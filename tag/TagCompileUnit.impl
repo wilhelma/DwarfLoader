@@ -1,0 +1,47 @@
+//
+// Created by wilhelma on 12/23/16.
+//
+
+#ifndef DWARFLOADER_TAGCOMPILEUNIT_H
+#define DWARFLOADER_TAGCOMPILEUNIT_H
+
+#include "./TagGeneric.h"
+#include "../include/DwarfHelper.h"
+
+namespace pcv {
+namespace dwarf {
+
+template <> struct TagHandler<DW_TAG_compile_unit> {
+    static bool handle(pcv::dwarf::Context &ctxt)
+    {
+      {  // register image
+        char *name;
+        if (!getDieName(ctxt.dbg, ctxt.die, &name)) throw DwarfError("die name");
+        ctxt.images.emplace_back(
+          std::unique_ptr<Image>{ new Image(name) }
+        );
+
+        ctxt.currentImage = ctxt.images.back().get();
+      }
+
+      {  // collect src files of cu
+        char **srcfiles;
+        Dwarf_Signed cnt;
+
+        if (dwarf_srcfiles(ctxt.die, &srcfiles, &cnt, nullptr) == DW_DLV_OK) {
+          for (int i = 0; i < cnt; ++i) {
+            ctxt.srcFiles.emplace_back(srcfiles[i]);
+            dwarf_dealloc(ctxt.dbg, srcfiles[i], DW_DLA_STRING);
+          }
+          dwarf_dealloc(ctxt.dbg, srcfiles, DW_DLA_LIST);
+        }
+      }
+
+      return false;  // continue
+    }
+};
+
+}  // namespace dwarf
+}  // namespace pcv
+
+#endif //DWARFLOADER_TAGCOMPILEUNIT_H

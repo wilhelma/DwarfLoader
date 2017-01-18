@@ -1,0 +1,43 @@
+//
+// Created by wilhelma on 12/23/16.
+//
+
+#ifndef DWARFLOADER_TAGNAMESPACE_H
+#define DWARFLOADER_TAGNAMESPACE_H
+
+#include "./TagGeneric.h"
+
+namespace pcv {
+namespace dwarf {
+
+template<>
+struct TagHandler<DW_TAG_namespace> {
+  static bool handle(Context &ctxt)
+  {
+    char *nmsp;
+
+    // in case of no unnamed namespace
+    if (dwarf_diename(ctxt.die, &nmsp, nullptr) == DW_DLV_OK) {
+      ctxt.namespaces.emplace_back( std::unique_ptr<Namespace>{
+          new Namespace(std::string(nmsp), ctxt.currentNamespace)
+      });
+      ctxt.currentNamespace = ctxt.namespaces.back().get();
+    }
+
+    return false; // continue
+  }
+};
+
+template<>
+struct TagLeaver<DW_TAG_namespace> {
+  static void leave(Context &ctxt)
+  {
+    if (hasAttr(ctxt.die, DW_AT_name))
+      ctxt.currentNamespace = ctxt.currentNamespace->parent;
+  }
+};
+
+}  // namespace dwarf
+}  // namespace pcv
+
+#endif //DWARFLOADER_TAGNAMESPACE_H

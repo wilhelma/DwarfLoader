@@ -1,0 +1,33 @@
+//
+// Created by wilhelma on 12/23/16.
+//
+
+#ifndef DWARFLOADER_TAGINHERITANCE_H
+#define DWARFLOADER_TAGINHERITANCE_H
+
+#include "./TagGeneric.h"
+
+namespace pcv {
+namespace dwarf {
+
+template <> struct TagHandler<DW_TAG_inheritance> {
+  static bool handle(Context &ctxt)
+  {
+    if (ctxt.currentClass == nullptr) throw DwarfError("no current class");
+
+    Dwarf_Die base = jump(ctxt.dbg, ctxt.die, DW_AT_type);
+
+    if (!hasAttr(ctxt.die, DW_AT_declaration)) {
+      Dwarf_Off off{};
+      if (dwarf_die_CU_offset(base, &off, nullptr) != DW_DLV_OK) throw DwarfError("die_cu_offset");
+      ctxt.addInheritance(off, ctxt.currentClass->offset);
+    }
+
+    return true;  // do not investigate further
+  }
+};
+
+}  // namespace dwarf
+}  // namespace pcv
+
+#endif //DWARFLOADER_TAGINHERITANCE_H

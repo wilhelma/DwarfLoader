@@ -1,0 +1,58 @@
+//
+// Created by wilhelma on 12/23/16.
+//
+
+#ifndef DWARFLOADER_TAGCLASS_H
+#define DWARFLOADER_TAGCLASS_H
+
+#include "./TagGeneric.h"
+
+namespace pcv {
+namespace dwarf {
+
+bool handleStructClass(Context &ctxt)
+{
+  if (!hasAttr(ctxt.die, DW_AT_declaration)) {
+    char *className{ nullptr };
+
+    if (getDieName(ctxt.dbg, ctxt.die, &className)) {
+      Dwarf_Off off{};
+      Dwarf_Unsigned fileNo{}, lineNo{};
+
+      if (dwarf_die_CU_offset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("die_offset");
+      getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_file, &fileNo);
+      getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &lineNo);
+
+      ctxt.addClass(off, std::unique_ptr<Class>(
+          new Class(demangle(className),
+                    *ctxt.currentImage,
+                    *ctxt.currentNamespace,
+                    ctxt.srcFiles[fileNo - 1],
+                    lineNo,
+                    off)
+      ));
+
+      ctxt.currentClass = ctxt.classes.back().get();
+    }
+  }
+  return false; // continue
+}
+
+template <> struct TagHandler<DW_TAG_class_type> {
+  static bool handle(Context &ctxt)
+  {
+    return handleStructClass(ctxt);
+  }
+};
+
+template <> struct TagHandler<DW_TAG_structure_type> {
+  static bool handle(Context &ctxt)
+  {
+    return handleStructClass(ctxt);
+  }
+};
+
+}  // namespace dwarf
+}  // namespace pcv
+
+#endif //DWARFLOADER_TAGNAMESPACE_H
