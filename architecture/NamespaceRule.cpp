@@ -9,20 +9,37 @@
 namespace pcv {
 namespace dwarf {
 
-void NamespaceRule::append(ArchSet_t &archSet, const Context &ctxt) {}
+std::unique_ptr<ArchRule::artifacts_t>
+NamespaceRule::append(Artifact_t &archSet, const Context &ctxt) {}
 
-void NamespaceRule::execute(ArchSet_t &archSet, const Context &ctxt)
+std::unique_ptr<ArchRule::artifacts_t>
+NamespaceRule::execute(Artifact_t &archSet, const Context &ctxt)
 {
+  static std::unordered_map<Namespace*, Artifact_t*> addedArtifacts;
+
+  auto artifacts = std::unique_ptr<artifacts_t> { new artifacts_t };
+  Artifact_t *parent = &archSet;
+
   for (auto &nmsp : ctxt.namespaces) {
-    archSet.children.push_back(
-        std::unique_ptr<ArchSet_t>{ new ArchSet_t(nmsp->name, &archSet) }
+    if (nmsp->parent && addedArtifacts.find(nmsp->parent) != end(addedArtifacts))
+      parent = addedArtifacts[nmsp->parent];
+
+    std::string name = nmsp->name.empty() ? "empty" : nmsp->name;
+    parent->children.push_back(
+        std::unique_ptr<Artifact_t>{ new Artifact_t(name, parent) }
     );
 
-    auto &children = archSet.children.back();
+    addedArtifacts[nmsp.get()] = parent->children.back().get();
+
+    auto &children = parent->children.back();
     for (auto &entity : nmsp->entities) {
-      children->entities.insert( entity );
+        children->entities.insert( entity );
     }
+
+    artifacts->emplace_back( parent->children.back().get() );
   }
+
+  return artifacts;
 }
 
 }  // namespace dwarf

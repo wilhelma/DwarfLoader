@@ -18,35 +18,42 @@ namespace dwarf {
 template <> struct TagHandler<DW_TAG_subprogram> {
   static bool handle(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_declaration) &&
-       !hasAttr(ctxt.die, DW_AT_artificial)) {
+    if (hasAttr(ctxt.die, DW_AT_name) &&
+        hasAttr(ctxt.die, DW_AT_decl_file) &&
+        !hasAttr(ctxt.die, DW_AT_artificial)) {
       char *rtnName{nullptr};
       Dwarf_Unsigned fileNo{}, lineNo{};
       Dwarf_Off off{};
 
       if (dwarf_diename(ctxt.die, &rtnName, nullptr) != DW_DLV_OK) throw DwarfError("diename");
-      if (dwarf_die_CU_offset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("cu_offset");
+      if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
       getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_file, &fileNo);
       getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &lineNo);
 
-      ctxt.routines.emplace_back(
-          std::unique_ptr<Routine> {
+      auto rtn = std::unique_ptr<Routine> {
               new Routine(rtnName,
                           *ctxt.currentImage,
                           *ctxt.currentNamespace,
+                          ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.top(),
                           ctxt.srcFiles[fileNo-1],
                           lineNo,
-                          off)
-          }
-      );
+                          off) };
+
+      ctxt.addRoutine(off, std::move(rtn));
+
+      if (!ctxt.currentClass.empty())
+        ctxt.currentClass.top()->methods.push_back( ctxt.routines.back().get() );
 
       ctxt.currentRoutine = ctxt.routines.back().get();
-
-      if (ctxt.currentClass != nullptr) {
-        ctxt.currentClass->methods.push_back( ctxt.currentRoutine );
-      }
-
     }
+
+    return false;  // continue
+  }
+  static bool handleDuplicate(Context &ctxt)
+  {
+    auto rtn = ctxt.getRoutine(ctxt.duplicate);
+    if (rtn)
+      ctxt.currentRoutine = rtn;
 
     return false;  // continue
   }

@@ -1,0 +1,14 @@
+//
+// Created by wilhelma on 1/20/17.
+//
+#include <gtest/gtest.h>
+
+namespace {
+
+int main(int argc, char **argv)
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
+}  // namespace

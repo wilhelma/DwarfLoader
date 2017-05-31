@@ -10,12 +10,10 @@
 namespace pcv {
 namespace dwarf {
 
-struct ArchSet_t;
-
 class NamespaceRule : public ArchRule {
- public:
-  void execute(ArchSet_t &archSet, const Context &ctxt) override;
-  void append(ArchSet_t &archSet, const Context &ctxt) override;
+ protected:
+  std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const Context &ctxt) override;
+  std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const Context &ctxt) override;
 };
 
 }  // namespace dwarf

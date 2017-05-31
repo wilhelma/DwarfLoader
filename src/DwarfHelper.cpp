@@ -3,8 +3,8 @@
 //
 
 #include <dwarf.h>
-#include "DwarfHelper.h"
-#include "DwarfException.h"
+#include "../include/DwarfHelper.h"
+#include "../include/DwarfException.h"
 
 bool getAttrText(Dwarf_Debug dbg, Dwarf_Die die, Dwarf_Half attr, char **text)
 {
@@ -54,9 +54,6 @@ Dwarf_Die jump(Dwarf_Debug dbg, Dwarf_Die die, Dwarf_Half attrDesc)
 
 bool getPtrOff(Dwarf_Debug dbg, Dwarf_Die die, Dwarf_Off *off)
 {
-  Dwarf_Off off2{};
-  dwarf_die_CU_offset(die, &off2, nullptr);
-
   Dwarf_Half tag{};
   if (dwarf_tag(die, &tag, nullptr) != DW_DLV_OK) throw DwarfError("tag");
   switch (tag) {

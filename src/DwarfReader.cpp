@@ -2,11 +2,9 @@
 // Created by wilhelma on 12/23/16.
 //
 
-#include <libdwarf.h>
-#include <cassert>
-#include <memory>
-
 #include "../include/DwarfReader.h"
+
+#include "../include/Filter.h"
 #include "../tag/TagGeneric.h"
 
 namespace pcv {
@@ -19,14 +17,17 @@ void DwarfReader::errHandler(Dwarf_Error err, Dwarf_Ptr errArg)
   dwarf_dealloc(dbg, err, DW_DLA_ERROR);
 }
 
-DwarfReader::DwarfReader(const std::string &filename)
+DwarfReader::DwarfReader(const std::string &filename,
+                         DieDuplicate &dieDuplicate,
+                         const Filter &filter)
+    : dieDuplicate_(dieDuplicate), filter_(filter)
 {
-  fileGuard_ = std::unique_ptr<FileGuard> { new FileGuard(filename.c_str()) };
-  dbgGuard_ = std::unique_ptr<DbgGuard> { new DbgGuard(fileGuard_->fd, errHandler) };
+  fileGuard_ = std::unique_ptr<FileGuard> {new FileGuard(filename.c_str())};
+  dbgGuard_ = std::unique_ptr<DbgGuard> {new DbgGuard(fileGuard_->fd, errHandler)};
   ctxt_.dbg = dbgGuard_->dbg;
 
-  ctxt_.namespaces.emplace_back( new Namespace(std::string(""), nullptr) );
-  ctxt_.currentNamespace = ctxt_.namespaces.back().get();
+  ctxt_.namespaces.emplace_back(new Namespace(std::string(""), nullptr));
+  ctxt_.emptyNamespace = ctxt_.currentNamespace = ctxt_.namespaces.back().get();
 }
 
 void DwarfReader::iterateCUs()
@@ -55,6 +56,12 @@ void DwarfReader::iterateCUs()
 void DwarfReader::inspectDie(Dwarf_Die die) noexcept
 {
   Dwarf_Die child_die{}, sib_die{};
+  ctxt_.die = die;
+  ctxt_.duplicate = dieDuplicate_.isDuplicate(ctxt_);
+  if (ctxt_.duplicate)
+    dieDuplicate_.addDuplicate(ctxt_);
+  else
+    dieDuplicate_.addDie(ctxt_);
 
   if (!handleDie(die)) {
     if (dwarf_child(die, &child_die, nullptr) == DW_DLV_OK) {
@@ -62,7 +69,6 @@ void DwarfReader::inspectDie(Dwarf_Die die) noexcept
       dwarf_dealloc(ctxt_.dbg, child_die, DW_DLA_DIE);
     }
   }
-
   leaveDie(die);
 
   if (dwarf_siblingof_b(ctxt_.dbg, die, IS_INFO, &sib_die, nullptr) == DW_DLV_OK) {
@@ -73,6 +79,13 @@ void DwarfReader::inspectDie(Dwarf_Die die) noexcept
 
 void DwarfReader::leaveDie(Dwarf_Die die)
 {
+  if (hasAttr(die, DW_AT_decl_file)) {
+    Dwarf_Unsigned fileNo{};
+    getAttrUint(ctxt_.dbg, die, DW_AT_decl_file, &fileNo);
+    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
+      return;
+  }
+
   Dwarf_Half tag{};
   if (dwarf_tag(die, &tag, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
   ctxt_.die = die;
@@ -83,10 +96,17 @@ bool DwarfReader::handleDie(Dwarf_Die die)
 {
   Dwarf_Half tag{};
   if (dwarf_tag(die, &tag, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
-  ctxt_.die = die;
+
+  if (hasAttr(ctxt_.die, DW_AT_decl_file)) {
+    Dwarf_Unsigned fileNo{};
+    getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_file, &fileNo);
+    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
+      return true;
+  }
 
   return handleDwarfDie(ctxt_, tag);
 }
+
 void DwarfReader::start()
 {
   iterateCUs();
@@ -97,6 +117,7 @@ void DwarfReader::processContext()
 {
   ctxt_.establishInheritance();
   ctxt_.establishComposition();
+  ctxt_.establishTypedefs();
 }
 
 }  // namespace dwarf
