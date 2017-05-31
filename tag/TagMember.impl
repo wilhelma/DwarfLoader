@@ -20,15 +20,15 @@ struct TagHandler<DW_TAG_member> {
   static bool handle(Context &ctxt)
   {
     if (!hasAttr(ctxt.die, DW_AT_artificial)) {
-      Dwarf_Off off{};
-
-      if (ctxt.currentClass == nullptr) throw DwarfError("No class for member");
+      Dwarf_Off off;
+      dwarf_dieoffset(ctxt.die, &off, nullptr);
+      if (ctxt.currentClass.empty()) throw DwarfError("No class for member");
       if (getPtrOff(ctxt.dbg, jump(ctxt.dbg, ctxt.die, DW_AT_type), &off)) {
-        ctxt.addComposition(ctxt.currentClass->offset, off);
+        ctxt.addComposition(ctxt.currentClass.top()->offset, off);
       } else { // member variable
         char *varName{nullptr};
         if (dwarf_diename(ctxt.die, &varName, nullptr) == DW_DLV_OK) {
-          if (dwarf_die_CU_offset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
+          if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("off");
 
           Dwarf_Unsigned file{}, line{};
           getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_file, &file);
@@ -39,17 +39,22 @@ struct TagHandler<DW_TAG_member> {
                   new Variable(demangle(varName),
                                *ctxt.currentImage,
                                *ctxt.currentNamespace,
+                               ctxt.currentClass.top(),
                                ctxt.srcFiles[file - 1],
                                line,
                                off)
               }
           );
-          ctxt.currentClass->members.push_back(ctxt.variables.back().get());
+          ctxt.currentClass.top()->members.push_back(ctxt.variables.back().get());
         }
       }
 
       return true;  // do not investigate further
     }
+  }
+  static bool handleDuplicate(Context &ctxt)
+  {
+    return false;
   }
 };
 

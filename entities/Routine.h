@@ -16,10 +16,11 @@ struct Routine : public SoftwareEntity {
   explicit Routine(std::string name,
                    Image &img,
                    Namespace &nmsp,
+                   const Class *cls,
                    std::string file,
                    int line,
                    Dwarf_Off offset)
-    : SoftwareEntity (name, img, nmsp, file, line, offset) {}
+    : SoftwareEntity (name, img, nmsp, cls, file, line, offset) {}
 
   EntityType getEntityType() const override { return EntityType::Routine; }
 };

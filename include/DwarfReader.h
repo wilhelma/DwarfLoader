@@ -17,13 +17,18 @@
 #include "./Context.h"
 #include "../guards/FileGuard.h"
 #include "../guards/DbgGuard.h"
+#include "Duplicate.h"
 
 namespace pcv {
 namespace dwarf {
 
+class Filter;
+
 class DwarfReader {
  public:
-  explicit DwarfReader(const std::string &fileName);
+  explicit DwarfReader(const std::string &fileName,
+                       DieDuplicate &dieDuplicate,
+                       const Filter &filter);
   ~DwarfReader() = default;
 
   /* disable copy/move construction and assignment operators */
@@ -41,6 +46,10 @@ class DwarfReader {
   }
 
  private:
+  static constexpr Dwarf_Bool IS_INFO { true };
+  DieDuplicate &dieDuplicate_;
+  const Filter &filter_;
+
   // processing
   void iterateCUs();
   void inspectDie(Dwarf_Die /* die */) noexcept;
@@ -50,12 +59,9 @@ class DwarfReader {
   // post-processing
   void processContext();
 
-  static constexpr Dwarf_Bool IS_INFO { true };
-
   std::unique_ptr<FileGuard> fileGuard_;
   std::unique_ptr<DbgGuard> dbgGuard_;
   Context ctxt_;
-  std::vector<std::string> srcFiles_;
 };
 
 }  // namespace dwarf
