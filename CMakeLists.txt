@@ -3,6 +3,8 @@ include(ExternalProject)
 
 project(DwarfLoader)
 
+set (CMAKE_CXX_STANDARD 11)
+
 set (PROJECT_INCLUDE_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/dwarf/include)
 set (PROJECT_SOURCE_DIR         ${CMAKE_CURRENT_SOURCE_DIR}/dwarf/src)
 set (ARCHITECTURE_INCLUDE_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/architecture/include)
