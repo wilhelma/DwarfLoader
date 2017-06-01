@@ -18,14 +18,14 @@ using entity::Id_t;
 namespace dwarf {
 
 struct VariableArgs {
-  pcv::entity::Variable::name_t name;
-  pcv::entity::Variable::size_t size;
+  entity::Variable::name_t name;
+  entity::Variable::size_t size;
   Dwarf_Unsigned file;
   Dwarf_Unsigned line;
   Id_t classId;
 };
 
-using locationHandler_t = std::function<void(Dwarf_Debug, Dwarf_Die, pcv::entity::Variable::offset_t)>;
+using locationHandler_t = std::function<void(Dwarf_Debug, Dwarf_Die, entity::Variable::offset_t)>;
 
 /*!
  * @brief Resolves the dwarf offset of the inherent pointer type.
@@ -85,8 +85,8 @@ bool getDieName(
 void handleLocListFromExpr(
   Dwarf_Debug dbg,                                /**< [IN] The debug handle.*/
   Dwarf_Die die,                                  /**< [IN] The die.*/
-  locationHandler_t stackHandler,                 /**< [IN] The handler for stack variables.*/
-  locationHandler_t staticGlobalHandler           /**< [IN] The handler for static/global vars.*/);
+  const locationHandler_t& stackHandler,                 /**< [IN] The handler for stack variables.*/
+  const locationHandler_t& staticGlobalHandler           /**< [IN] The handler for static/global vars.*/);
 
 /*!
  * @return The variable size of dbg/die.
@@ -111,7 +111,7 @@ const char* getVariableName(
 /*!
  * @returns the class ptr of the variable type, if the type is a class/struct, otherwise nullptr.
  */
-pcv::entity::Class* getClassOfVariable(
+entity::Class* getClassOfVariable(
   Dwarf_Debug dbg,                        /**< [IN] The debug handle.*/
   Dwarf_Die die,                          /**< [IN] The die.*/
   const Context& ctxt                     /**< [IN] The context.*/);

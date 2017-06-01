@@ -4,34 +4,8 @@
 
 #include "DwarfReader.h"
 
-#include "Filter.h"
 #include "tag/TagGeneric.h"
 #include "entities/Variable.h"
-
-namespace {
-
-using pcv::entity::Variable;
-
-void postProcess(pcv::dwarf::Context *ctxt) {
-  ctxt->establishInheritance();
-  ctxt->establishComposition();
-  ctxt->establishTypedefs();
-}
-
-std::unique_ptr<std::vector<Variable*>> getVariablesOfType(Variable::Type type, Context& ctxt)
-{
-  std::unique_ptr<std::vector<Variable*>> vec {new std::vector<Variable*>};
-
-  for (auto& v : ctxt.variables) {
-    if (v->type == type) {
-      vec->emplace_back(v.get());
-    }
-  }
-
-  return vec;
-}
-
-}
 
 namespace pcv {
 namespace dwarf {
