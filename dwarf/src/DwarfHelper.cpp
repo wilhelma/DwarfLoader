@@ -4,11 +4,8 @@
 
 #include <dwarf.h>
 #include <Context.h>
-#include <libdwarf.h>
 #include "DwarfHelper.h"
 #include "DwarfException.h"
-#include "Type.h"
-#include "entities/SoftwareEntity.h"
 
 namespace {
 
@@ -142,8 +139,8 @@ bool getDieName(Dwarf_Debug dbg, Dwarf_Die die, char **name)
 
 void handleLocListFromExpr(Dwarf_Debug dbg,
                            Dwarf_Die die,
-                           locationHandler_t stackHandler,
-                           locationHandler_t globalAndStaticHandler)
+                           const locationHandler_t& stackHandler,
+                           const locationHandler_t& globalAndStaticHandler)
 {
   Dwarf_Attribute attr;
 
@@ -197,11 +194,6 @@ Dwarf_Unsigned getVariableSize(Dwarf_Debug dbg, Dwarf_Die die)
   }
   dwarf_dealloc(dbg, typeDie, DW_DLA_DIE);
   return bsize;
-}
-
-void identifySubrangeDie(Dwarf_Die& die)
-{
-
 }
 
 Dwarf_Unsigned getArraySize(Dwarf_Debug dbg, Dwarf_Die arrayDie)

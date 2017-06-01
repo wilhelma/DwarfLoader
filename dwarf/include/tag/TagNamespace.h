@@ -10,13 +10,13 @@
 namespace pcv {
 namespace dwarf {
 
-std::string getNamespaceString(const std::string& nmspString, Namespace *nmsp)
+std::string getNamespaceString(const std::string &nmspString, Namespace *nmsp)
 {
-  std::string s{ nmspString };
-  if (nmsp) {
-    s.append( std::string("::") + (nmsp->name.empty() ? "<>" : nmsp->name) );
+  std::string s{nmspString};
+  if (nmsp != nullptr) {
+    s.append(std::string("::") + (nmsp->name.empty() ? "<>" : nmsp->name));
     for (Namespace *parent = nmsp->parent; parent != nullptr; parent = parent->parent) {
-      s.append( std::string("::" + parent->name));
+      s.append(std::string("::" + parent->name));
     }
   }
   return s;
@@ -64,15 +64,17 @@ template<>
 struct TagLeaver<DW_TAG_namespace> {
   static void leave(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_name))
+    if (hasAttr(ctxt.die, DW_AT_name)) {
       ctxt.currentNamespace = (ctxt.currentNamespace->parent == nullptr)
-                                ? ctxt.emptyNamespace : ctxt.currentNamespace->parent;
+                              ? ctxt.emptyNamespace : ctxt.currentNamespace->parent;
+    }
   }
   static void leaveDuplicate(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_name))
+    if (hasAttr(ctxt.die, DW_AT_name)) {
       ctxt.currentNamespace = (ctxt.currentNamespace->parent == nullptr)
                               ? ctxt.emptyNamespace : ctxt.currentNamespace->parent;
+    }
   }
 };
 

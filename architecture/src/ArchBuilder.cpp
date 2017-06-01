@@ -7,6 +7,7 @@
 #include <json11.hpp>
 #include <unordered_map>
 #include <algorithm>
+#include <memory>
 #include <iostream>
 
 #include "../include/ArchRule.h"

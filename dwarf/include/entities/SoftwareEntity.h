@@ -51,7 +51,7 @@ struct SoftwareEntity {
 
   Id_t id;
   name_t name;
-  size_t size;
+  size_t size{};
   Image *img;
   Namespace *nmsp;
   Class *cls;

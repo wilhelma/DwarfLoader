@@ -13,7 +13,8 @@
 
 namespace {
 
-bool isValid(const Context &ctxt, Dwarf_Die die) {
+bool isValid(const Context &ctxt, Dwarf_Die die)
+{
   return !(ctxt.currentClass.empty() && pcv::dwarf::hasAttr(die, DW_AT_artificial));
 }
 
@@ -22,8 +23,9 @@ bool isValid(const Context &ctxt, Dwarf_Die die) {
 namespace pcv {
 namespace dwarf {
 
-bool inspectConstructors(Context &ctxt, Dwarf_Die die) {
-  char *rtnName = 0;
+bool inspectConstructors(Context &ctxt, Dwarf_Die die)
+{
+  char *rtnName = nullptr;
   if (getDieName(ctxt.dbg, die, &rtnName)) {
     std::string uName = demangle(rtnName);
     size_t pos2{uName.rfind("::")};
@@ -45,7 +47,7 @@ bool inspectConstructors(Context &ctxt, Dwarf_Die die) {
             // add line of declaration to class constructors
             dwarf_dieoffset(specDie, &specOff, nullptr);
             auto rtn = ctxt.getRoutine(specOff);
-            if (rtn) {
+            if (rtn != nullptr) {
               rtn->isConstructor = true;
               ctxt.linkNameToRoutine(rtnName, rtn);
             }
@@ -61,7 +63,8 @@ bool inspectConstructors(Context &ctxt, Dwarf_Die die) {
   return false;
 }
 
-bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0) {
+bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
+{
   if (isValid(ctxt, die)) {
     char *rtnName{nullptr};
     if (!getDieName(ctxt.dbg, die, &rtnName)) throw DwarfError("diename");
@@ -86,13 +89,13 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0) {
 
     if (lineNo > 0 || isConstructor) {
       auto rtn = std::unique_ptr<Routine> {
-        new Routine(off,
-                    rtnName,
-                    ctxt.currentImage,
-                    ctxt.currentNamespace,
-                    ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.top(),
-                    file,
-                    lineNo)};
+          new Routine(off,
+                      rtnName,
+                      ctxt.currentImage,
+                      ctxt.currentNamespace,
+                      ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.top(),
+                      file,
+                      lineNo)};
 
       ctxt.addRoutine(off, std::move(rtn));
 
@@ -109,7 +112,8 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0) {
 
 template<>
 struct TagHandler<DW_TAG_subprogram> {
-  static bool handle(Context &ctxt) {
+  static bool handle(Context &ctxt)
+  {
     bool stop = false;
 
     if (hasAttr(ctxt.die, DW_AT_specification)) {
@@ -124,7 +128,8 @@ struct TagHandler<DW_TAG_subprogram> {
 
     return stop;
   }
-  static bool handleDuplicate(Context &ctxt) {
+  static bool handleDuplicate(Context &ctxt)
+  {
     auto rtn = ctxt.getRoutine(ctxt.duplicate);
     if (rtn) ctxt.currentRoutine.emplace(rtn);
 
@@ -134,14 +139,18 @@ struct TagHandler<DW_TAG_subprogram> {
 
 template<>
 struct TagLeaver<DW_TAG_subprogram> {
-  static void leave(Context &ctxt) {
+  static void leave(Context &ctxt)
+  {
     if (isValid(ctxt, ctxt.die) && hasAttr(ctxt.die, DW_AT_decl_file))
       ctxt.currentRoutine.pop();
   }
 
-  static void leaveDuplicate(Context &ctxt) {
+  static void leaveDuplicate(Context &ctxt)
+  {
     auto rtn = ctxt.getRoutine(ctxt.duplicate);
-    if (rtn) ctxt.currentRoutine.pop();
+    if (rtn != nullptr) {
+      ctxt.currentRoutine.pop();
+    }
   }
 };
 

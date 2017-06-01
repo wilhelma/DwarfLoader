@@ -19,8 +19,8 @@ static std::string fixPath(const char *path)
     pathStr.erase(pathStr.find("/./") + 1, 2);
 
   while (pathStr.find("/../") != std::string::npos) {
-    int lastSlash = pathStr.find("/../");
-    int firstSlash = pathStr.rfind("/", lastSlash - 1);
+    auto lastSlash = pathStr.find("/../");
+    auto firstSlash = pathStr.rfind("/", lastSlash - 1);
     pathStr.erase(firstSlash, lastSlash + 3 - firstSlash);
   }
 
