@@ -2,7 +2,7 @@
 // Created by wilhelma on 1/20/17.
 //
 
-#include "../ArchBuilder.h"
+#include "ArchBuilder.h"
 
 using pcv::dwarf::Artifact_t;
 using pcv::dwarf::SoftwareEntity;
