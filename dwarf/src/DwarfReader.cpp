@@ -22,7 +22,7 @@ void DwarfReader::errHandler(Dwarf_Error err, Dwarf_Ptr errArg)
 DwarfReader::DwarfReader(const std::string &filename,
                          DieDuplicate &dieDuplicate,
                          const Filter &filter)
-    : dieDuplicate_(dieDuplicate), filter_(filter)
+    : filter_(filter), dieDuplicate_(dieDuplicate)
 {
   fileGuard_ = std::unique_ptr<FileGuard> {new FileGuard(filename.c_str())};
   dbgGuard_ = std::unique_ptr<DbgGuard> {new DbgGuard(fileGuard_->fd, errHandler)};
@@ -36,7 +36,7 @@ void DwarfReader::iterateCUs()
 {
   Dwarf_Unsigned cu_header_length, abbrev_offset, next_cu_header, typeOffset;
   Dwarf_Half version_stamp, address_size, offset_size, extension_size;
-  Dwarf_Sig8 signature{};
+  Dwarf_Sig8 signature{0};
   Dwarf_Die cu_die;
 
   int res{DW_DLV_OK};
