@@ -9,6 +9,7 @@ set (PROJECT_INCLUDE_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/dwarf/include)
 set (PROJECT_SOURCE_DIR         ${CMAKE_CURRENT_SOURCE_DIR}/dwarf/src)
 set (ARCHITECTURE_INCLUDE_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/architecture/include)
 set (ARCHITECTURE_SOURCE_DIR    ${CMAKE_CURRENT_SOURCE_DIR}/architecture/src)
+set (AST_DIR                    ${CMAKE_CURRENT_SOURCE_DIR}/ast)
 
 set(SOURCE_FILES
         src/main.cpp
@@ -24,7 +25,18 @@ set(SOURCE_FILES
         ${ARCHITECTURE_SOURCE_DIR}/NamespaceRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexFileRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexNameRule.cpp
-        ${ARCHITECTURE_SOURCE_DIR}/RegexRule.cpp)
+        ${ARCHITECTURE_SOURCE_DIR}/RegexRule.cpp
+        ${AST_DIR}/visitor/ASTVisitor.cpp
+        ${AST_DIR}/ast-from-json/CreateAstFromJson.cpp
+        ${AST_DIR}/nodes/Program.cpp
+        ${AST_DIR}/nodes/DefinitionExpression.cpp
+        ${AST_DIR}/nodes/Component.cpp
+        ${AST_DIR}/nodes/AndExpression.cpp
+        ${AST_DIR}/nodes/OrExpression.cpp
+        ${AST_DIR}/nodes/NotExpression.cpp
+        ${AST_DIR}/nodes/AtomExpression.cpp
+        ${AST_DIR}/nodes/SetExpression.cpp
+        ${AST_DIR}/nodes/Expression.cpp)
 
 #------------------------------ json11 library ----------------------------------------------------#
 ExternalProject_Add(json11

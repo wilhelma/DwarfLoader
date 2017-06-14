@@ -1,6 +1,8 @@
 #include <cassert>
 #include <cstdlib>
 #include <stdlib.h>
+#include <string>
+#include <fstream>
 
 #include "Filter.h"
 #include "Duplicate.h"
@@ -10,6 +12,11 @@
 #include "ClassRule.h"
 #include "RegexFileRule.h"
 #include "RegexNameRule.h"
+
+#include "../ast/nodes/Program.h"
+#include "../ast/ast-from-json/CreateAstFromJson.h"
+#include "../ast/visitor/ASTVisitor.h"
+
 
 using pcv::dwarf::DwarfReader;
 using pcv::ArchBuilder;
@@ -22,37 +29,56 @@ using pcv::dwarf::Filter;
 using pcv::dwarf::DieDuplicate;
 using pcv::entity::EntityType;
 
-int main(int argc, char** argv) {
-  if (argc != 2) {
-    std::cerr << "No program argument given!\n";
-    abort();
-  }
-  try {
-    Filter filter(
-        "(.+)main(.+)",
-        "(.+)boost(.+)"
-    );
-    DieDuplicate duplicate;
-    DwarfReader reader(argv[1], duplicate, filter);
-    reader.start();
+int main(int argc, char **argv) {
+    if (argc != 3) {
+        std::cerr << "No program argument given!\n";
+        abort();
+    }
+    try {
+        std::string error;
+        std::string line;
+        std::string inputjson;
+        std::ifstream inputfile(argv[2]);
+        if (inputfile.is_open()) {
+            while (getline(inputfile, line)) {
+                inputjson += line;
+            }
+            inputfile.close();
 
-    ArchBuilder builder(reader.getContext());
+            const auto json = Json::parse(inputjson, error);
+            Program program = CreateAstFromJson::generateAst(json);
+            ASTVisitor astVisitor;
+            program.accept(astVisitor);
+        } else {
+            std::cerr << "Cannot opet file!";
+            return -1;
+        }
 
-    ArchRule *nRule = new NamespaceRule();
+        Filter filter(
+                "(.+)main(.+)",
+                "(.+)boost(.+)"
+        );
+        DieDuplicate duplicate;
+        DwarfReader reader(argv[1], duplicate, filter);
+        reader.start();
 
-    ArchRule *ruleA = new RegexNameRule("functions", EntityType::Routine, "(.*)");
+        ArchBuilder builder(reader.getContext());
 
-    builder.apply( nRule );
-    builder.apply( ruleA );
+        ArchRule *nRule = new NamespaceRule();
 
-    builder.finish();
-    std::cout << builder;
+        ArchRule *ruleA = new RegexNameRule("functions", EntityType::Routine, "(.*)");
 
-    delete nRule;
-    delete ruleA;
+        builder.apply(nRule);
+        builder.apply(ruleA);
 
-  } catch (DwarfError& e) {
-    std::cerr << e.what();
-    return -1;
-  }
+        builder.finish();
+        std::cout << builder;
+
+        delete nRule;
+        delete ruleA;
+
+    } catch (DwarfError &e) {
+        std::cerr << e.what();
+        return -1;
+    }
 }
