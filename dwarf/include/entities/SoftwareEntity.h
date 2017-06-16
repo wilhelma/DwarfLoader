@@ -66,6 +66,7 @@ struct SoftwareEntity {
   /// @param name The name of the entity.
   /// @param img The containing image.
   /// @param nmsp The containing namespace.
+  /// @param cls The containing class.
   /// @param file The name of the containing file.
   /// @param line The line of the declaration.
   explicit SoftwareEntity(Id_t id, name_t name, Image *img, Namespace *nmsp, Class *cls,

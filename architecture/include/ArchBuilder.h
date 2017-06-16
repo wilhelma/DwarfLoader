@@ -8,7 +8,7 @@
 #include <vector>
 #include <unordered_set>
 #include <memory>
-#include <gtest/gtest_prod.h>
+
 #include <iostream>
 
 #include "entities/SoftwareEntity.h"

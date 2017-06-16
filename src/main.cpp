@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
         }
 
         Filter filter(
-                "(.+)main(.+)",
+                "(.+)DwarfLoader(.+)",
                 "(.+)boost(.+)"
         );
         DieDuplicate duplicate;
@@ -64,12 +64,9 @@ int main(int argc, char **argv) {
 
         ArchBuilder builder(reader.getContext());
 
-        ArchRule *nRule = new NamespaceRule();
-
-        ArchRule *ruleA = new RegexNameRule("functions", EntityType::Routine, "(.*)");
+        ArchRule *nRule = new NamespaceRule("pcv");
 
         builder.apply(nRule);
-        builder.apply(ruleA);
 
         builder.finish();
         std::cout << builder;

@@ -5,11 +5,14 @@
 #ifndef DWARFLOADER_NAMESPACERULE_H
 #define DWARFLOADER_NAMESPACERULE_H
 
+#include <regex>
 #include "ArchRule.h"
 
 namespace pcv {
 
 class NamespaceRule : public ArchRule {
+  const std::string artifactName_;
+  const std::regex rx_;
  protected:
   std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
   std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;

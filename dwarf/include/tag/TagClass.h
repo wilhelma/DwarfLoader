@@ -70,8 +70,6 @@ struct TagHandler<DW_TAG_class_type> {
 
   static bool handleDuplicate(Context &ctxt)
   {
-    Dwarf_Off off;
-    dwarf_dieoffset(ctxt.die, &off, nullptr);
     return handleStructClassDuplicate(ctxt);
   }
 };

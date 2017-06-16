@@ -59,10 +59,12 @@ struct TagHandler<DW_TAG_member> {
   {
     if (!hasAttr(ctxt.die, DW_AT_artificial) &&
         !hasAttr(ctxt.die, DW_AT_declaration)) {
-      if (ctxt.currentClass.empty()) throw DwarfError("No class for member");
 
       Dwarf_Off off{};
       if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_dieoff");
+
+      if (ctxt.currentClass.empty()) throw DwarfError("No class for member");
+
 
       if (getPtrOff(ctxt.dbg, jump(ctxt.dbg, ctxt.die, DW_AT_type), &off)) {
         ctxt.addComposition(ctxt.currentClass.top()->id, off);
