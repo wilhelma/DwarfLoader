@@ -2,6 +2,7 @@
 // Created by wilhelma on 1/7/17.
 //
 
+#include <iostream>
 #include "Context.h"
 
 namespace pcv {

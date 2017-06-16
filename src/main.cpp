@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
   }
   try {
     Filter filter(
-        "(.+)pcv(.+)",
+        "(.+)cppcheck(.+)",
         "(.+)boost(.+)"
     );
     DieDuplicate duplicate;
@@ -38,17 +38,16 @@ int main(int argc, char** argv) {
 
     ArchBuilder builder(reader.getContext());
 
-    ArchRule *nRule = new NamespaceRule();
+    ArchRule *cRule = new ClassRule();
 
     ArchRule *ruleA = new RegexNameRule("functions", EntityType::Routine, "(.*)");
 
-    builder.apply( nRule );
-    builder.apply( ruleA );
+    builder.apply( cRule );
 
     builder.finish();
     std::cout << builder;
 
-    delete nRule;
+    delete cRule;
     delete ruleA;
 
   } catch (DwarfError& e) {

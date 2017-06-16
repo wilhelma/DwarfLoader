@@ -85,8 +85,8 @@ void DwarfReader::leave(Dwarf_Die die)
   if (hasAttr(die, DW_AT_decl_file)) {
     Dwarf_Unsigned fileNo{};
     getAttrUint(ctxt_.dbg, die, DW_AT_decl_file, &fileNo);
-//    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
-//      return;
+    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
+      return;
   }
 
   Dwarf_Half tag{};
@@ -103,8 +103,8 @@ bool DwarfReader::handle(Dwarf_Die die)
   if (hasAttr(ctxt_.die, DW_AT_decl_file)) {
     Dwarf_Unsigned fileNo{};
     getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_file, &fileNo);
-/*    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
-      return true;*/
+    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
+      return true;
   }
 
   return handleDwarfDie(ctxt_, tag);
