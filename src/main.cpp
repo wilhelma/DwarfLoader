@@ -12,6 +12,7 @@
 #include "NamespaceRule.h"
 #include "ClassRule.h"
 #include "FunctionRule.h"
+#include "VariableRule.h"
 #include "RegexFileRule.h"
 #include "RegexNameRule.h"
 
@@ -26,6 +27,7 @@ using pcv::ArchRule;
 using pcv::NamespaceRule;
 using pcv::ClassRule;
 using pcv::FunctionRule;
+using pcv::VariableRule;
 using pcv::RegexFileRule;
 using pcv::RegexNameRule;
 using pcv::dwarf::Filter;
@@ -70,10 +72,12 @@ int main(int argc, char **argv) {
         ArchRule *nRule = new NamespaceRule("compN", "pcv");
         ArchRule *cRule = new ClassRule("compC", "Dwarf.*");
         ArchRule *fRule = new FunctionRule("compF", ".*Rule.*");
+        ArchRule *vRule = new VariableRule("compV", ".*artifactName.*");
 
         builder.apply(nRule);
         builder.apply(cRule);
         builder.apply(fRule);
+        builder.apply(vRule);
 
         builder.finish();
         std::cout << builder;

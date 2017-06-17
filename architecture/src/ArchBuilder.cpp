@@ -224,7 +224,7 @@ std::ostream &operator<<(std::ostream &os, const ArchBuilder &obj)
 void ArchBuilder::finish()
 {
 //  removeDuplicatedsAndAppend(artifact_);
-  removeEmptyArtifacts(artifact_);
+ // removeEmptyArtifacts(artifact_);
 }
 
 }  // namespace pcv
