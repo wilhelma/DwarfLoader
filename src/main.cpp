@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string>
 #include <fstream>
+#include <FunctionRule.h>
 
 #include "Filter.h"
 #include "Duplicate.h"
@@ -10,6 +11,7 @@
 #include "ArchBuilder.h"
 #include "NamespaceRule.h"
 #include "ClassRule.h"
+#include "FunctionRule.h"
 #include "RegexFileRule.h"
 #include "RegexNameRule.h"
 
@@ -23,6 +25,7 @@ using pcv::ArchBuilder;
 using pcv::ArchRule;
 using pcv::NamespaceRule;
 using pcv::ClassRule;
+using pcv::FunctionRule;
 using pcv::RegexFileRule;
 using pcv::RegexNameRule;
 using pcv::dwarf::Filter;
@@ -66,9 +69,11 @@ int main(int argc, char **argv) {
 
         ArchRule *nRule = new NamespaceRule("compN", "pcv");
         ArchRule *cRule = new ClassRule("compC", "Dwarf.*");
+        ArchRule *fRule = new FunctionRule("compF", ".*Rule.*");
 
         builder.apply(nRule);
         builder.apply(cRule);
+        builder.apply(fRule);
 
         builder.finish();
         std::cout << builder;

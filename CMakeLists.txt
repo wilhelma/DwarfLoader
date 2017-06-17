@@ -23,6 +23,7 @@ set(SOURCE_FILES
         ${ARCHITECTURE_SOURCE_DIR}/ArchRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/ClassRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/NamespaceRule.cpp
+        ${ARCHITECTURE_SOURCE_DIR}/FunctionRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexFileRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexNameRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexRule.cpp
