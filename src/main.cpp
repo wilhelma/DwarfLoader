@@ -64,10 +64,10 @@ int main(int argc, char **argv) {
 
         ArchBuilder builder(reader.getContext());
 
-      //  ArchRule *nRule = new NamespaceRule("compN", "pcv");
+        ArchRule *nRule = new NamespaceRule("compN", "pcv");
         ArchRule *cRule = new ClassRule("compC", "Dwarf.*");
 
-       // builder.apply(nRule);
+        builder.apply(nRule);
         builder.apply(cRule);
 
         builder.finish();

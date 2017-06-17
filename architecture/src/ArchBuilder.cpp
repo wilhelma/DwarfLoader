@@ -223,7 +223,7 @@ std::ostream &operator<<(std::ostream &os, const ArchBuilder &obj)
 
 void ArchBuilder::finish()
 {
-  removeDuplicatedsAndAppend(artifact_);
+//  removeDuplicatedsAndAppend(artifact_);
   removeEmptyArtifacts(artifact_);
 }
 
