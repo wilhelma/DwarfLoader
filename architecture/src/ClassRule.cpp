@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <regex>
 
 #include "ArchBuilder.h"
 #include "Context.h"
@@ -14,6 +15,8 @@ namespace pcv {
 
 using pcv::entity::EntityType;
 using pcv::entity::Class;
+
+  ClassRule::ClassRule(const std::string &artifactName, const std::string &regexString) : artifactName_(artifactName), rx_(regexString) {}
 
 const Class *getBaseClass(const Class *c)
 {
@@ -63,12 +66,14 @@ ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   auto artifacts = std::unique_ptr<artifacts_t> { new artifacts_t };
   std::unordered_set<const SoftwareEntity*> toRemove;
 
+  archSet.children.emplace_back(std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet)});
+
   for (auto &c : ctxt.classes)
-    artifacts->emplace_back( appendHierarchy(c.get(), archSet, &toRemove) );
+    if(std::regex_match(c->name, rx_))
+      artifacts->emplace_back(appendHierarchy(c.get(), *(archSet.children.back().get()), &toRemove));
 
   for (auto e : toRemove)
     archSet.entities.erase(e);
-
   return artifacts;
 }
 
