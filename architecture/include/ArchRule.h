@@ -19,6 +19,7 @@ struct Artifact_t;
 class ArchRule {
  protected:
   using artifacts_t = std::vector<Artifact_t*>;
+  std::unique_ptr<artifacts_t> artifacts;
   virtual std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) = 0;
   virtual std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) = 0;
 
@@ -28,8 +29,15 @@ class ArchRule {
 
   void apply(Artifact_t &archSet, const dwarf::Context &ctxt)
   {
-    std::unique_ptr<artifacts_t> artifacts = execute(archSet, ctxt);
+    artifacts = execute(archSet, ctxt);
     apply(artifacts, ctxt);
+
+  }
+
+  std::unique_ptr<artifacts_t> getArtifacts() {
+    std::unique_ptr<artifacts_t > pInt(std::move(artifacts));
+    return pInt;
+   // return std::unique_ptr<artifacts_t >( artifacts );
   }
 
   void apply(std::unique_ptr<artifacts_t> &artifacts, const dwarf::Context &ctxt)

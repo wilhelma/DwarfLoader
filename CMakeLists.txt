@@ -19,6 +19,7 @@ set(SOURCE_FILES
         ${PROJECT_SOURCE_DIR}/DwarfHelper.cpp
         ${PROJECT_SOURCE_DIR}/Filter.cpp
         ${PROJECT_SOURCE_DIR}/Duplicate.cpp
+        ${ARCHITECTURE_SOURCE_DIR}/OrOperatorRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/ArchBuilder.cpp
         ${ARCHITECTURE_SOURCE_DIR}/ArchRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/ClassRule.cpp

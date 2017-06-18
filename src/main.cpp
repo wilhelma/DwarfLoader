@@ -9,6 +9,7 @@
 #include "Duplicate.h"
 #include "DwarfReader.h"
 #include "ArchBuilder.h"
+#include "OrOperatorRule.h"
 #include "NamespaceRule.h"
 #include "ClassRule.h"
 #include "FunctionRule.h"
@@ -24,6 +25,7 @@
 using pcv::dwarf::DwarfReader;
 using pcv::ArchBuilder;
 using pcv::ArchRule;
+using pcv::OrOperatorRule;
 using pcv::NamespaceRule;
 using pcv::ClassRule;
 using pcv::FunctionRule;
@@ -35,57 +37,64 @@ using pcv::dwarf::DieDuplicate;
 using pcv::entity::EntityType;
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        std::cerr << "No program argument given!\n";
-        abort();
+  if (argc != 3) {
+    std::cerr << "No program argument given!\n";
+    abort();
+  }
+  try {
+    std::string error;
+    std::string line;
+    std::string inputjson;
+    std::ifstream inputfile(argv[2]);
+    if (inputfile.is_open()) {
+      while (getline(inputfile, line)) {
+        inputjson += line;
+      }
+      inputfile.close();
+
+      const auto json = Json::parse(inputjson, error);
+      Program program = CreateAstFromJson::generateAst(json);
+      ASTVisitor astVisitor;
+      program.accept(astVisitor);
+    } else {
+      std::cerr << "Cannot opet file!";
+      return -1;
     }
-    try {
-        std::string error;
-        std::string line;
-        std::string inputjson;
-        std::ifstream inputfile(argv[2]);
-        if (inputfile.is_open()) {
-            while (getline(inputfile, line)) {
-                inputjson += line;
-            }
-            inputfile.close();
 
-            const auto json = Json::parse(inputjson, error);
-            Program program = CreateAstFromJson::generateAst(json);
-            ASTVisitor astVisitor;
-            program.accept(astVisitor);
-        } else {
-            std::cerr << "Cannot opet file!";
-            return -1;
-        }
+    Filter filter(
+            "(.+)DwarfLoader(.+)",
+            "(.+)boost(.+)"
+    );
+    DieDuplicate duplicate;
+    DwarfReader reader(argv[1], duplicate, filter);
+    reader.start();
 
-        Filter filter(
-                "(.+)DwarfLoader(.+)",
-                "(.+)boost(.+)"
-        );
-        DieDuplicate duplicate;
-        DwarfReader reader(argv[1], duplicate, filter);
-        reader.start();
+    ArchBuilder builder(reader.getContext());
 
-        ArchBuilder builder(reader.getContext());
+    //   ArchRule *nRule = new NamespaceRule("compN", "pcv");
+    ArchRule *cRule = new ClassRule("compC", "Dwarf.*");
 
-        ArchRule *nRule = new NamespaceRule("compN", "pcv");
-        ArchRule *cRule = new ClassRule("compC", "Dwarf.*");
-        ArchRule *fRule = new FunctionRule("compF", ".*Rule.*");
-        ArchRule *vRule = new VariableRule("compV", ".*artifactName.*");
+    ArchRule *fRule = new FunctionRule("compF", ".*OrOperatorRule.*");
+    ArchRule *vRule = new VariableRule("compV", ".*artifactName.*");
+    ArchRule *orRule = new OrOperatorRule("compClassORVariable", vRule, cRule);
+    ArchRule *or1Rule = new OrOperatorRule("comp(ClassORVariable)ORFunction", orRule, fRule);
+    
+    //   builder.apply(nRule);
+    builder.apply(cRule);
+    builder.apply(fRule);
+    builder.apply(vRule);
+    builder.apply(orRule);
+    builder.apply(or1Rule);
 
-        builder.apply(nRule);
-        builder.apply(cRule);
-        builder.apply(fRule);
-        builder.apply(vRule);
+    builder.finish();
+    std::cout << builder;
 
-        builder.finish();
-        std::cout << builder;
+    delete vRule;
+    delete cRule;
+    delete fRule;
 
-      //  delete nRule;
-
-    } catch (DwarfError &e) {
-        std::cerr << e.what();
-        return -1;
-    }
+  } catch (DwarfError &e) {
+    std::cerr << e.what();
+    return -1;
+  }
 }
