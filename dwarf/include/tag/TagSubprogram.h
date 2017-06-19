@@ -90,7 +90,7 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
     if (lineNo > 0 || isConstructor) {
       auto rtn = std::unique_ptr<Routine> {
           new Routine(off,
-                      rtnName,
+                      demangle(rtnName),
                       ctxt.currentImage,
                       ctxt.currentNamespace,
                       ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.top(),
