@@ -35,9 +35,7 @@ class ArchRule {
   }
 
   std::unique_ptr<artifacts_t> getArtifacts() {
-    std::unique_ptr<artifacts_t > pInt(std::move(artifacts));
-    return pInt;
-   // return std::unique_ptr<artifacts_t >( artifacts );
+    return std::move(artifacts);
   }
 
   void apply(std::unique_ptr<artifacts_t> &artifacts, const dwarf::Context &ctxt)
@@ -71,6 +69,8 @@ class ArchRule {
 
  private:
   std::vector<ArchRule *> followers_;
+
+
 };
 
 template<typename T>

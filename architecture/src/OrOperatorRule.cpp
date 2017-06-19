@@ -13,9 +13,7 @@ namespace pcv {
                     ArchRule* secondArtifact) : artifactName_(artifactName),
                                                                       firstArtifact_(firstArtifact),
                                                                       secondArtifact_(secondArtifact) {}
-
-  Artifact_t* copyChildren(Artifact_t &parent, Artifact_t &artifact)
-  {
+  Artifact_t* OrOperatorRule::copyChildren(Artifact_t &parent, Artifact_t &artifact) {
     for(auto &child : artifact.children) {
       parent.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(child->name, &parent)});
 
@@ -23,10 +21,8 @@ namespace pcv {
         parent.children.back().get()->entities.insert(entity);
       copyChildren(*(parent.children.back().get()), *child);
     }
-
     return &parent;
   }
-
   std::unique_ptr<ArchRule::artifacts_t> OrOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     std::unique_ptr<artifacts_t> firstArtifactsList = firstArtifact_->getArtifacts();
     std::unique_ptr<artifacts_t> secondArtifactsList = secondArtifact_->getArtifacts();

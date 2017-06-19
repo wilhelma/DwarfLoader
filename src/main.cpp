@@ -10,6 +10,7 @@
 #include "DwarfReader.h"
 #include "ArchBuilder.h"
 #include "OrOperatorRule.h"
+#include "SetOperatorRule.h"
 #include "NamespaceRule.h"
 #include "ClassRule.h"
 #include "FunctionRule.h"
@@ -26,6 +27,7 @@ using pcv::dwarf::DwarfReader;
 using pcv::ArchBuilder;
 using pcv::ArchRule;
 using pcv::OrOperatorRule;
+using pcv::SetOperatorRule;
 using pcv::NamespaceRule;
 using pcv::ClassRule;
 using pcv::FunctionRule;
@@ -73,18 +75,18 @@ int main(int argc, char **argv) {
 
     //   ArchRule *nRule = new NamespaceRule("compN", "pcv");
     ArchRule *cRule = new ClassRule("compC", "Dwarf.*");
-
     ArchRule *fRule = new FunctionRule("compF", ".*OrOperatorRule.*");
     ArchRule *vRule = new VariableRule("compV", ".*artifactName.*");
-    ArchRule *orRule = new OrOperatorRule("compClassORVariable", vRule, cRule);
-    ArchRule *or1Rule = new OrOperatorRule("comp(ClassORVariable)ORFunction", orRule, fRule);
-    
+   // ArchRule *orRule = new OrOperatorRule("compClassORVariable", vRule, cRule);
+    //ArchRule *or1Rule = new OrOperatorRule("comp(ClassORVariable)ORFunction", orRule, fRule);
+    ArchRule *setRule = new SetOperatorRule("proba", fRule, vRule, cRule);
     //   builder.apply(nRule);
     builder.apply(cRule);
     builder.apply(fRule);
     builder.apply(vRule);
-    builder.apply(orRule);
-    builder.apply(or1Rule);
+   // builder.apply(orRule);
+    //builder.apply(or1Rule);
+    builder.apply(setRule);
 
     builder.finish();
     std::cout << builder;
