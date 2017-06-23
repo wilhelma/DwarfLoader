@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
   }
   try {
     Filter filter(
-        "(.+)cppcheck(.+)",
+        "(.+)DwarfLoader(.+)",
         "(.+)boost(.+)"
     );
     DieDuplicate duplicate;
@@ -40,8 +40,9 @@ int main(int argc, char** argv) {
 
     ArchRule *cRule = new ClassRule();
 
-    ArchRule *ruleA = new RegexNameRule("functions", EntityType::Routine, "(.*)");
+    ArchRule *ruleA = new RegexNameRule("Checks", EntityType::Class, ".*Check.*");
 
+    builder.apply( ruleA );
     builder.apply( cRule );
 
     builder.finish();

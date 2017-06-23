@@ -65,6 +65,7 @@ struct Context {
   // class
   void addClass(Dwarf_Off off, Class *cls);
   Class* getClass(Dwarf_Off off) const;
+  Class* getClass(const Namespace& nmsp, const Class::name_t& className) const;
 
   // routine
   void addRoutine(Dwarf_Off off, std::unique_ptr<Routine> rtn);
@@ -80,6 +81,7 @@ struct Context {
 
  private:
   std::unordered_map<Dwarf_Off, Class*> offClassMap_;
+  std::unordered_map<Class::name_t, Class*> nameClassMap_;
   std::unordered_map<Dwarf_Off, Routine*> offRoutineMap_;
   std::unordered_map<Routine::name_t, Routine*> nameRtnMap_;
   std::unordered_map<Dwarf_Off, std::string> offTypedefName_;

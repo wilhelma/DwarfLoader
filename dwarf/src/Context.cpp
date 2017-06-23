@@ -15,6 +15,8 @@ namespace dwarf {
 void Context::addClass(Dwarf_Off off, Class *cls)
 {
   offClassMap_[off] = cls;
+  if (getClass(*cls->nmsp, cls->name) == nullptr)
+    nameClassMap_[cls->nmsp->name + cls->name] = cls;
   currentClass.push(cls);
 }
 
@@ -22,6 +24,15 @@ Class *Context::getClass(Dwarf_Off off) const
 {
   auto tmp = offClassMap_.find(off);
   if (tmp != std::end(offClassMap_))
+    return tmp->second;
+
+  return nullptr;
+}
+
+Class* Context::getClass(const Namespace& nmsp, const Class::name_t& name) const
+{
+  auto tmp = nameClassMap_.find(nmsp.name + name);
+  if (tmp != std::end(nameClassMap_))
     return tmp->second;
 
   return nullptr;
