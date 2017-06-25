@@ -23,29 +23,32 @@ namespace pcv {
     }
     return &parent;
   }
+
   std::unique_ptr<ArchRule::artifacts_t> OrOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
-    std::unique_ptr<artifacts_t> firstArtifactsList = firstArtifact_->getArtifacts();
-    std::unique_ptr<artifacts_t> secondArtifactsList = secondArtifact_->getArtifacts();
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
 
     archSet.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(artifactName_, &archSet)});
 
     Artifact_t *parent = archSet.children.back().get();
 
-    for(auto &artifact : *firstArtifactsList) {
+    Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
+    Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
+
+    for(auto &artifact : firstArtifactSet->children) {
       parent->children.emplace_back(new Artifact_t(artifact->name, parent));
       for(auto &entity : artifact->entities)
         parent->children.back().get()->entities.insert(entity);
       artifacts->emplace_back(copyChildren(*(parent->children.back().get()), *artifact));
     }
 
-    for(auto &artifact : *secondArtifactsList) {
+    for(auto &artifact : firstArtifactSet->children) {
       parent->children.emplace_back(new Artifact_t(artifact->name, parent));
       for(auto &entity : artifact->entities)
         parent->children.back().get()->entities.insert(entity);
       artifacts->emplace_back(copyChildren(*(parent->children.back().get()), *artifact));
     }
 
+    this->setArchSet(archSet.children.back().get());
     return artifacts;
   }
 

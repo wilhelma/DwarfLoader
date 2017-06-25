@@ -38,6 +38,8 @@ namespace pcv {
         newArtifacts->emplace_back(copyChildren(*(parent->children.back().get()), *artifact));
       }
     }
+
+    this->setArchSet(archSet.children.back().get());
     return newArtifacts;
   }
 

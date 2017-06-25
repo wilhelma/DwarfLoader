@@ -13,46 +13,42 @@ namespace pcv {
                                                              firstArtifact_(firstArtifact),
                                                              secondArtifact_(secondArtifact) {}
 
-  Artifact_t* AndOperatorRule::copyChildren(Artifact_t &parent, Artifact_t &artifact) {
-    for(auto &child : artifact.children) {
-      parent.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(child->name, &parent)});
+  void findIntersectionOfArtifacts(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
+    Artifact_t* parent = &archSet;
+    if(first.name == second.name) {
+     // std::cout << first.name << std::endl;
+      std::unique_ptr<Artifact_t> intersectArtifact(new Artifact_t(first.name, parent));
+      for(auto &firstChild : first.children)
+        for(auto &secondChild : second.children)
+          if(firstChild->name == secondChild->name) {
+            intersectArtifact->children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(firstChild->name, intersectArtifact.get())});
+            for(auto entity : firstChild->entities)
+              if(secondChild->entities.find(entity) != secondChild->entities.end())
+                intersectArtifact->children.back()->entities.insert(entity);
+          }
 
-      for(auto &entity : child->entities)
-        parent.children.back().get()->entities.insert(entity);
-      copyChildren(*(parent.children.back().get()), *child);
+      for(auto entity : first.entities)
+        if(second.entities.find(entity) != second.entities.end())
+          intersectArtifact->entities.insert(entity);
+      archSet.children.push_back(std::move(intersectArtifact));
     }
-    return &parent;
   }
 
- /* std::unique_ptr<Artifact_t> findIntersectionOfArtifacts(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
-    if(first.name == second.name) {
-      std::unique_ptr<Artifact_t> intersectArtifact = new Artifact_t(first.name, &archSet);
-      for(auto entity : first.entities) {
-        if(second.entities.find(entity) != second.entities.end()) {
-          intersectArtifact->entities.insert(entity);
-        }
-      }
-      return std::move(intersectArtifact);
-    }
-    return nullptr;
-  }*/
-
   std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
-    std::unique_ptr<artifacts_t> firstArtifactsList = firstArtifact_->getArtifacts();
-    std::unique_ptr<artifacts_t> secondArtifactsList = secondArtifact_->getArtifacts();
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
 
     archSet.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(artifactName_, &archSet)});
 
     Artifact_t *parent = archSet.children.back().get();
 
-    for(auto &artifact : *firstArtifactsList) {
-      if(std::find(secondArtifactsList->begin(), secondArtifactsList->begin(), artifact) != secondArtifactsList->end()) {
-        std::cout << "Found duplicate: " << artifact->name << std::endl;
-      }
+    Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
+    Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
 
-    }
+    for(auto &firstArtifact : firstArtifactSet->children)
+      for(auto &secondArtifact : secondArtifactSet->children)
+        findIntersectionOfArtifacts(*firstArtifact, *secondArtifact, *parent);
 
+    this->setArchSet(archSet.children.back().get());
     return artifacts;
   }
 

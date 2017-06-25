@@ -29,6 +29,7 @@ namespace pcv {
       }
     }
 
+    this->setArchSet(archSet.children.back().get());
     return artifacts;
   }
 

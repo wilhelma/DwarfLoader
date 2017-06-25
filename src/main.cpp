@@ -10,6 +10,7 @@
 #include "DwarfReader.h"
 #include "ArchBuilder.h"
 #include "OrOperatorRule.h"
+#include "AndOperatorRule.h"
 #include "SetOperatorRule.h"
 #include "NamespaceRule.h"
 #include "ClassRule.h"
@@ -28,6 +29,7 @@ using pcv::ArchBuilder;
 using pcv::ArchRule;
 using pcv::OrOperatorRule;
 using pcv::SetOperatorRule;
+using pcv::AndOperatorRule;
 using pcv::NamespaceRule;
 using pcv::ClassRule;
 using pcv::FunctionRule;
@@ -74,26 +76,33 @@ int main(int argc, char **argv) {
     ArchBuilder builder(reader.getContext());
 
     //   ArchRule *nRule = new NamespaceRule("compN", "pcv");
-    ArchRule *cRule = new ClassRule("compC", "Dwarf.*");
-    ArchRule *fRule = new FunctionRule("compF", ".*OrOperatorRule.*");
-    ArchRule *vRule = new VariableRule("compV", ".*artifactName.*");
+    ArchRule *cRule = new ClassRule("compC", ".*Rule");
+    ArchRule *c1Rule = new ClassRule("compC1", ".*rRule");
+    //ArchRule *fRule = new FunctionRule("compF", ".*OrOperatorRule.*");
+   // ArchRule *vRule = new VariableRule("compV", ".*artifactName.*");
    // ArchRule *orRule = new OrOperatorRule("compClassORVariable", vRule, cRule);
     //ArchRule *or1Rule = new OrOperatorRule("comp(ClassORVariable)ORFunction", orRule, fRule);
-    ArchRule *setRule = new SetOperatorRule("proba", fRule, vRule, cRule);
+   ArchRule *andRule = new AndOperatorRule("andRule", cRule, c1Rule);
+    ArchRule *orRule = new OrOperatorRule("orRule", cRule, c1Rule);
     //   builder.apply(nRule);
     builder.apply(cRule);
-    builder.apply(fRule);
-    builder.apply(vRule);
+    builder.apply(c1Rule);
+    builder.apply(andRule);
+    builder.apply(orRule);
+
+  //  builder.addArtifact(cRule->getArchSet());
+  //  builder.apply(fRule);
+ //   builder.apply(vRule);
    // builder.apply(orRule);
     //builder.apply(or1Rule);
-    builder.apply(setRule);
+  //  builder.apply(setRule);
 
     builder.finish();
     std::cout << builder;
 
-    delete vRule;
-    delete cRule;
-    delete fRule;
+ //   delete vRule;
+   // delete cRule;
+   // delete fRule;
 
   } catch (DwarfError &e) {
     std::cerr << e.what();

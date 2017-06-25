@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <memory>
+#include "ArchBuilder.h"
 
 namespace pcv {
 
@@ -20,11 +21,12 @@ class ArchRule {
  protected:
   using artifacts_t = std::vector<Artifact_t*>;
   std::unique_ptr<artifacts_t> artifacts;
+  Artifact_t* archSetAdded;
   virtual std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) = 0;
   virtual std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) = 0;
 
  public:
-  ArchRule() = default;
+  ArchRule()  {};
   virtual ~ArchRule() = default;
 
   void apply(Artifact_t &archSet, const dwarf::Context &ctxt)
@@ -36,6 +38,14 @@ class ArchRule {
 
   std::unique_ptr<artifacts_t> getArtifacts() {
     return std::move(artifacts);
+  }
+
+  Artifact_t* getArchSet() {
+    return archSetAdded;
+  }
+
+  void setArchSet(Artifact_t* artifact) {
+    archSetAdded = artifact;
   }
 
   void apply(std::unique_ptr<artifacts_t> &artifacts, const dwarf::Context &ctxt)
@@ -69,8 +79,6 @@ class ArchRule {
 
  private:
   std::vector<ArchRule *> followers_;
-
-
 };
 
 template<typename T>

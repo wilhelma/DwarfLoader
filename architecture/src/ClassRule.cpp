@@ -4,7 +4,7 @@
 
 #include "../include/ClassRule.h"
 
-#include <algorithm>
+
 #include <iostream>
 #include <regex>
 
@@ -29,11 +29,9 @@ const Class *getBaseClass(const Class *c)
   return cp;
 };
 
-Artifact_t* appendHierarchy(const Class *c, Artifact_t &as,
+Artifact_t* ClassRule::appendHierarchy(const Class *c, Artifact_t &as,
                      std::unordered_set<const SoftwareEntity*> *toRemove)
 {
-  static std::unordered_map<const Class*, Artifact_t*> added;
-
   const Class *bc = getBaseClass(c);
   if (added.find(bc) == end(added)) {
     as.children.emplace_back(std::unique_ptr<Artifact_t>{ new Artifact_t(bc->name, &as)});
@@ -74,6 +72,8 @@ ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 
   for (auto e : toRemove)
     archSet.entities.erase(e);
+
+  this->setArchSet(archSet.children.back().get());
   return artifacts;
 }
 
