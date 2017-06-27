@@ -66,8 +66,8 @@ int main(int argc, char **argv) {
     }
 
     Filter filter(
-       "(.*)DwarfLoader(.*)",
-       "(.+)boost(.+)"
+        "(.+)DwarfLoader(.+)",
+        "(.+)boost(.+)"
     );
     DieDuplicate duplicate;
     DwarfReader reader(argv[1], duplicate, filter);
@@ -75,8 +75,6 @@ int main(int argc, char **argv) {
 
     ArchBuilder builder(reader.getContext());
 
-    ArchRule *cRule = new ClassRule("checks", "Check.*");
-    builder.apply(cRule);
 /*    ArchRule *sRule = new NamespaceRule("preprocessor", ".*simplecpp.*");
     ArchRule *xmlRule = new NamespaceRule("output", ".*tinyxml2.*");
     ArchRule *mRule = new FunctionRule("match", ".*(M|m)atch.*");
@@ -105,6 +103,10 @@ int main(int argc, char **argv) {
     builder.apply(libRule);
     builder.apply(valueRule);
     builder.apply(settingsRule);*/
+
+    ArchRule *cRule = new ClassRule("checks", "Check.*");
+
+    builder.apply( cRule );
 
     builder.finish();
     std::cout << builder;

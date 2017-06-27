@@ -13,8 +13,8 @@ namespace dwarf {
 bool handleStructClass(Context &ctxt)
 {
   Dwarf_Off off{};
-
   if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
+
   if (hasAttr(ctxt.die, DW_AT_decl_file)) {
     char *clsChar{nullptr};
     std::string clsString{};
@@ -24,10 +24,8 @@ bool handleStructClass(Context &ctxt)
     else
       clsString = std::string("unnamed");
 
-    Dwarf_Off off{};
     Dwarf_Unsigned fileNo{}, lineNo{}, size{};
 
-    if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_file, &fileNo);
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &lineNo);
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_byte_size, &size);

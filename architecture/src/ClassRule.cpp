@@ -19,6 +19,7 @@ void addMethod(const pcv::dwarf::Routine* routine, pcv::Artifact_t* artifact)
      new pcv::Artifact_t(routine->name, artifact)
   });
   auto newArtifact = artifact->children.back().get();
+  newArtifact->entity = routine;
 
   for (auto variable : routine->locals) {
     newArtifact->entities.insert(variable);

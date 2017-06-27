@@ -41,7 +41,6 @@ void ASTVisitor::visit(OrExpression &el) {
 }
 
 void ASTVisitor::visit(Program &el) {
-    std::cout << "Visiting Program\n";
     for(int i = 0; i < el.getExpressions().size(); i++) {
         el.getExpressions()[i]->accept(*this);
     }
