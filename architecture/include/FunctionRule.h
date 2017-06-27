@@ -11,13 +11,14 @@
 namespace pcv {
 
   class FunctionRule : public ArchRule {
-    const std::string artifactName_;
+    std::string artifactName_;
     const std::regex rx_;
   public:
     FunctionRule(const std::string &artifactName, const std::string &regexString);
     std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
 
     std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;
+
   };
 
 }  // namespace pcv

@@ -14,27 +14,24 @@ namespace pcv {
   std::unique_ptr<ArchRule::artifacts_t>
   FunctionRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
-
-    archSet.children.push_back(std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet)});
-
-    Artifact_t *parent = archSet.children.back().get();
+    artifact_ = new Artifact_t(artifactName_, &archSet);
 
     for (auto &f : ctxt.routines) {
       if (std::regex_match(f->name, rx_)) {
-        parent->children.emplace_back(new Artifact_t(f->name, parent));
+        artifact_->children.emplace_back(new Artifact_t(f->name, artifact_));
 
-        auto &children = parent->children.back();
+        auto &children = artifact_->children.back();
         for (auto &locals : f->locals) {
           children->entities.insert(locals);
         }
 
-        artifacts->emplace_back(parent->children.back().get());
+        artifacts->emplace_back(artifact_->children.back().get());
       }
     }
 
-    this->setArchSet(archSet.children.back().get());
     return artifacts;
   }
 
   std::unique_ptr<ArchRule::artifacts_t> FunctionRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) {}
+
 }

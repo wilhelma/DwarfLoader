@@ -124,6 +124,10 @@ void removeEmptyArtifacts(Artifact_t &as)
   }
 }
 
+  Artifact_t* ArchBuilder::getArchSet() {
+    return &artifact_;
+  }
+
 void ArchBuilder::apply(ArchRule *rule) noexcept
 {
   rule->apply(artifact_, ctxt_);

@@ -30,17 +30,16 @@ std::unique_ptr<ArchRule::artifacts_t>
 RegexRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 {
   auto artifacts = std::unique_ptr<artifacts_t> { new artifacts_t };
+  artifact_ = new Artifact_t(artifactName_, &archSet);
 
-  archSet.children.emplace_back(
-      std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet) }
-  );
-  artifacts->emplace_back( archSet.children.back().get() );
+  artifacts->emplace_back( artifact_);
 
   for (auto &image : ctxt.images) {
-    fillArtifact(image->entities, archSet.children.back().get());
+    fillArtifact(image->entities, artifact_);
   }
 
   return artifacts;
 }
+
 
 }  // namespace pcv

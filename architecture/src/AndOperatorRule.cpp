@@ -36,22 +36,20 @@ namespace pcv {
 
   std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
-
-    archSet.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(artifactName_, &archSet)});
-
-    Artifact_t *parent = archSet.children.back().get();
+    artifact_ = new Artifact_t(artifactName_, &archSet);
 
     Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
     Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
 
     for(auto &firstArtifact : firstArtifactSet->children)
       for(auto &secondArtifact : secondArtifactSet->children)
-        findIntersectionOfArtifacts(*firstArtifact, *secondArtifact, *parent);
+        findIntersectionOfArtifacts(*firstArtifact, *secondArtifact, *artifact_);
 
-    this->setArchSet(archSet.children.back().get());
     return artifacts;
   }
 
   std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) {}
+
+
 
 }

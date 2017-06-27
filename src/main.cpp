@@ -39,6 +39,7 @@ using pcv::RegexNameRule;
 using pcv::dwarf::Filter;
 using pcv::dwarf::DieDuplicate;
 using pcv::entity::EntityType;
+using pcv::Artifact_t;
 
 int main(int argc, char **argv) {
   if (argc != 3) {
@@ -57,52 +58,26 @@ int main(int argc, char **argv) {
       inputfile.close();
 
       const auto json = Json::parse(inputjson, error);
+      Filter filter(
+              "(.+)DwarfLoader(.+)",
+              "(.+)boost(.+)"
+      );
+
+      DieDuplicate duplicate;
+
+      DwarfReader reader(argv[1], duplicate, filter);
+      reader.start();
+
+      VisitorContext visitorContext(reader.getContext());
+      ASTVisitor astVisitor(&visitorContext);
+
       Program program = CreateAstFromJson::generateAst(json);
-      ASTVisitor astVisitor;
       program.accept(astVisitor);
+
     } else {
       std::cerr << "Cannot opet file!";
       return -1;
     }
-
-    Filter filter(
-            "(.+)DwarfLoader(.+)",
-            "(.+)boost(.+)"
-    );
-    DieDuplicate duplicate;
-    DwarfReader reader(argv[1], duplicate, filter);
-    reader.start();
-
-    ArchBuilder builder(reader.getContext());
-
-    //   ArchRule *nRule = new NamespaceRule("compN", "pcv");
-    ArchRule *cRule = new ClassRule("compC", ".*Rule");
-    ArchRule *c1Rule = new ClassRule("compC1", ".*rRule");
-    //ArchRule *fRule = new FunctionRule("compF", ".*OrOperatorRule.*");
-   // ArchRule *vRule = new VariableRule("compV", ".*artifactName.*");
-   // ArchRule *orRule = new OrOperatorRule("compClassORVariable", vRule, cRule);
-    //ArchRule *or1Rule = new OrOperatorRule("comp(ClassORVariable)ORFunction", orRule, fRule);
-   ArchRule *andRule = new AndOperatorRule("andRule", cRule, c1Rule);
-    ArchRule *orRule = new OrOperatorRule("orRule", cRule, c1Rule);
-    //   builder.apply(nRule);
-    builder.apply(cRule);
-    builder.apply(c1Rule);
-    builder.apply(andRule);
-    builder.apply(orRule);
-
-  //  builder.addArtifact(cRule->getArchSet());
-  //  builder.apply(fRule);
- //   builder.apply(vRule);
-   // builder.apply(orRule);
-    //builder.apply(or1Rule);
-  //  builder.apply(setRule);
-
-    builder.finish();
-    std::cout << builder;
-
- //   delete vRule;
-   // delete cRule;
-   // delete fRule;
 
   } catch (DwarfError &e) {
     std::cerr << e.what();

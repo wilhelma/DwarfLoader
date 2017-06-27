@@ -21,10 +21,9 @@ namespace pcv {
     static std::unordered_map<Namespace *, Artifact_t *> addedArtifacts;
 
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
+    artifact_ = new Artifact_t(artifactName_, &archSet);
 
-    archSet.children.emplace_back(std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet)});
-
-    Artifact_t *parent = archSet.children.back().get();
+    Artifact_t *parent = artifact_;
 
     for (auto &nmsp : ctxt.namespaces) {
       if(std::regex_match(nmsp->name, rx_)) {
@@ -47,8 +46,8 @@ namespace pcv {
       }
     }
 
-    this->setArchSet(archSet.children.back().get());
-    return artifacts;
+   return artifacts;
   }
+
 
 }  // namespace pcv

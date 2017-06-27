@@ -33,7 +33,7 @@ class RegexRule : public ArchRule {
   virtual const std::string& getMatchString(const SoftwareEntity& entity) const = 0;
 
  private:
-  const std::string artifactName_;
+  std::string artifactName_;
   EntityType type_;
   const std::regex rx_;
 

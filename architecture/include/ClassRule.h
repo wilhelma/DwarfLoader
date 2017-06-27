@@ -15,7 +15,7 @@ namespace pcv {
   using pcv::entity::Class;
 
 class ClassRule : public ArchRule {
-  const std::string artifactName_;
+  std::string artifactName_;
   const std::regex rx_;
   std::unordered_map<const Class*, Artifact_t*> added;
 
@@ -26,6 +26,7 @@ class ClassRule : public ArchRule {
   ClassRule(const std::string &artifactName, const std::string &regexString);
   std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
   std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;
+
 };
 
 }  // namespace pcv

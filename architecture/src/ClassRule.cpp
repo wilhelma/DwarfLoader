@@ -64,16 +64,15 @@ ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   auto artifacts = std::unique_ptr<artifacts_t> { new artifacts_t };
   std::unordered_set<const SoftwareEntity*> toRemove;
 
-  archSet.children.emplace_back(std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet)});
+  artifact_ = new Artifact_t(artifactName_, &archSet);
 
   for (auto &c : ctxt.classes)
     if(std::regex_match(c->name, rx_))
-      artifacts->emplace_back(appendHierarchy(c.get(), *(archSet.children.back().get()), &toRemove));
+      artifacts->emplace_back(appendHierarchy(c.get(), *(artifact_), &toRemove));
 
   for (auto e : toRemove)
-    archSet.entities.erase(e);
+    artifact_->entities.erase(e);
 
-  this->setArchSet(archSet.children.back().get());
   return artifacts;
 }
 
@@ -98,5 +97,6 @@ ClassRule::append(Artifact_t &as, const dwarf::Context &ctxt)
 
   return artifacts;
 }
+
 
 }  // namespace pcv

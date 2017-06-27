@@ -12,7 +12,7 @@
 namespace pcv {
 
   class OrOperatorRule : public ArchRule {
-    const std::string artifactName_;
+    std::string artifactName_;
     ArchRule* firstArtifact_;
     ArchRule* secondArtifact_;
 
@@ -24,6 +24,7 @@ namespace pcv {
 
     std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
     std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;
+
   };
 
 }  // namespace pcv
