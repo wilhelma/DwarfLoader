@@ -30,6 +30,7 @@ class ArchRule;
 /// @brief The artifact structure that builds the architecture.
 typedef struct Artifact_t {
   std::string name;
+  const SoftwareEntity* entity;
   std::unordered_set<const SoftwareEntity*> entities;
   std::vector<std::unique_ptr<Artifact_t>> children;
   Artifact_t* parent;

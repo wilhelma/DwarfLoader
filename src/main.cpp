@@ -66,8 +66,8 @@ int main(int argc, char **argv) {
     }
 
     Filter filter(
-            "(.+)DwarfLoader(.+)",
-            "(.+)boost(.+)"
+       "(.*)DwarfLoader(.*)",
+       "(.+)boost(.+)"
     );
     DieDuplicate duplicate;
     DwarfReader reader(argv[1], duplicate, filter);
@@ -75,34 +75,39 @@ int main(int argc, char **argv) {
 
     ArchBuilder builder(reader.getContext());
 
-    //   ArchRule *nRule = new NamespaceRule("compN", "pcv");
-    ArchRule *cRule = new ClassRule("compC", ".*Rule");
-    ArchRule *c1Rule = new ClassRule("compC1", ".*rRule");
-    //ArchRule *fRule = new FunctionRule("compF", ".*OrOperatorRule.*");
-   // ArchRule *vRule = new VariableRule("compV", ".*artifactName.*");
-   // ArchRule *orRule = new OrOperatorRule("compClassORVariable", vRule, cRule);
-    //ArchRule *or1Rule = new OrOperatorRule("comp(ClassORVariable)ORFunction", orRule, fRule);
-   ArchRule *andRule = new AndOperatorRule("andRule", cRule, c1Rule);
-    ArchRule *orRule = new OrOperatorRule("orRule", cRule, c1Rule);
-    //   builder.apply(nRule);
+    ArchRule *cRule = new ClassRule("checks", "Check.*");
     builder.apply(cRule);
-    builder.apply(c1Rule);
-    builder.apply(andRule);
-    builder.apply(orRule);
+/*    ArchRule *sRule = new NamespaceRule("preprocessor", ".*simplecpp.*");
+    ArchRule *xmlRule = new NamespaceRule("output", ".*tinyxml2.*");
+    ArchRule *mRule = new FunctionRule("match", ".*(M|m)atch.*");
 
-  //  builder.addArtifact(cRule->getArchSet());
-  //  builder.apply(fRule);
- //   builder.apply(vRule);
-   // builder.apply(orRule);
-    //builder.apply(or1Rule);
-  //  builder.apply(setRule);
+    ArchRule *guiRule = new ClassRule("gui", "((?!ErrorLogger).)*", ".*gui.*");
+    ArchRule *libRule = new ClassRule("library", ".*Library.*");
+    ArchRule *valueRule = new ClassRule("ValueFlow", ".*Value.*");
+    ArchRule *settingsRule = new ClassRule("settings", ".*Settings.*");
+
+//    ArchRule *fileRule = new RegexFileRule("cliFile", EntityType::All, ".*cli.*");
+//    ArchRule *classRule = new ClassRule("cliClass", ".*");
+//    ArchRule *andRule = new AndOperatorRule("cli", fileRule, classRule);
+
+    ArchRule *cliRule = new ClassRule("cli", ".*", ".*cli.*");
+    builder.apply(cliRule);
+
+//    builder.apply(fileRule);
+//    builder.apply(classRule);
+//    builder.apply(andRule);
+
+    builder.apply(cRule);
+    builder.apply(sRule);
+    builder.apply(mRule);
+    builder.apply(xmlRule);
+    builder.apply(guiRule);
+    builder.apply(libRule);
+    builder.apply(valueRule);
+    builder.apply(settingsRule);*/
 
     builder.finish();
     std::cout << builder;
-
- //   delete vRule;
-   // delete cRule;
-   // delete fRule;
 
   } catch (DwarfError &e) {
     std::cerr << e.what();

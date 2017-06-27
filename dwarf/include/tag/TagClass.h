@@ -32,8 +32,11 @@ bool handleStructClass(Context &ctxt)
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &lineNo);
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_byte_size, &size);
 
-    ctxt.classes.emplace_back(
-        std::unique_ptr<Class>{
+    auto cls = ctxt.getClass(*ctxt.currentNamespace, clsString);
+    if (cls == nullptr) {
+      // first occurrence of this class in the dwarf file
+      ctxt.classes.emplace_back(
+         std::unique_ptr<Class>{
             new Class(off,
                       clsString,
                       ctxt.currentImage,
@@ -42,12 +45,48 @@ bool handleStructClass(Context &ctxt)
                       ctxt.srcFiles[fileNo - 1],
                       lineNo,
                       size)
-        });
+         });
 
-    ctxt.addClass(off, ctxt.classes.back().get() );
-    return false; // continue
+      ctxt.addClass(off, ctxt.classes.back().get());
+    } else {
+      // there where already declarations of this class in the dwarf file
+      cls->cls = ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.top();
+      cls->file = ctxt.srcFiles[fileNo - 1];
+      cls->line = lineNo;
+      cls->size = size;
+      ctxt.addClass(off, cls);
+    }
   }
-  return true; // todo: check if classes/structs without decl_file make sense (see cppcheck)
+  else {
+    char *clsChar{nullptr};
+    std::string clsString{};
+
+    if (!getDieName(ctxt.dbg, ctxt.die, &clsChar)) throw DwarfError("dieName");
+    clsString = std::string(clsChar);
+
+    auto cls = ctxt.getClass(*ctxt.currentNamespace, clsString);
+    if (cls == nullptr) {
+      // first occurrence of this class
+      ctxt.classes.emplace_back(
+         std::unique_ptr<Class>{
+           new Class(off,
+                     clsString,
+                     ctxt.currentImage,
+                     ctxt.currentNamespace,
+                     nullptr,  // do set base class on definition
+                     "",  // do set file on definition
+                     0,
+                     0)
+       });
+
+      ctxt.addClass(off, ctxt.classes.back().get());
+    } else {
+      // there has been a occurence (declarations or definitions) already
+      ctxt.addClass(off, cls);
+    }
+  }
+
+  return false; // continue
 }
 
 bool handleStructClassDuplicate(Context &ctxt)

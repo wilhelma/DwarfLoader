@@ -11,92 +11,93 @@
 #include "ArchBuilder.h"
 #include "Context.h"
 
+namespace {
+
+void addMethod(const pcv::dwarf::Routine* routine, pcv::Artifact_t* artifact)
+{
+  artifact->children.emplace_back(std::unique_ptr<pcv::Artifact_t> {
+     new pcv::Artifact_t(routine->name, artifact)
+  });
+  auto newArtifact = artifact->children.back().get();
+
+  for (auto variable : routine->locals) {
+    newArtifact->entities.insert(variable);
+  }
+}
+
+}
+
 namespace pcv {
 
 using pcv::entity::EntityType;
 using pcv::entity::Class;
 
-  ClassRule::ClassRule(const std::string &artifactName, const std::string &regexString) : artifactName_(artifactName), rx_(regexString) {}
+ClassRule::ClassRule(const std::string &artifactName,
+                     const std::string &regex,
+                     const std::string &fileRegex)
+   : artifactName_(artifactName), rx_(regex), fileRx_(fileRegex) {}
 
-const Class *getBaseClass(const Class *c)
+const Class* ClassRule::getBaseClass(const Class *currentClass)
 {
-  const Class *cp = c;
+  const Class *cp = currentClass;
 
-  // todo: consider multiple inheritance
-  for (auto bc : c->baseClasses)
-    cp = getBaseClass(bc);
+  for (auto bc : currentClass->baseClasses) {
+    if (std::regex_match(bc->name, rx_) && std::regex_match(bc->file, fileRx_)) {
+      cp = getBaseClass(bc);
+      break;  // todo: consider multiple inheritance
+    }
+  }
 
   return cp;
 };
 
-Artifact_t* ClassRule::appendHierarchy(const Class *c, Artifact_t &as,
-                     std::unordered_set<const SoftwareEntity*> *toRemove)
+void ClassRule::traverseHierarchy(const Class* cls, Artifact_t* artifact)
 {
-  const Class *bc = getBaseClass(c);
-  if (added.find(bc) == end(added)) {
-    as.children.emplace_back(std::unique_ptr<Artifact_t>{ new Artifact_t(bc->name, &as)});
-    added[bc] = as.children.back().get();
+  artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
+     new pcv::Artifact_t(cls->name, artifact)
+  });
+  auto newArtifact = artifact->children.back().get();
+  newArtifact->entity = cls;
+  added.insert(cls);
+
+  for (auto member : cls->members) {
+    newArtifact->entities.insert(member);
   }
 
-  added[bc]->children.emplace_back(
-      std::unique_ptr<Artifact_t>{ new Artifact_t(c->name, added[bc]) }
-  );
-
-  added[bc]->children.back()->entities.insert( c );
-  toRemove->insert( c );
-
-  for (auto member : c->members) {
-    added[bc]->children.back()->entities.insert( member );
-    toRemove->insert( member );
+  for (auto method: cls->methods) {
+    addMethod(method, newArtifact);
   }
 
-  for (auto &method : c->methods) {
-    added[bc]->children.back()->entities.insert( method );
-    toRemove->insert( method );
+  for (auto childClass : cls->inheritClasses) {
+    if (std::regex_match(childClass->name, rx_) && std::regex_match(childClass->file, fileRx_)) {
+      traverseHierarchy(childClass, newArtifact);
+    }
   }
-
-  return added[bc];
 }
 
 std::unique_ptr<ArchRule::artifacts_t>
 ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 {
-  auto artifacts = std::unique_ptr<artifacts_t> { new artifacts_t };
-  std::unordered_set<const SoftwareEntity*> toRemove;
+  archSet.children.push_back(std::unique_ptr<Artifact_t> {new Artifact_t(artifactName_, &archSet)});
+  auto newArtifact = archSet.children.back().get();
 
-  archSet.children.emplace_back(std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet)});
+  // handle all classes that match the regexes
+  for (auto &c : ctxt.classes) {
+    if (std::regex_match(c->name, rx_) && std::regex_match(c->file, fileRx_)) {
+      if (added.find(c.get()) == std::end(added)) {
+        traverseHierarchy(getBaseClass(c.get()), newArtifact);
+      }
+    }
+  }
 
-  for (auto &c : ctxt.classes)
-    if(std::regex_match(c->name, rx_))
-      artifacts->emplace_back(appendHierarchy(c.get(), *(archSet.children.back().get()), &toRemove));
-
-  for (auto e : toRemove)
-    archSet.entities.erase(e);
-
-  this->setArchSet(archSet.children.back().get());
-  return artifacts;
+  this->setArchSet(newArtifact);
+  return nullptr;
 }
 
 std::unique_ptr<ArchRule::artifacts_t>
 ClassRule::append(Artifact_t &as, const dwarf::Context &ctxt)
 {
-  auto artifacts = std::unique_ptr<artifacts_t> { new artifacts_t };
-
-  for (auto &c : as.children)
-    append(*c.get(), ctxt);
-
-  std::unordered_set<const SoftwareEntity*> toRemove;
-  for (auto e : as.entities) {
-    if (e->getEntityType() == EntityType::Class) {
-      const Class *c = reinterpret_cast<const Class *>(e);
-      artifacts->emplace_back( appendHierarchy(c, as, &toRemove) );
-    }
-  }
-
-  for (auto e : toRemove)
-    as.entities.erase(e);
-
-  return artifacts;
+  return nullptr;
 }
 
 }  // namespace pcv

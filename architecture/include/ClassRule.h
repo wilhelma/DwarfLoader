@@ -15,17 +15,23 @@ namespace pcv {
   using pcv::entity::Class;
 
 class ClassRule : public ArchRule {
-  const std::string artifactName_;
-  const std::regex rx_;
-  std::unordered_map<const Class*, Artifact_t*> added;
-
-  Artifact_t* appendHierarchy(const Class *c, Artifact_t &as,
-                              std::unordered_set<const SoftwareEntity*> *toRemove);
  public:
+  using added_t = std::unordered_set<const Class*>;
 
-  ClassRule(const std::string &artifactName, const std::string &regexString);
+  explicit ClassRule(const std::string &artifactName,
+                     const std::string &regex,
+                     const std::string &fileRegex = ".*");
   std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
   std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;
+
+ private:
+  const std::string artifactName_;
+  const std::regex rx_;
+  const std::regex fileRx_;
+  added_t added;
+
+  const Class* getBaseClass(const Class *currentClass);
+  void traverseHierarchy(const Class* cls, Artifact_t* artifact);
 };
 
 }  // namespace pcv
