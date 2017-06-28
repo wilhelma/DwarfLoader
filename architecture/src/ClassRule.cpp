@@ -81,8 +81,8 @@ void ClassRule::traverseHierarchy(const Class* cls,
 std::unique_ptr<ArchRule::artifacts_t>
 ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 {
-  archSet.children.push_back(std::unique_ptr<Artifact_t> {new Artifact_t(artifactName_, &archSet)});
-  auto newArtifact = archSet.children.back().get();
+  artifact_ = new Artifact_t(artifactName_, &archSet);
+  auto newArtifact = artifact_;
   std::unordered_set<const Class *> classes;
 
   // consider only matching classes

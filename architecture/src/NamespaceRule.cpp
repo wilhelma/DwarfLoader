@@ -24,8 +24,7 @@ namespace pcv {
   NamespaceRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     static std::unordered_map<Namespace *, Artifact_t *> addedArtifacts;
 
-    archSet.children.emplace_back(std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet)});
-    artifact_ = archSet.children.back().get();
+    artifact_ = new Artifact_t(artifactName_, &archSet);
 
     for (auto &nmsp : ctxt.namespaces) {
       if(std::regex_match(nmsp->name, rx_)) {

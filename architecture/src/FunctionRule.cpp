@@ -14,8 +14,7 @@ FunctionRule::FunctionRule(const std::string &artifactName,
 std::unique_ptr<ArchRule::artifacts_t>
 FunctionRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 {
-  archSet.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(artifactName_, &archSet)});
-  artifact_ = archSet.children.back().get();
+  artifact_ = new Artifact_t(artifactName_, &archSet);
 
   std::unordered_set<const Routine*> routines;
   for (auto &f : ctxt.routines) {
