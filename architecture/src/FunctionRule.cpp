@@ -39,11 +39,11 @@ ArchRule::added_t FunctionRule::apply(Artifact_t &artifact,
 {
   for (auto routine : routines) {
     artifact.children.emplace_back(new Artifact_t(routine->name, &artifact));
-    artifact_ = artifact.children.back().get();
+    auto newArtifact = artifact.children.back().get();
     added_.insert(routine);
 
     for (auto variable : routine->locals) {
-      artifact_->entities.insert(variable);
+      newArtifact->entities.insert(variable);
       added_.insert(variable);
     }
   }

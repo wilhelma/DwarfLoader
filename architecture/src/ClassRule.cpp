@@ -41,12 +41,12 @@ void ClassRule::addMethod(const pcv::dwarf::Routine* routine, pcv::Artifact_t* a
   artifact->children.emplace_back(std::unique_ptr<pcv::Artifact_t> {
      new pcv::Artifact_t(routine->name, artifact)
   });
-  artifact_ = artifact->children.back().get();
-  artifact_->entity = routine;
+  auto newArtifact = artifact->children.back().get();
+  newArtifact->entity = routine;
   added.insert(routine);
 
   for (auto variable : routine->locals) {
-    artifact_->entities.insert(variable);
+    newArtifact->entities.insert(variable);
     added.insert(variable);
   }
 }

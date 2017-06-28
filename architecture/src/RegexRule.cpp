@@ -3,6 +3,7 @@
 //
 
 #include <ClassRule.h>
+#include <FunctionRule.h>
 #include "RegexRule.h"
 #include "ArchBuilder.h"
 #include "Context.h"
@@ -25,12 +26,27 @@ void RegexRule::fillArtifact(const std::vector<SoftwareEntity*> &entities,
   {
     std::unordered_set<const Class *> classes;
     for (auto &entity : entities) {
-      if ((entity->getEntityType() == EntityType::Class)) {
+      if (entity->getEntityType() == EntityType::Class) {
         classes.insert(static_cast<const Class *>(entity));
       }
     }
     ClassRule cRule;
     added = cRule.apply(*toFill, classes);
+  }
+
+  // consider functions
+  {
+    std::unordered_set<const Routine *> routines;
+    for (auto &entity : entities) {
+      if (entity->getEntityType() == EntityType::Routine) {
+        if (added.find(entity) == std::end(added)) {
+          routines.insert(static_cast<const Routine *>(entity));
+        }
+      }
+    }
+    FunctionRule fRule;
+    auto added2 = fRule.apply(*toFill, routines);
+    added.insert(std::begin(added2), std::end(added2));
   }
 
   // fill rest
