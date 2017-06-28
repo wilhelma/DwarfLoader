@@ -21,21 +21,18 @@ namespace pcv {
   std::unique_ptr<ArchRule::artifacts_t> SetOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto newArtifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
     artifact_ = new Artifact_t(artifactName_, &archSet);
-
+    std::cout << artifacts.size();
     for(auto &memberArtifact : artifacts) {
-      Artifact_t *parent = artifact_;
-      std::unique_ptr<artifacts_t> artifactsList = memberArtifact->getArchSet();
-      if(artifactsList.get()[0][0]->parent) {
-        parent->children.emplace_back(new Artifact_t(artifactsList.get()[0][0]->parent->name, parent));
-        for(auto &entity : artifactsList.get()[0][0]->parent->entities)
-          parent->children.back().get()->entities.insert(entity);
-        parent = parent->children.back().get();
+      artifact_->children.emplace_back(new Artifact_t(memberArtifact->name, artifact_));
+      Artifact_t* parent = artifact_->children.back().get();
+      for(auto &child : memberArtifact->children) {
+        parent->children.emplace_back(new Artifact_t(child->name, parent));
+        for(auto &entity : child->entities) {
+          parent->entities.insert(entity);
+        }
       }
-      for(auto &artifact : *artifactsList) {
-        parent->children.emplace_back(new Artifact_t(artifact->name, parent));
-        for(auto &entity : artifact->entities)
-          parent->children.back().get()->entities.insert(entity);
-        newArtifacts->emplace_back(copyChildren(*(parent->children.back().get()), *artifact));
+      for(auto &entity : memberArtifact->entities) {
+        parent->entities.insert(entity);
       }
     }
 

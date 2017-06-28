@@ -33,7 +33,7 @@ RegexRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   artifact_ = new Artifact_t(artifactName_, &archSet);
 
   artifacts->emplace_back( artifact_);
-
+std::cout << ctxt.images.size();
   for (auto &image : ctxt.images) {
     fillArtifact(image->entities, artifact_);
   }

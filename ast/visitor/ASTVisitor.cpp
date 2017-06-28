@@ -10,6 +10,7 @@
 #include "OrOperatorRule.h"
 #include "VariableRule.h"
 #include "RegexFileRule.h"
+#include "SetOperatorRule.h"
 
 using pcv::AndOperatorRule;
 using pcv::ClassRule;
@@ -18,7 +19,8 @@ using pcv::FunctionRule;
 using pcv::OrOperatorRule;
 using pcv::VariableRule;
 using pcv::RegexFileRule;
-using pcv::EntityType ;
+using pcv::EntityType;
+using pcv::SetOperatorRule;
 
 ASTVisitor::ASTVisitor(VisitorContext* visitorContext) : visitorContext_(visitorContext) {}
 
@@ -82,13 +84,18 @@ void ASTVisitor::visit(OrExpression &el) {
 
 void ASTVisitor::visit(Program &el) {
     for(int i = 0; i < el.getExpressions().size(); i++) {
+        std::cout << "Expresion: " << i << std::endl;
         el.getExpressions()[i]->accept(*this);
     }
     visitorContext_->outputBuilderJson();
 }
 
 void ASTVisitor::visit(SetExpression &el) {
+    std::vector<Artifact_t*> artifactsFromStack;
     for(int i = 0; i < el.getTerms().size(); i++) {
-        el.getTerms()[i]->accept(*this);
+        artifactsFromStack.push_back(visitorContext_->getArtifactFromArchBuilder(el.getTerms()[i]->getName()));
     }
+    ArchRule* archRule = new SetOperatorRule("", artifactsFromStack);
+    visitorContext_->pushToArchRulesStack(archRule);
+    visitorContext_->applyRuleToBuilder(archRule);
 }

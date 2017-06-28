@@ -38,6 +38,15 @@ void VisitorContext::addArtifactToArchBuilder(std::string artifactName, ArchRule
   archBuilder_.getArchSet()->children.push_back(std::unique_ptr<Artifact_t>(archRule->getArchSet()));
 }
 
+Artifact_t* VisitorContext::getArtifactFromArchBuilder(std::string artifactName) {
+  for(auto &child : archBuilder_.getArchSet()->children) {
+    if(child->name == artifactName) {
+      return child.get();
+    }
+  }
+  return nullptr;
+}
+
 void VisitorContext::outputBuilderJson() {
   archBuilder_.finish();
   std::cout << archBuilder_;

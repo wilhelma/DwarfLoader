@@ -13,10 +13,10 @@ namespace pcv {
 
   class SetOperatorRule : public ArchRule {
     std::string artifactName_;
-    std::vector<ArchRule*> artifacts;
+    std::vector<Artifact_t*> artifacts;
 
   public:
-    template <class U>
+/*    template <class U>
     SetOperatorRule(const std::string artifactName, U n) {
       artifactName_ = artifactName;
       artifacts.push_back(n);
@@ -26,7 +26,9 @@ namespace pcv {
     SetOperatorRule(const std::string artifactName, U n, Ts... rest) : SetOperatorRule(artifactName, rest...) {
       artifactName_ = artifactName;
       artifacts.push_back(n);
-    }
+    }*/
+
+    SetOperatorRule(const std::string artifactName, std::vector<Artifact_t*> artifacts) : artifactName_(artifactName), artifacts(artifacts) {}
 
     Artifact_t* copyChildren(Artifact_t &parent, Artifact_t &artifact);
 

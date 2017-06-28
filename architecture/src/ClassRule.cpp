@@ -66,9 +66,12 @@ ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 
   artifact_ = new Artifact_t(artifactName_, &archSet);
 
-  for (auto &c : ctxt.classes)
+  for (auto &c : ctxt.classes) {
+    std::cout << c->name << std::endl;
     if(std::regex_match(c->name, rx_))
       artifacts->emplace_back(appendHierarchy(c.get(), *(artifact_), &toRemove));
+  }
+
 
   for (auto e : toRemove)
     artifact_->entities.erase(e);
