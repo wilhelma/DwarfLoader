@@ -9,10 +9,11 @@
 namespace pcv {
   Artifact_t* SetOperatorRule::copyChildren(Artifact_t &parent, Artifact_t &artifact) {
     for(auto &child : artifact.children) {
-      parent.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(child->name, &parent)});
+      parent.children.emplace_back(new Artifact_t(child->name, &parent));
 
       for(auto &entity : child->entities)
         parent.children.back().get()->entities.insert(entity);
+
       copyChildren(*(parent.children.back().get()), *child);
     }
     return &parent;
@@ -27,9 +28,7 @@ namespace pcv {
       Artifact_t* parent = artifact_->children.back().get();
       for(auto &child : memberArtifact->children) {
         parent->children.emplace_back(new Artifact_t(child->name, parent));
-        for(auto &entity : child->entities) {
-          parent->entities.insert(entity);
-        }
+        copyChildren(*parent, *child);
       }
       for(auto &entity : memberArtifact->entities) {
         parent->entities.insert(entity);
