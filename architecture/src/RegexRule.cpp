@@ -27,7 +27,9 @@ void RegexRule::fillArtifact(const std::vector<SoftwareEntity*> &entities,
     std::unordered_set<const Class *> classes;
     for (auto &entity : entities) {
       if (entity->getEntityType() == EntityType::Class) {
-        classes.insert(static_cast<const Class *>(entity));
+        if (std::regex_match(getMatchString(*entity), rx_)) {
+          classes.insert(static_cast<const Class *>(entity));
+        }
       }
     }
     ClassRule cRule;
@@ -40,7 +42,9 @@ void RegexRule::fillArtifact(const std::vector<SoftwareEntity*> &entities,
     for (auto &entity : entities) {
       if (entity->getEntityType() == EntityType::Routine) {
         if (added.find(entity) == std::end(added)) {
-          routines.insert(static_cast<const Routine *>(entity));
+          if (std::regex_match(getMatchString(*entity), rx_)) {
+            routines.insert(static_cast<const Routine *>(entity));
+          }
         }
       }
     }
