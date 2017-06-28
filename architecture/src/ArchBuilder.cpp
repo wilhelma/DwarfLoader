@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <memory>
 #include <iostream>
+#include <Context.h>
 
 #include "../include/ArchRule.h"
 
@@ -123,6 +124,10 @@ void removeEmptyArtifacts(Artifact_t &as)
       ++i;
   }
 }
+
+  Artifact_t* ArchBuilder::getArchSet() {
+    return &artifact_;
+  }
 
 void ArchBuilder::apply(ArchRule *rule) noexcept
 {

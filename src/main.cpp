@@ -38,6 +38,7 @@ using pcv::RegexNameRule;
 using pcv::dwarf::Filter;
 using pcv::dwarf::DieDuplicate;
 using pcv::entity::EntityType;
+using pcv::Artifact_t;
 
 int main(int argc, char **argv) {
   if (argc != 3) {
@@ -56,55 +57,26 @@ int main(int argc, char **argv) {
       inputfile.close();
 
       const auto json = Json::parse(inputjson, error);
+      Filter filter(
+              "(.+)cppcheck(.+)",
+              "(.+)boost(.+)"
+      );
+
+      DieDuplicate duplicate;
+
+      DwarfReader reader(argv[1], duplicate, filter);
+      reader.start();
+
+      VisitorContext visitorContext(reader.getContext());
+      ASTVisitor astVisitor(&visitorContext);
+
       Program program = CreateAstFromJson::generateAst(json);
-      ASTVisitor astVisitor;
       program.accept(astVisitor);
+
     } else {
       std::cerr << "Cannot opet file!";
       return -1;
     }
-
-    Filter filter(
-        "(.+)cppcheck(.+)",
-        "(.+)boost(.+)"
-    );
-    DieDuplicate duplicate;
-    DwarfReader reader(argv[1], duplicate, filter);
-    reader.start();
-
-    ArchBuilder builder(reader.getContext());
-
-    ArchRule *sRule = new NamespaceRule("preprocessor", ".*simplecpp.*");
-    ArchRule *xmlRule = new NamespaceRule("output", ".*tinyxml2.*");
-    ArchRule *mRule = new FunctionRule("match", ".*::(M|m)atch.*");
-    ArchRule *guiRule = new ClassRule("gui", "((?!ErrorLogger).)*", ".*gui.*");
-    ArchRule *libRule = new ClassRule("library", ".*Library.*");
-    ArchRule *valueRule = new ClassRule("ValueFlow", ".*Value.*");
-    ArchRule *settingsRule = new ClassRule("settings", ".*Settings.*");
-    ArchRule *cliRule = new ClassRule("cli", ".*", ".*cli.*");
-    ArchRule *checkRule = new ClassRule("checks", "Check.*");
-
-
-    builder.apply(sRule);
-    builder.apply(xmlRule);
-    builder.apply(mRule);
-    builder.apply(guiRule);
-    builder.apply(libRule);
-    builder.apply(valueRule);
-    builder.apply(settingsRule);
-    builder.apply(cliRule);
-    builder.apply(checkRule);
-
-//    ArchRule *fileRule = new RegexFileRule("cliFile", EntityType::All, ".*cli.*");
-//    ArchRule *classRule = new ClassRule("cliClass", ".*");
-//    ArchRule *andRule = new AndOperatorRule("cli", fileRule, classRule);
-//      builder.apply(fileRule);
-//    builder.apply(classRule);
-//    builder.apply(andRule);
-
-
-    builder.finish();
-    std::cout << builder;
 
   } catch (DwarfError &e) {
     std::cerr << e.what();

@@ -45,6 +45,8 @@ typedef struct Artifact_t {
   Artifact_t(const Artifact_t&&) = delete;
   Artifact_t&operator=(const Artifact_t&&) = delete;
 
+  void setParent(Artifact_t &child, Artifact_t &parent) { child.parent = &parent;}
+
   ~Artifact_t() = default;
 } Artifact_t;
 
@@ -73,6 +75,8 @@ class ArchBuilder {
   /// @param [in] obj The internal ArchBuilder reference.
   /// @return The ostream ref to write to.
   friend std::ostream& operator<<(std::ostream& os, const ArchBuilder& obj);
+
+  Artifact_t* getArchSet();
 
   /* disable copy/move construction and assignment operators */
   ArchBuilder(const ArchBuilder &) = delete;

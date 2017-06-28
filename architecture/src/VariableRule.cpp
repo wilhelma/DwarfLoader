@@ -17,10 +17,9 @@ namespace pcv {
 
   std::unique_ptr<ArchRule::artifacts_t> VariableRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
+    artifact_ = new Artifact_t(artifactName_, &archSet);
 
-    archSet.children.push_back(std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet)});
-
-    Artifact_t *parent = archSet.children.back().get();
+    Artifact_t *parent = artifact_;
 
     for (auto &variable : ctxt.variables) {
       if (std::regex_match(variable->name, rx_)) {
@@ -29,9 +28,9 @@ namespace pcv {
       }
     }
 
-    this->setArchSet(archSet.children.back().get());
     return artifacts;
   }
 
   std::unique_ptr<ArchRule::artifacts_t> VariableRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) {}
+
 }

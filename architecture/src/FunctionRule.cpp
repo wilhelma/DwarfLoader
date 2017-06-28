@@ -26,7 +26,6 @@ FunctionRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 
   apply(*newArtifact, routines);
 
-  this->setArchSet(newArtifact);
   return nullptr;
 }
 

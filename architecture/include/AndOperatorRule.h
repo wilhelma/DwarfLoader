@@ -12,7 +12,7 @@
 namespace pcv {
 
   class AndOperatorRule : public ArchRule {
-    const std::string artifactName_;
+    std::string artifactName_;
     ArchRule* firstArtifact_;
     ArchRule* secondArtifact_;
 

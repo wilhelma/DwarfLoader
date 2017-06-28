@@ -93,7 +93,6 @@ ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   }
 
   apply(*newArtifact, classes);
-  this->setArchSet(newArtifact);
   return nullptr;
 }
 
