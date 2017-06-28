@@ -26,6 +26,8 @@ class ArchRule {
   virtual std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) = 0;
 
  public:
+  using added_t = std::unordered_set<const SoftwareEntity*>;
+
   ArchRule()  {};
   virtual ~ArchRule() = default;
 

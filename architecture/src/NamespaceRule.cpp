@@ -2,9 +2,13 @@
 // Created by wilhelma on 1/10/17.
 //
 
+#include <ClassRule.h>
+#include <entities/SoftwareEntity.h>
+#include <FunctionRule.h>
 #include "NamespaceRule.h"
 #include "ArchBuilder.h"
 #include "Context.h"
+#include "entities/SoftwareEntity.h"
 
 namespace pcv {
 
@@ -20,35 +24,60 @@ namespace pcv {
   NamespaceRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     static std::unordered_map<Namespace *, Artifact_t *> addedArtifacts;
 
-    auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
-
     archSet.children.emplace_back(std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet)});
-
-    Artifact_t *parent = archSet.children.back().get();
+    auto newArtifact = archSet.children.back().get();
 
     for (auto &nmsp : ctxt.namespaces) {
       if(std::regex_match(nmsp->name, rx_)) {
         if (nmsp->parent && addedArtifacts.find(nmsp->parent) != end(addedArtifacts))
-          parent = addedArtifacts[nmsp->parent];
+          newArtifact = addedArtifacts[nmsp->parent];
 
         std::string name = nmsp->name.empty() ? "empty" : nmsp->name;
-        parent->children.push_back(
-                std::unique_ptr<Artifact_t>{new Artifact_t(name, parent)}
+        newArtifact->children.push_back(
+                std::unique_ptr<Artifact_t>{new Artifact_t(name, newArtifact)}
         );
 
-        addedArtifacts[nmsp.get()] = parent->children.back().get();
+        addedArtifacts[nmsp.get()] = newArtifact->children.back().get();
 
-        auto &children = parent->children.back();
-        for (auto &entity : nmsp->entities) {
-          children->entities.insert(entity);
+        ArchRule::added_t added;
+        // consider classes
+        {
+          std::unordered_set<const Class *> classes;
+          for (auto entity : nmsp->entities) {
+            if (entity->getEntityType() == pcv::entity::EntityType::Class) {
+              classes.insert(static_cast<const Class *>(entity));
+            }
+          }
+          ClassRule cRule;
+          added = cRule.apply(*newArtifact, classes);
         }
 
-        artifacts->emplace_back(parent->children.back().get());
+        // consider routines
+        {
+          std::unordered_set<const Routine *> routines;
+          for (auto entity : nmsp->entities) {
+            if (entity->getEntityType() == pcv::entity::EntityType::Routine) {
+              if (added.find(entity) == std::end(added)) {
+                routines.insert(static_cast<const Routine *>(entity));
+              }
+            }
+          }
+          FunctionRule fRule;
+          auto fAdded = fRule.apply(*newArtifact, routines);
+          added.insert(begin(fAdded), end(fAdded));
+        }
+
+        auto &children = newArtifact->children.back();
+        for (auto entity : nmsp->entities) {
+          if (added.find(entity) == end(added)) {
+            children->entities.insert(entity);
+          }
+        }
       }
     }
 
     this->setArchSet(archSet.children.back().get());
-    return artifacts;
+    return nullptr;
   }
 
 }  // namespace pcv

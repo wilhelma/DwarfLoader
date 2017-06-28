@@ -11,23 +11,6 @@
 #include "ArchBuilder.h"
 #include "Context.h"
 
-namespace {
-
-void addMethod(const pcv::dwarf::Routine* routine, pcv::Artifact_t* artifact)
-{
-  artifact->children.emplace_back(std::unique_ptr<pcv::Artifact_t> {
-     new pcv::Artifact_t(routine->name, artifact)
-  });
-  auto newArtifact = artifact->children.back().get();
-  newArtifact->entity = routine;
-
-  for (auto variable : routine->locals) {
-    newArtifact->entities.insert(variable);
-  }
-}
-
-}
-
 namespace pcv {
 
 using pcv::entity::EntityType;
@@ -38,13 +21,14 @@ ClassRule::ClassRule(const std::string &artifactName,
                      const std::string &fileRegex)
    : artifactName_(artifactName), rx_(regex), fileRx_(fileRegex) {}
 
-const Class* ClassRule::getBaseClass(const Class *currentClass)
+const Class* ClassRule::getBaseClass(const Class *currentClass,
+                                     const std::unordered_set<const Class*>& classes)
 {
   const Class *cp = currentClass;
 
   for (auto bc : currentClass->baseClasses) {
-    if (std::regex_match(bc->name, rx_) && std::regex_match(bc->file, fileRx_)) {
-      cp = getBaseClass(bc);
+    if (classes.find(bc) != std::end(classes)) {
+      cp = getBaseClass(bc, classes);
       break;  // todo: consider multiple inheritance
     }
   }
@@ -52,7 +36,24 @@ const Class* ClassRule::getBaseClass(const Class *currentClass)
   return cp;
 };
 
-void ClassRule::traverseHierarchy(const Class* cls, Artifact_t* artifact)
+void ClassRule::addMethod(const pcv::dwarf::Routine* routine, pcv::Artifact_t* artifact)
+{
+  artifact->children.emplace_back(std::unique_ptr<pcv::Artifact_t> {
+     new pcv::Artifact_t(routine->name, artifact)
+  });
+  auto newArtifact = artifact->children.back().get();
+  newArtifact->entity = routine;
+  added.insert(routine);
+
+  for (auto variable : routine->locals) {
+    newArtifact->entities.insert(variable);
+    added.insert(variable);
+  }
+}
+
+void ClassRule::traverseHierarchy(const Class* cls,
+                                  Artifact_t* artifact,
+                                  const std::unordered_set<const Class*>& classes)
 {
   artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
      new pcv::Artifact_t(cls->name, artifact)
@@ -63,6 +64,7 @@ void ClassRule::traverseHierarchy(const Class* cls, Artifact_t* artifact)
 
   for (auto member : cls->members) {
     newArtifact->entities.insert(member);
+    added.insert(member);
   }
 
   for (auto method: cls->methods) {
@@ -70,8 +72,8 @@ void ClassRule::traverseHierarchy(const Class* cls, Artifact_t* artifact)
   }
 
   for (auto childClass : cls->inheritClasses) {
-    if (std::regex_match(childClass->name, rx_) && std::regex_match(childClass->file, fileRx_)) {
-      traverseHierarchy(childClass, newArtifact);
+    if (classes.find(childClass) != std::end(classes)) {
+      traverseHierarchy(childClass, newArtifact, classes);
     }
   }
 }
@@ -81,16 +83,16 @@ ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 {
   archSet.children.push_back(std::unique_ptr<Artifact_t> {new Artifact_t(artifactName_, &archSet)});
   auto newArtifact = archSet.children.back().get();
+  std::unordered_set<const Class *> classes;
 
-  // handle all classes that match the regexes
+  // consider only matching classes
   for (auto &c : ctxt.classes) {
     if (std::regex_match(c->name, rx_) && std::regex_match(c->file, fileRx_)) {
-      if (added.find(c.get()) == std::end(added)) {
-        traverseHierarchy(getBaseClass(c.get()), newArtifact);
-      }
+      classes.insert(c.get());
     }
   }
 
+  apply(*newArtifact, classes);
   this->setArchSet(newArtifact);
   return nullptr;
 }
@@ -99,6 +101,18 @@ std::unique_ptr<ArchRule::artifacts_t>
 ClassRule::append(Artifact_t &as, const dwarf::Context &ctxt)
 {
   return nullptr;
+}
+
+ClassRule::added_t ClassRule::apply(Artifact_t &artifact,
+                                    const std::unordered_set<const Class *> &classes)
+{
+  for (auto cls : classes) {
+    if (added.find(cls) == std::end(added)) {
+      traverseHierarchy(getBaseClass(cls, classes), &artifact, classes);
+    }
+  }
+
+  return added;
 }
 
 }  // namespace pcv

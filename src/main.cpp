@@ -23,7 +23,6 @@
 #include "../ast/ast-from-json/CreateAstFromJson.h"
 #include "../ast/visitor/ASTVisitor.h"
 
-
 using pcv::dwarf::DwarfReader;
 using pcv::ArchBuilder;
 using pcv::ArchRule;
@@ -66,7 +65,7 @@ int main(int argc, char **argv) {
     }
 
     Filter filter(
-        "(.+)DwarfLoader(.+)",
+        "(.+)cppcheck(.+)",
         "(.+)boost(.+)"
     );
     DieDuplicate duplicate;
@@ -75,38 +74,34 @@ int main(int argc, char **argv) {
 
     ArchBuilder builder(reader.getContext());
 
-/*    ArchRule *sRule = new NamespaceRule("preprocessor", ".*simplecpp.*");
+    ArchRule *sRule = new NamespaceRule("preprocessor", ".*simplecpp.*");
     ArchRule *xmlRule = new NamespaceRule("output", ".*tinyxml2.*");
-    ArchRule *mRule = new FunctionRule("match", ".*(M|m)atch.*");
-
+    ArchRule *mRule = new FunctionRule("match", ".*::(M|m)atch.*");
     ArchRule *guiRule = new ClassRule("gui", "((?!ErrorLogger).)*", ".*gui.*");
     ArchRule *libRule = new ClassRule("library", ".*Library.*");
     ArchRule *valueRule = new ClassRule("ValueFlow", ".*Value.*");
     ArchRule *settingsRule = new ClassRule("settings", ".*Settings.*");
+    ArchRule *cliRule = new ClassRule("cli", ".*", ".*cli.*");
+    ArchRule *checkRule = new ClassRule("checks", "Check.*");
+
+
+    builder.apply(sRule);
+    builder.apply(xmlRule);
+    builder.apply(mRule);
+    builder.apply(guiRule);
+    builder.apply(libRule);
+    builder.apply(valueRule);
+    builder.apply(settingsRule);
+    builder.apply(cliRule);
+    builder.apply(checkRule);
 
 //    ArchRule *fileRule = new RegexFileRule("cliFile", EntityType::All, ".*cli.*");
 //    ArchRule *classRule = new ClassRule("cliClass", ".*");
 //    ArchRule *andRule = new AndOperatorRule("cli", fileRule, classRule);
-
-    ArchRule *cliRule = new ClassRule("cli", ".*", ".*cli.*");
-    builder.apply(cliRule);
-
-//    builder.apply(fileRule);
+//      builder.apply(fileRule);
 //    builder.apply(classRule);
 //    builder.apply(andRule);
 
-    builder.apply(cRule);
-    builder.apply(sRule);
-    builder.apply(mRule);
-    builder.apply(xmlRule);
-    builder.apply(guiRule);
-    builder.apply(libRule);
-    builder.apply(valueRule);
-    builder.apply(settingsRule);*/
-
-    ArchRule *cRule = new ClassRule("checks", "Check.*");
-
-    builder.apply( cRule );
 
     builder.finish();
     std::cout << builder;

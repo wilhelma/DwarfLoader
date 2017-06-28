@@ -7,6 +7,7 @@
 #include "DwarfReader.h"
 #include "ArchBuilder.h"
 #include "NamespaceRule.h"
+#include "FunctionRule.h"
 #include "ClassRule.h"
 #include "Filter.h"
 #include "Duplicate.h"
@@ -19,6 +20,7 @@ using pcv::dwarf::DwarfReader;
 using pcv::ArchBuilder;
 using pcv::ArchRule;
 using pcv::NamespaceRule;
+using pcv::FunctionRule;
 using pcv::ClassRule;
 using pcv::dwarf::Filter;
 using pcv::dwarf::DieDuplicate;
@@ -31,7 +33,7 @@ class DwarfWrapper : public node::ObjectWrap {
         Filter* filter_;
         DieDuplicate duplicate_;
 
-        explicit DwarfWrapper(const std::string &fileName);
+        explicit DwarfWrapper(const std::string &fileName, const std::string& filterStr);
         ~DwarfWrapper();
 
         static v8::Persistent<v8::Function> constructor;

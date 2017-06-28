@@ -2,6 +2,7 @@
 // Created by wilhelma on 1/10/17.
 //
 
+#include <ClassRule.h>
 #include "RegexRule.h"
 #include "ArchBuilder.h"
 #include "Context.h"
@@ -18,10 +19,29 @@ RegexRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) { return null
 void RegexRule::fillArtifact(const std::vector<SoftwareEntity*> &entities,
                              Artifact_t *toFill) const
 {
-  for (auto &entity : entities) {
-    if ((entity->getEntityType() & type_) != EntityType::None) {
-      if (std::regex_match(getMatchString(*entity), rx_))
-        toFill->entities.insert(entity);
+  added_t added;
+
+  // consider classes
+  {
+    std::unordered_set<const Class *> classes;
+    for (auto &entity : entities) {
+      if ((entity->getEntityType() == EntityType::Class)) {
+        classes.insert(static_cast<const Class *>(entity));
+      }
+    }
+    ClassRule cRule;
+    added = cRule.apply(*toFill, classes);
+  }
+
+  // fill rest
+  {
+    for (auto &entity : entities) {
+      if ((entity->getEntityType() & type_) != EntityType::None) {
+        if (std::regex_match(getMatchString(*entity), rx_)) {
+          if (added.find(entity) == std::end(added))
+            toFill->entities.insert(entity);
+        }
+      }
     }
   }
 }

@@ -4,8 +4,11 @@
 
 #include <dwarf.h>
 #include <Context.h>
+#include <libdwarf.h>
 #include "DwarfHelper.h"
 #include "DwarfException.h"
+#include "Type.h"
+#include "entities/SoftwareEntity.h"
 
 namespace {
 
@@ -194,6 +197,11 @@ Dwarf_Unsigned getVariableSize(Dwarf_Debug dbg, Dwarf_Die die)
   }
   dwarf_dealloc(dbg, typeDie, DW_DLA_DIE);
   return bsize;
+}
+
+void identifySubrangeDie(Dwarf_Die& die)
+{
+
 }
 
 Dwarf_Unsigned getArraySize(Dwarf_Debug dbg, Dwarf_Die arrayDie)

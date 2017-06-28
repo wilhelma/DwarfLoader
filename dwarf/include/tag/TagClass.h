@@ -24,8 +24,10 @@ bool handleStructClass(Context &ctxt)
     else
       clsString = std::string("unnamed");
 
+    Dwarf_Off off{};
     Dwarf_Unsigned fileNo{}, lineNo{}, size{};
 
+    if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_file, &fileNo);
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &lineNo);
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_byte_size, &size);
@@ -107,6 +109,8 @@ struct TagHandler<DW_TAG_class_type> {
 
   static bool handleDuplicate(Context &ctxt)
   {
+    Dwarf_Off off;
+    dwarf_dieoffset(ctxt.die, &off, nullptr);
     return handleStructClassDuplicate(ctxt);
   }
 };
@@ -128,15 +132,11 @@ template<>
 struct TagLeaver<DW_TAG_class_type> {
   static void leave(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file)) {
       ctxt.currentClass.pop();
-    }
   }
   static void leaveDuplicate(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file)) {
       ctxt.currentClass.pop();
-    }
   }
 };
 
@@ -144,15 +144,11 @@ template<>
 struct TagLeaver<DW_TAG_structure_type> {
   static void leave(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file)) {
       ctxt.currentClass.pop();
-    }
   }
   static void leaveDuplicate(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file)) {
       ctxt.currentClass.pop();
-    }
   }
 };
 

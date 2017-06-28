@@ -5,8 +5,8 @@
 #ifndef DWARFLOADER_TAGCOMPILEUNIT_H
 #define DWARFLOADER_TAGCOMPILEUNIT_H
 
-#include "tag/TagGeneric.h"
-#include "DwarfHelper.h"
+#include "./TagGeneric.h"
+#include "../include/DwarfHelper.h"
 
 namespace pcv {
 namespace dwarf {
@@ -19,8 +19,8 @@ static std::string fixPath(const char *path)
     pathStr.erase(pathStr.find("/./") + 1, 2);
 
   while (pathStr.find("/../") != std::string::npos) {
-    auto lastSlash = pathStr.find("/../");
-    auto firstSlash = pathStr.rfind("/", lastSlash - 1);
+    int lastSlash = pathStr.find("/../");
+    int firstSlash = pathStr.rfind("/", lastSlash - 1);
     pathStr.erase(firstSlash, lastSlash + 3 - firstSlash);
   }
 

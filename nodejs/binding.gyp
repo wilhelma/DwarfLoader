@@ -9,6 +9,7 @@
         "../dwarf/src/DwarfReader.cpp",
         "../architecture/src/ArchBuilder.cpp",
         "../architecture/src/NamespaceRule.cpp",
+        "../architecture/src/FunctionRule.cpp",
         "../architecture/src/ClassRule.cpp",
         "../dwarf/src/Context.cpp",
         "../dwarf/src/DwarfHelper.cpp",
