@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <memory>
 #include <iostream>
+#include <Context.h>
 
 #include "../include/ArchRule.h"
 

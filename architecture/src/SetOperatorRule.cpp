@@ -21,7 +21,7 @@ namespace pcv {
   std::unique_ptr<ArchRule::artifacts_t> SetOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto newArtifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
     artifact_ = new Artifact_t(artifactName_, &archSet);
-    std::cout << artifacts.size();
+
     for(auto &memberArtifact : artifacts) {
       artifact_->children.emplace_back(new Artifact_t(memberArtifact->name, artifact_));
       Artifact_t* parent = artifact_->children.back().get();

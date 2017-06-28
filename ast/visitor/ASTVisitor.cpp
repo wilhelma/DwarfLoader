@@ -84,7 +84,6 @@ void ASTVisitor::visit(OrExpression &el) {
 
 void ASTVisitor::visit(Program &el) {
     for(int i = 0; i < el.getExpressions().size(); i++) {
-        std::cout << "Expresion: " << i << std::endl;
         el.getExpressions()[i]->accept(*this);
     }
     visitorContext_->outputBuilderJson();

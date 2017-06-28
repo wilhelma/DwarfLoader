@@ -20,8 +20,10 @@ void RegexRule::fillArtifact(const std::vector<SoftwareEntity*> &entities,
 {
   for (auto &entity : entities) {
     if ((entity->getEntityType() & type_) != EntityType::None) {
-      if (std::regex_match(getMatchString(*entity), rx_))
+      if (std::regex_match(getMatchString(*entity), rx_)) {
         toFill->entities.insert(entity);
+      }
+
     }
   }
 }
@@ -33,7 +35,7 @@ RegexRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   artifact_ = new Artifact_t(artifactName_, &archSet);
 
   artifacts->emplace_back( artifact_);
-std::cout << ctxt.images.size();
+
   for (auto &image : ctxt.images) {
     fillArtifact(image->entities, artifact_);
   }
