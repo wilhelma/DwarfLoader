@@ -54,10 +54,11 @@ RegexRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   archSet.children.emplace_back(
       std::unique_ptr<Artifact_t>{ new Artifact_t(artifactName_, &archSet) }
   );
-  artifacts->emplace_back( archSet.children.back().get() );
+  artifact_ = archSet.children.back().get();
 
+  artifacts->emplace_back( artifact_ );
   for (auto &image : ctxt.images) {
-    fillArtifact(image->entities, archSet.children.back().get());
+    fillArtifact(image->entities, artifact_);
   }
 
   return artifacts;

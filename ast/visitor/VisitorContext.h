@@ -23,7 +23,7 @@ class VisitorContext {
   std::stack<ArchRule*> archRulesStack;
   std::stack<std::string> artifactNamesStack;
 public:
-  VisitorContext(Context& ctxt);
+  VisitorContext(const Context& ctxt);
 
   void pushToArchRulesStack(ArchRule* archRule);
 

@@ -15,7 +15,7 @@ std::unique_ptr<ArchRule::artifacts_t>
 FunctionRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 {
   archSet.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(artifactName_, &archSet)});
-  auto newArtifact = archSet.children.back().get();
+  artifact_ = archSet.children.back().get();
 
   std::unordered_set<const Routine*> routines;
   for (auto &f : ctxt.routines) {
@@ -24,7 +24,7 @@ FunctionRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
     }
   }
 
-  apply(*newArtifact, routines);
+  apply(*artifact_, routines);
 
   return nullptr;
 }
@@ -40,11 +40,11 @@ ArchRule::added_t FunctionRule::apply(Artifact_t &artifact,
 {
   for (auto routine : routines) {
     artifact.children.emplace_back(new Artifact_t(routine->name, &artifact));
-    auto& newArtifact = artifact.children.back();
+    artifact_ = artifact.children.back().get();
     added_.insert(routine);
 
     for (auto variable : routine->locals) {
-      newArtifact->entities.insert(variable);
+      artifact_->entities.insert(variable);
       added_.insert(variable);
     }
   }

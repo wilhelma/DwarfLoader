@@ -9,7 +9,7 @@ using pcv::dwarf::Filter;
 using pcv::dwarf::DieDuplicate;
 using pcv::Artifact_t;
 
-VisitorContext::VisitorContext(Context &ctxt) : archBuilder_(ctxt) {
+VisitorContext::VisitorContext(const Context &ctxt) : archBuilder_(ctxt) {
 
 }
 

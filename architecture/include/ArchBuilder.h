@@ -40,11 +40,6 @@ typedef struct Artifact_t {
   /// @param parent The parent artifact (nullptr if it is a root artifact).
   explicit Artifact_t(const std::string& name, Artifact_t* parent) : name(name), parent(parent) {}
 
-  Artifact_t(const Artifact_t&) = delete;
-  Artifact_t& operator=(const Artifact_t&) = delete;
-  Artifact_t(const Artifact_t&&) = delete;
-  Artifact_t&operator=(const Artifact_t&&) = delete;
-
   void setParent(Artifact_t &child, Artifact_t &parent) { child.parent = &parent;}
 
   ~Artifact_t() = default;
@@ -77,12 +72,6 @@ class ArchBuilder {
   friend std::ostream& operator<<(std::ostream& os, const ArchBuilder& obj);
 
   Artifact_t* getArchSet();
-
-  /* disable copy/move construction and assignment operators */
-  ArchBuilder(const ArchBuilder &) = delete;
-  ArchBuilder(ArchBuilder &&) = delete;
-  ArchBuilder &operator=(const ArchBuilder &) = delete;
-  ArchBuilder &operator=(ArchBuilder &&) = delete;
 
  private:
   const dwarf::Context &ctxt_;

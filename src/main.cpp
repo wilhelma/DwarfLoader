@@ -41,6 +41,10 @@ using pcv::entity::EntityType;
 using pcv::Artifact_t;
 
 int main(int argc, char **argv) {
+  Filter filter("(.+)cppcheck(.+)", "(.+)boost(.+)");
+  DieDuplicate duplicate;
+  auto reader = std::unique_ptr<DwarfReader> { new DwarfReader(argv[1], duplicate, filter) };
+
   if (argc != 3) {
     std::cerr << "No program argument given!\n";
     abort();
@@ -57,17 +61,9 @@ int main(int argc, char **argv) {
       inputfile.close();
 
       const auto json = Json::parse(inputjson, error);
-      Filter filter(
-              "(.+)cppcheck(.+)",
-              "(.+)boost(.+)"
-      );
+      reader->start();
 
-      DieDuplicate duplicate;
-
-      DwarfReader reader(argv[1], duplicate, filter);
-      reader.start();
-
-      VisitorContext visitorContext(reader.getContext());
+      VisitorContext visitorContext(reader->getContext());
       ASTVisitor astVisitor(&visitorContext);
 
       Program program = CreateAstFromJson::generateAst(json);

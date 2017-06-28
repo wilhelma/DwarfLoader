@@ -66,12 +66,6 @@ struct Artifact_t;
     template<typename T>
     friend ArchRule &operator<<(ArchRule &lhs, T &rhs);
 
-    /* disable copy/move construction and assignment operators */
-    ArchRule(const ArchRule &) = delete;
-    ArchRule(ArchRule &&) = delete;
-    ArchRule &operator=(const ArchRule &) = delete;
-    ArchRule &operator=(ArchRule &&) = delete;
-
   private:
     std::vector<ArchRule *> followers_;
   };
