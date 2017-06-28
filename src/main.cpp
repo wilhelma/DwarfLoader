@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
 
       const auto json = Json::parse(inputjson, error);
       Filter filter(
-              "(.+)DwarfLoader(.+)",
+              "(.+)cppcheck(.+)",
               "(.+)boost(.+)"
       );
 

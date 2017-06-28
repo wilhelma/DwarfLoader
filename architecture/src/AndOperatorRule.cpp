@@ -55,7 +55,6 @@ namespace pcv {
       for(auto &entity : second.entities) {
         for(auto &childOfFirst : first.children) {
           if(entity->getEntityType() == EntityType::Class && (entity->name == childOfFirst->name)) {
-            std::cout << "hre";
             std::unique_ptr<Artifact_t> intersectArtifact(new Artifact_t(childOfFirst->name, parent));
             for(auto &child : childOfFirst->children) {
               intersectArtifact->children.emplace_back(new Artifact_t(child->name, intersectArtifact.get()));
