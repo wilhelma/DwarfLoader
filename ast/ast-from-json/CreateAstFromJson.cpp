@@ -8,7 +8,7 @@ Program CreateAstFromJson::generateAst(Json json) {
     std::vector<std::unique_ptr<DefinitionExpression>> definitionExpressions;
     Json::array statements = json.array_items();
 
-    for (int i = 0; i < statements.size(); i++) {
+    for (size_t i = 0; i < statements.size(); i++) {
         definitionExpressions.push_back(std::unique_ptr<DefinitionExpression>(generateDefinitionExpressionFromJson(statements[i])));
     }
     return Program{definitionExpressions};
@@ -100,7 +100,7 @@ SetExpression* CreateAstFromJson::generateSetTermFromJson(Json json) {
     std::vector<std::unique_ptr<Component>> elements;
     Json::array jsonElements = json["elements"].array_items();
 
-    for(int i = 0; i < jsonElements.size(); i++)
+    for(size_t i = 0; i < jsonElements.size(); i++)
         elements.push_back(std::unique_ptr<Component>(generateComponentFromJson(jsonElements[i])));
 
     return new SetExpression{elements};

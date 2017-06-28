@@ -9,7 +9,8 @@ using pcv::dwarf::Filter;
 using pcv::dwarf::DieDuplicate;
 using pcv::Artifact_t;
 
-VisitorContext::VisitorContext(const Context &ctxt) : archBuilder_(ctxt) {
+VisitorContext::VisitorContext(const Context &ctxt,
+                               std::ostream& out) : archBuilder_(ctxt), out_(out) {
 
 }
 
@@ -49,7 +50,7 @@ Artifact_t* VisitorContext::getArtifactFromArchBuilder(std::string artifactName)
 
 void VisitorContext::outputBuilderJson() {
   archBuilder_.finish();
-  std::cout << archBuilder_;
+  out_ << archBuilder_;
 }
 
 void VisitorContext::applyRuleToBuilder(ArchRule *archRule) {

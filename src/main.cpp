@@ -63,7 +63,9 @@ int main(int argc, char **argv) {
       const auto json = Json::parse(inputjson, error);
       reader->start();
 
-      VisitorContext visitorContext(reader->getContext());
+      std::stringstream test;
+
+      VisitorContext visitorContext(reader->getContext(), std::cout);
       ASTVisitor astVisitor(&visitorContext);
 
       Program program = CreateAstFromJson::generateAst(json);

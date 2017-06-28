@@ -83,7 +83,7 @@ void ASTVisitor::visit(OrExpression &el) {
 }
 
 void ASTVisitor::visit(Program &el) {
-    for(int i = 0; i < el.getExpressions().size(); i++) {
+    for(size_t i = 0; i < el.getExpressions().size(); i++) {
         el.getExpressions()[i]->accept(*this);
     }
     visitorContext_->outputBuilderJson();
@@ -91,7 +91,7 @@ void ASTVisitor::visit(Program &el) {
 
 void ASTVisitor::visit(SetExpression &el) {
     std::vector<Artifact_t*> artifactsFromStack;
-    for(int i = 0; i < el.getTerms().size(); i++) {
+    for(size_t i = 0; i < el.getTerms().size(); i++) {
         artifactsFromStack.push_back(visitorContext_->getArtifactFromArchBuilder(el.getTerms()[i]->getName()));
     }
     ArchRule* archRule = new SetOperatorRule("", artifactsFromStack);

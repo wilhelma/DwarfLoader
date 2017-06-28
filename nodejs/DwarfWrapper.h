@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <sstream>
+#include <v8.h>
 
 using pcv::dwarf::DwarfReader;
 using pcv::ArchBuilder;
@@ -32,8 +33,11 @@ class DwarfWrapper : public node::ObjectWrap {
         ArchBuilder* arch_;
         Filter* filter_;
         DieDuplicate duplicate_;
+        const std::string ast_;
 
-        explicit DwarfWrapper(const std::string &fileName, const std::string& filterStr);
+        explicit DwarfWrapper(const std::string &fileName,
+                              const std::string& filterStr,
+                              const std::string& ast);
         ~DwarfWrapper();
 
         static v8::Persistent<v8::Function> constructor;

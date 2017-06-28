@@ -1,8 +1,15 @@
+#include <v8.h>
 #include "DwarfWrapper.h"
+#include "../ast/visitor/VisitorContext.h"
+#include "../ast/visitor/ASTVisitor.h"
+#include "../ast/ast-from-json/CreateAstFromJson.h"
 
 v8::Persistent<v8::Function> DwarfWrapper::constructor;
 
-DwarfWrapper::DwarfWrapper(const std::string &fileName, const std::string& filterStr){
+DwarfWrapper::DwarfWrapper(const std::string &fileName,
+                           const std::string& filterStr,
+                           const std::string& ast)
+    : ast_(ast) {
    filter_ = new Filter("(.+)" + filterStr + "(.+)", "(.+)boost(.+)");
    DwarfWrapper::reader_ = new DwarfReader(fileName, duplicate_, *filter_);
    arch_ = new ArchBuilder(reader_->getContext());
@@ -30,8 +37,9 @@ void DwarfWrapper::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     if (args.IsConstructCall()) {
         v8::String::Utf8Value str(args[0]);
         v8::String::Utf8Value filterStr(args[1]);
+        v8::String::Utf8Value ast(args[2]);
 
-        DwarfWrapper* obj = new DwarfWrapper(*str, *filterStr);
+        DwarfWrapper* obj = new DwarfWrapper(*str, *filterStr, *ast);
         obj->Wrap(args.This());
         args.GetReturnValue().Set(args.This());
     } else {
@@ -54,32 +62,17 @@ void DwarfWrapper::start(const v8::FunctionCallbackInfo<v8::Value>& args) {
         std::cerr << e.what();
     }
 
-    ArchBuilder builder(obj->reader_->getContext());
-
-    ArchRule *sRule = new NamespaceRule("preprocessor", ".*simplecpp.*");
-    ArchRule *xmlRule = new NamespaceRule("output", ".*tinyxml2.*");
-    ArchRule *mRule = new FunctionRule("match", ".*::(M|m)atch.*");
-    ArchRule *guiRule = new ClassRule("gui", "((?!ErrorLogger).)*", ".*gui.*");
-    ArchRule *libRule = new ClassRule("library", ".*Library.*");
-    ArchRule *valueRule = new ClassRule("ValueFlow", ".*Value.*");
-    ArchRule *settingsRule = new ClassRule("settings", ".*Settings.*");
-    ArchRule *cliRule = new ClassRule("cli", ".*", ".*cli.*");
-    ArchRule *checkRule = new ClassRule("checks", "Check.*");
-
-    builder.apply(sRule);
-    builder.apply(xmlRule);
-    builder.apply(mRule);
-    builder.apply(guiRule);
-    builder.apply(libRule);
-    builder.apply(valueRule);
-    builder.apply(settingsRule);
-    builder.apply(cliRule);
-    builder.apply(checkRule);
-
-    builder.finish();
     std::stringstream buffer;
-    buffer << builder;
-    std::string output = buffer.str();
-    args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate,output.c_str()));
+    std::string error;
+
+    const auto json = Json::parse(obj->ast_, error);
+
+    VisitorContext visitorContext(obj->reader_->getContext(), buffer);
+    ASTVisitor astVisitor(&visitorContext);
+
+    Program program = CreateAstFromJson::generateAst(json);
+    program.accept(astVisitor);
+
+    args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, buffer.str().c_str()));
 }
 

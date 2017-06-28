@@ -59,6 +59,9 @@ namespace pcv {
   }
 
 
-  std::unique_ptr<ArchRule::artifacts_t> OrOperatorRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) {}
+  std::unique_ptr<ArchRule::artifacts_t> OrOperatorRule::append(Artifact_t &archSet, const dwarf::Context &ctxt)
+  {
+    return nullptr;
+  }
 
 }
