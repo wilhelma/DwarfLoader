@@ -16,6 +16,7 @@ DwarfWrapper::DwarfWrapper(const std::string &fileName,
 }
 
 DwarfWrapper::~DwarfWrapper(){
+    delete filter_;
     delete reader_;
     delete arch_;
 }
@@ -55,17 +56,20 @@ void DwarfWrapper::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
 void DwarfWrapper::start(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Isolate* isolate = args.GetIsolate();
     DwarfWrapper* obj = ObjectWrap::Unwrap<DwarfWrapper>(args.Holder());
+    v8::String::Utf8Value ast(args[0]);
 
-    try {
-        obj->reader_->start();
-    } catch (DwarfError& e) {
-        std::cerr << e.what();
+    if (obj->reader_->getContext().images.size() == 0) {
+        try {
+            obj->reader_->start();
+        } catch (DwarfError& e) {
+            std::cerr << e.what();
+        }
     }
 
     std::stringstream buffer;
     std::string error;
 
-    const auto json = Json::parse(obj->ast_, error);
+    const auto json = Json::parse(*ast, error);
 
     VisitorContext visitorContext(obj->reader_->getContext(), buffer);
     ASTVisitor astVisitor(&visitorContext);
