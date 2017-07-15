@@ -9,16 +9,15 @@
 #include <json11.hpp>
 
 #include "Expression.h"
-#include "Component.h"
 
 using json11::Json;
 
 class SetExpression : public virtual Expression {
-    std::vector<std::unique_ptr<Component>> terms;
+    std::vector<std::unique_ptr<Expression>> terms;
 public:
-    SetExpression(std::vector<std::unique_ptr<Component>> &terms);
+    SetExpression(std::vector<std::unique_ptr<Expression>> &terms);
 
-    const std::vector<std::unique_ptr<Component>, std::allocator<std::unique_ptr<Component>>> &getTerms() const;
+    const std::vector<std::unique_ptr<Expression>, std::allocator<std::unique_ptr<Expression>>> &getTerms() const;
 
     virtual void accept(Visitor& v) override;
 };
