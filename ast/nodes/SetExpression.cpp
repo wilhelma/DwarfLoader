@@ -10,12 +10,12 @@ void SetExpression::accept(Visitor &v) {
 }
 
 SetExpression::SetExpression(
-        std::vector<std::unique_ptr<Component>> &terms) {
+        std::vector<std::unique_ptr<Expression>> &terms) {
     this->terms = std::move(terms);
 
 }
 
-const std::vector<std::unique_ptr<Component>, std::allocator<std::unique_ptr<Component>>> &
+const std::vector<std::unique_ptr<Expression>, std::allocator<std::unique_ptr<Expression>>> &
 SetExpression::getTerms() const {
     return terms;
 }
