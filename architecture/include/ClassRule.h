@@ -42,8 +42,7 @@ class ClassRule : public ArchRule {
   const std::regex fileRx_;
   added_t added;
 
-  const Class* getBaseClass(const Class *currentClass,
-                            const std::unordered_set<const Class *>& classes);
+  const Class* getBaseClass(const Class *currentClass);
 
   void addMethod(const Routine* routine, Artifact_t* artifact);
 
