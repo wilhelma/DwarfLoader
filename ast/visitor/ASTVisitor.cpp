@@ -2,8 +2,6 @@
 // Created by Faris Cakaric on 25.05.17.
 //
 
-#include <typeinfo>
-
 #include "ASTVisitor.h"
 #include "AndOperatorRule.h"
 #include "ClassRule.h"
@@ -94,7 +92,6 @@ void ASTVisitor::visit(Program &el) {
 void ASTVisitor::visit(SetExpression &el) {
     std::vector<Artifact_t*> artifactsFromStack;
     for(size_t i = 0; i < el.getTerms().size(); i++) {
-      std::cout << typeid(el.getTerms()[i].get()).name() << std::endl;
       if(dynamic_cast<Component*>(el.getTerms()[i].get()))
         artifactsFromStack.push_back(visitorContext_->getArtifactFromArchBuilder(dynamic_cast<Component*>(el.getTerms()[i].get())->getName()));
       else {
