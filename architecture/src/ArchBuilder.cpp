@@ -135,10 +135,10 @@ void ArchBuilder::apply(ArchRule *rule) noexcept
 }
 
 void addArtifact(Json::array *entities,
-                 const Artifact_t *set,
+                 const Artifact_t *artifact,
                  const std::string &artifactName = "")
 {
-  for (auto &entity : set->entities) {
+  for (auto &entity : artifact->entities) {
     entities->emplace_back(
         Json::object {
             {"id", entity->name},
@@ -153,16 +153,33 @@ void addArtifact(Json::array *entities,
     );
   }
 
-  for (auto &child : set->children) {
+  for (auto &child : artifact->children) {
     auto childObjects = Json::array {};
     addArtifact(&childObjects, child.get(), child->name);
 
-    entities->emplace_back(
-        Json::object {
+    if (artifact->entity != nullptr) {
+      entities->emplace_back(
+         Json::object {
+            {"id", child->name},
+            {"Id", static_cast<int>(artifact->entity->id)},
+            {"Type", static_cast<int>(artifact->entity->getEntityType())},
+            {"Name", artifact->entity->name},
+            {"Image", artifact->entity->img->name},
+            {"Namespace", artifact->entity->nmsp->name},
+            {"File", artifact->entity->file},
+            {"Line", static_cast<int>(artifact->entity->line)},
+            {"children", childObjects},
+         }
+      );
+    } else {
+      entities->emplace_back(
+         Json::object {
             {"id", child->name},
             {"children", childObjects},
-        }
-    );
+         }
+      );
+    }
+
   }
 }
 

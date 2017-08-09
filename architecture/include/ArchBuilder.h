@@ -38,7 +38,8 @@ typedef struct Artifact_t {
   /// @brief Constructor.
   /// @param name The name of the artifact.
   /// @param parent The parent artifact (nullptr if it is a root artifact).
-  explicit Artifact_t(const std::string& name, Artifact_t* parent) : name(name), parent(parent) {}
+  explicit Artifact_t(const std::string& name, Artifact_t* parent) : name(name), entity(nullptr),
+                                                                     parent(parent) {}
 
   void setParent(Artifact_t &child, Artifact_t &parent) { child.parent = &parent;}
 

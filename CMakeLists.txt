@@ -53,7 +53,7 @@ ExternalProject_Add(json11
         BUILD_COMMAND PATH=$ENV{PATH} make
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/json11"
         BINARY_DIR "${CMAKE_SOURCE_DIR}/3rdparty/json11"
-        CMAKE_ARGS -DJSON11_BUILD_TESTS=off
+        CMAKE_ARGS -DJSON11_BUILD_TESTS=off -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         TEST_COMMAND "")
 
 include_directories(${CMAKE_SOURCE_DIR}/3rdparty/json11)
@@ -64,5 +64,6 @@ include_directories(${PROJECT_INCLUDE_DIR})
 include_directories(${ARCHITECTURE_INCLUDE_DIR})
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_compile_options(${PROJECT_NAME} PUBLIC -fno-omit-frame-pointer)
+add_dependencies(${PROJECT_NAME} json11)
 target_link_libraries(${PROJECT_NAME} dwarf elf ${CMAKE_SOURCE_DIR}/3rdparty/json11/libjson11.a)
 

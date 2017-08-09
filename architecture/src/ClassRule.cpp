@@ -60,7 +60,8 @@ namespace pcv {
 
   void ClassRule::traverseHierarchy(const Class *cls,
                                     Artifact_t *artifact,
-                                    const std::unordered_set<const Class *> &classes) {
+                                    const std::unordered_set<const Class *> &classes)
+  {
     artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
             new pcv::Artifact_t(cls->name, artifact)
     });
@@ -111,7 +112,7 @@ namespace pcv {
                                       const std::unordered_set<const Class *> &classes) {
     for (auto cls : classes) {
       if (added.find(cls) == std::end(added)) {
-        const Class *baseClass = getBaseClass(cls);
+        const auto *baseClass = getBaseClass(cls);
         traverseHierarchy(baseClass, &artifact, classes);
       }
     }

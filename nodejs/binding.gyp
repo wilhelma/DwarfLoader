@@ -46,17 +46,18 @@
         }]
       ],
       'cflags_cc': [ '-fexceptions', '-fpermissive', '-fPIC' ],
+      'cflags_cc!': [ '-fno-rtti' ],
       'include_dirs': [
-        '../cmake-build-debug/3rdparty/json11',
+        '../3rdparty/json11',
         '../dwarf/include',
         '../architecture/include'
       ],
       'link_settings': {
         "libraries": [
           '-L/usr/local/lib',
-          '-ldwarf',
-          '-lelf',
-          '../../cmake-build-debug/3rdparty/json11/libjson11.a'
+	  '/home/wilhelma/workspace/parceive/dc_cpp/cmake-build-release/libdwarf/libdwarf/libdwarf.a',
+	  '/home/wilhelma/workspace/parceive/dc_cpp/cmake-build-release/libelf/lib/libelf.a',
+          '../../3rdparty/json11/libjson11.a'
         ]
       }
     }
