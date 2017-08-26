@@ -6,41 +6,48 @@
 #include "OrOperatorRule.h"
 #include "ArchBuilder.h"
 #include "Context.h"
+#include "ClassRule.h"
+#include "FunctionRule.h"
+#include "VariableRule.h"
+#include "entities/Variable.h"
 
 
 namespace pcv {
+  using entity::Variable;
+
   OrOperatorRule::OrOperatorRule(const std::string &artifactName, ArchRule* firstArtifact,
                     ArchRule* secondArtifact) : artifactName_(artifactName),
                                                                       firstArtifact_(firstArtifact),
                                                                       secondArtifact_(secondArtifact) {}
-  Artifact_t* OrOperatorRule::copyChildren(Artifact_t &parent, Artifact_t &artifact) {
-    for(auto &child : artifact.children) {
-      parent.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(child->name, &parent)});
 
-      for(auto &entity : child->entities)
-        parent.children.back().get()->entities.insert(entity);
-      copyChildren(*(parent.children.back().get()), *child);
+  void getClassesInArtifact(Artifact_t &artifact, std::unordered_set<const Class *> &classes) {
+    if (artifact.entity && artifact.entity->getEntityType() == pcv::entity::EntityType::Class) {
+      classes.insert(static_cast<const Class*>(artifact.entity));
     }
-    return &parent;
+    for(auto &child : artifact.children) {
+      getClassesInArtifact(*child, classes);
+    }
   }
 
-  void findUnionOfArtifacts(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
-    Artifact_t* parent = &archSet;
-    if(first.name == second.name) {
-      std::unique_ptr<Artifact_t> intersectArtifact(new Artifact_t(first.name, parent));
-      for(auto &firstChild : first.children)
-        for(auto &secondChild : second.children)
-          if(firstChild->name == secondChild->name) {
-            intersectArtifact->children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(firstChild->name, intersectArtifact.get())});
-            for(auto entity : firstChild->entities)
-              if(secondChild->entities.find(entity) != secondChild->entities.end())
-                intersectArtifact->children.back()->entities.insert(entity);
-          }
+  void getRoutinesInArtifact(Artifact_t &artifact, std::unordered_set<const Routine *> &routines, ArchRule::added_t &added) {
+    if (artifact.entity && artifact.entity->getEntityType() == pcv::entity::EntityType::Routine) {
+      if(added.find(artifact.entity) == std::end(added)) {
+        routines.insert(static_cast<const Routine*>(artifact.entity));
+      }
+    }
+    for(auto &child : artifact.children) {
+      getRoutinesInArtifact(*child, routines, added);
+    }
+  }
 
-      for(auto entity : first.entities)
-        if(second.entities.find(entity) != second.entities.end())
-          intersectArtifact->entities.insert(entity);
-      archSet.children.push_back(std::move(intersectArtifact));
+  void getGlobalVariablesInArtifact(Artifact_t &artifact, std::unordered_set<const Variable *> &variables, ArchRule::added_t &added) {
+    if (artifact.entity && artifact.entity->getEntityType() == pcv::entity::EntityType::Variable) {
+      if(added.find(artifact.entity) == std::end(added)) {
+        variables.insert(static_cast<const Variable*>(artifact.entity));
+      }
+    }
+    for(auto &child : artifact.children) {
+      getGlobalVariablesInArtifact(*child, variables, added);
     }
   }
 
@@ -51,9 +58,34 @@ namespace pcv {
     Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
     Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
 
-    for(auto &firstArtifact : firstArtifactSet->children)
-      for(auto &secondArtifact : secondArtifactSet->children)
-        findUnionOfArtifacts(*firstArtifact, *secondArtifact, *artifact_);
+    ArchRule::added_t added;
+    // consider classes
+    {
+      std::unordered_set<const Class *> classes;
+      getClassesInArtifact(*firstArtifactSet, classes);
+      getClassesInArtifact(*secondArtifactSet, classes);
+      ClassRule cRule;
+      added = cRule.apply(*artifact_, classes);
+    }
+
+    // consider routines
+    {
+      std::unordered_set<const Routine *> routines;
+      getRoutinesInArtifact(*firstArtifactSet, routines, added);
+      getRoutinesInArtifact(*secondArtifactSet, routines, added);
+      FunctionRule fRule;
+      auto fAdded = fRule.apply(*artifact_, routines);
+      added.insert(begin(fAdded), end(fAdded));
+    }
+
+    //consider global variables
+    {
+      std::unordered_set<const Variable *> variables;
+      getGlobalVariablesInArtifact(*firstArtifactSet, variables, added);
+      getGlobalVariablesInArtifact(*secondArtifactSet, variables, added);
+      VariableRule vRule;
+      vRule.apply(*artifact_, variables);
+    }
 
     return artifacts;
   }

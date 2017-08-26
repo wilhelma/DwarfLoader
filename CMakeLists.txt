@@ -26,6 +26,7 @@ set(SOURCE_FILES
         ${ARCHITECTURE_SOURCE_DIR}/ArchRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/ClassRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/NamespaceRule.cpp
+        ${ARCHITECTURE_SOURCE_DIR}/NotOperatorRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/FunctionRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/VariableRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexFileRule.cpp

@@ -36,6 +36,8 @@ namespace pcv {
                 std::unique_ptr<Artifact_t>{new Artifact_t(name, artifact_)}
         );
 
+       // artifact_->children.back().get()->entity = nmsp.get();
+
         addedArtifacts[nmsp.get()] = artifact_->children.back().get();
 
         ArchRule::added_t added;

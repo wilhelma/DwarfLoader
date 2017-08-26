@@ -15,7 +15,49 @@ namespace pcv {
                                                              firstArtifact_(firstArtifact),
                                                              secondArtifact_(secondArtifact) {}
 
+  Artifact_t* copyIntersectingHierarchy(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
+    Artifact_t* added = &archSet;
+    if(first.entity == second.entity && first.entity != nullptr) {
+      std::cout << first.entity->name<< std::endl;
+      archSet.children.push_back(
+              std::unique_ptr<Artifact_t>{new Artifact_t((first.name == second.name ? first.name : ""), &archSet)}
+      );
+      added = archSet.children.back().get();
+    }
+    for(auto &childArtifact : second.children) {
+      copyIntersectingHierarchy(first, *childArtifact, *added);
+    }
+    return added;
+  }
+
   void findIntersectionOfArtifacts(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
+    Artifact_t* added = copyIntersectingHierarchy(first, second, archSet);
+
+
+    for(auto &childArtifact : first.children) {
+      std::cout << "herw";
+      findIntersectionOfArtifacts(*childArtifact, second, *added);
+    }
+  }
+
+  std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
+    auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
+    artifact_ = new Artifact_t(artifactName_, &archSet);
+
+    Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
+    Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
+
+    findIntersectionOfArtifacts(*firstArtifactSet, *secondArtifactSet, *artifact_);
+
+    return artifacts;
+  }
+
+  std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::append(Artifact_t &archSet, const dwarf::Context &ctxt)
+  {
+    return nullptr;
+  }
+
+/* void findIntersectionOfArtifacts(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
     Artifact_t* parent = &archSet;
     if((first.name == second.name) && first.name != "") {
      // std::cout << first.name << std::endl;
@@ -76,26 +118,6 @@ namespace pcv {
     for(auto &firstChild : first.children)
       for(auto &secondChild : second.children)
         findIntersectionOfArtifacts(*firstChild, *secondChild, *parent);
-  }
-
-  std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
-    auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
-    artifact_ = new Artifact_t(artifactName_, &archSet);
-
-    Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
-    Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
-
-
-        findIntersectionOfArtifacts(*firstArtifactSet, *secondArtifactSet, *artifact_);
-
-    return artifacts;
-  }
-
-  std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::append(Artifact_t &archSet, const dwarf::Context &ctxt)
-  {
-    return nullptr;
-  }
-
-
+  }*/
 
 }

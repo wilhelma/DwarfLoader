@@ -41,7 +41,9 @@ namespace pcv {
     added.insert(routine);
 
     for (auto variable : routine->locals) {
-      newArtifact->entities.insert(variable);
+      newArtifact->children.emplace_back(new Artifact_t(variable->name, newArtifact));
+      newArtifact->children.back().get()->entity = variable;
+      //newArtifact->entities.insert(variable);
       added.insert(variable);
     }
   }
@@ -69,7 +71,9 @@ namespace pcv {
     added.insert(cls);
 
     for (auto member : cls->members) {
-      newArtifact->entities.insert(member);
+      newArtifact->children.emplace_back(new Artifact_t(member->name, newArtifact));
+      newArtifact->children.back().get()->entity = member;
+      //newArtifact->entities.insert(member);
       added.insert(member);
     }
 

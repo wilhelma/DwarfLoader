@@ -18,6 +18,7 @@ FunctionRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 
   std::unordered_set<const Routine*> routines;
   for (auto &f : ctxt.routines) {
+    //std::cout << f->name << std::endl;
     if (std::regex_match(f->name, rx_)) {
       routines.insert(f.get());
     }
@@ -39,11 +40,13 @@ ArchRule::added_t FunctionRule::apply(Artifact_t &artifact,
 {
   for (auto routine : routines) {
     artifact.children.emplace_back(new Artifact_t(routine->name, &artifact));
-    auto newArtifact = artifact.children.back().get();
+    auto newRoutine = artifact.children.back().get();
+    newRoutine->entity = routine;
     added_.insert(routine);
 
     for (auto variable : routine->locals) {
-      newArtifact->entities.insert(variable);
+      newRoutine->children.emplace_back(new Artifact_t(variable->name, newRoutine));
+      newRoutine->children.back().get()->entity = variable;
       added_.insert(variable);
     }
   }
