@@ -7,11 +7,11 @@
 
 #include <regex>
 #include <memory>
-#include "ArchRule.h"
+#include "BinaryOperatorRule.h"
 
 namespace pcv {
 
-  class OrOperatorRule : public ArchRule {
+  class OrOperatorRule : public BinaryOperatorRule {
     std::string artifactName_;
     ArchRule* firstArtifact_;
     ArchRule* secondArtifact_;

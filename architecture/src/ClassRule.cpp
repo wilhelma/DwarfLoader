@@ -92,6 +92,7 @@ namespace pcv {
   std::unique_ptr<ArchRule::artifacts_t>
   ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     artifact_ = new Artifact_t(artifactName_, &archSet);
+    artifact_->entity = nullptr;
     auto newArtifact = artifact_;
     std::unordered_set<const Class *> classes;
 

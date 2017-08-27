@@ -2,11 +2,11 @@
 // Created by Faris Cakaric on 19.06.17.
 //
 
-#include <iostream>
-#include <AndOperatorRule.h>
-#include "ArchBuilder.h"
-#include "Context.h"
-#include "entities/SoftwareEntity.h"
+#include "AndOperatorRule.h"
+#include "ClassRule.h"
+#include "FunctionRule.h"
+#include "VariableRule.h"
+
 using pcv::entity::SoftwareEntity;
 using pcv::entity::EntityType;
 namespace pcv {
@@ -15,29 +15,17 @@ namespace pcv {
                                                              firstArtifact_(firstArtifact),
                                                              secondArtifact_(secondArtifact) {}
 
-  Artifact_t* copyIntersectingHierarchy(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
-    Artifact_t* added = &archSet;
-    if(first.entity == second.entity && first.entity != nullptr) {
-      std::cout << first.entity->name<< std::endl;
-      archSet.children.push_back(
-              std::unique_ptr<Artifact_t>{new Artifact_t((first.name == second.name ? first.name : ""), &archSet)}
-      );
-      added = archSet.children.back().get();
+  template <typename InIt1, typename InIt2, typename OutIt>
+  OutIt unordered_set_intersection(InIt1 b1, InIt1 e1, InIt2 b2, InIt2 e2, OutIt out) {
+    while (!(b1 == e1)) {
+      if (!(std::find(b2, e2, *b1) == e2)) {
+        *out = *b1;
+        ++out;
+      }
+      ++b1;
     }
-    for(auto &childArtifact : second.children) {
-      copyIntersectingHierarchy(first, *childArtifact, *added);
-    }
-    return added;
-  }
 
-  void findIntersectionOfArtifacts(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
-    Artifact_t* added = copyIntersectingHierarchy(first, second, archSet);
-
-
-    for(auto &childArtifact : first.children) {
-      std::cout << "herw";
-      findIntersectionOfArtifacts(*childArtifact, second, *added);
-    }
+    return out;
   }
 
   std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
@@ -47,7 +35,55 @@ namespace pcv {
     Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
     Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
 
-    findIntersectionOfArtifacts(*firstArtifactSet, *secondArtifactSet, *artifact_);
+    ArchRule::added_t added;
+    // consider classes
+    {
+      std::unordered_set<const Class *> classesInFirstArtifact;
+      std::unordered_set<const Class *> classesInSecondArtifact;
+      getClassesInArtifact(*firstArtifactSet, classesInFirstArtifact);
+      getClassesInArtifact(*secondArtifactSet, classesInSecondArtifact);
+      std::unordered_set<const Class *> classes;
+      unordered_set_intersection(
+              classesInFirstArtifact.begin(), classesInFirstArtifact.end(),
+              classesInSecondArtifact.begin(), classesInSecondArtifact.end(),
+              std::inserter(classes, classes.begin())
+      );
+      ClassRule cRule;
+      added = cRule.apply(*artifact_, classes);
+    }
+
+    // consider routines
+    {
+      std::unordered_set<const Routine *> routinesInFirstArtifact;
+      std::unordered_set<const Routine *> routinesInSecondArtifact;
+      getRoutinesInArtifact(*firstArtifactSet, routinesInFirstArtifact, added);
+      getRoutinesInArtifact(*secondArtifactSet, routinesInSecondArtifact, added);
+      std::unordered_set<const Routine *> routines;
+      unordered_set_intersection(
+              routinesInFirstArtifact.begin(), routinesInFirstArtifact.end(),
+              routinesInSecondArtifact.begin(), routinesInSecondArtifact.end(),
+              std::inserter(routines, routines.begin())
+      );
+      FunctionRule fRule;
+      auto fAdded = fRule.apply(*artifact_, routines);
+      added.insert(begin(fAdded), end(fAdded));
+    }
+
+    //consider global variables
+    {
+      std::unordered_set<const Variable *> variablesInFirstArtifact;
+      std::unordered_set<const Variable *> variablesInSecondArtifact;
+      getGlobalVariablesInArtifact(*firstArtifactSet, variablesInFirstArtifact, added);
+      getGlobalVariablesInArtifact(*secondArtifactSet, variablesInSecondArtifact, added);
+      std::unordered_set<const Variable *> variables;
+      unordered_set_intersection(
+              variablesInFirstArtifact.begin(), variablesInFirstArtifact.end(),
+              variablesInSecondArtifact.begin(), variablesInSecondArtifact.end(),
+              std::inserter(variables, variables.begin())
+      );
+      VariableRule vRule;
+      vRule.apply(*artifact_, variables);
+    }
 
     return artifacts;
   }
@@ -57,67 +93,5 @@ namespace pcv {
     return nullptr;
   }
 
-/* void findIntersectionOfArtifacts(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
-    Artifact_t* parent = &archSet;
-    if((first.name == second.name) && first.name != "") {
-     // std::cout << first.name << std::endl;
-      std::unique_ptr<Artifact_t> intersectArtifact(new Artifact_t(first.name, parent));
-      for(auto &firstChild : first.children)
-        for(auto &secondChild : second.children)
-          if(firstChild->name == secondChild->name) {
-            intersectArtifact->children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(firstChild->name, intersectArtifact.get())});
-            for(auto entity : firstChild->entities)
-              if(secondChild->entities.find(entity) != secondChild->entities.end())
-                intersectArtifact->children.back()->entities.insert(entity);
-          }
-
-      for(auto entity : first.entities)
-        if(second.entities.find(entity) != second.entities.end())
-          intersectArtifact->entities.insert(entity);
-      archSet.children.push_back(std::move(intersectArtifact));
-    } else {
-      for(auto &entity : first.entities) {
-        for(auto &childOfSecond : second.children) {
-          if (entity->getEntityType() == EntityType::Class && (entity->name == childOfSecond->name)) {
-            std::unique_ptr<Artifact_t> intersectArtifact(new Artifact_t(childOfSecond->name, parent));
-            for (auto &child : childOfSecond->children) {
-              intersectArtifact->children.emplace_back(new Artifact_t(child->name, intersectArtifact.get()));
-              for (auto childEntity : child->entities) {
-                intersectArtifact->entities.insert(childEntity);
-              }
-            }
-
-            for (auto entityFromSecond : childOfSecond->entities)
-              intersectArtifact->entities.insert(entityFromSecond);
-
-            archSet.children.push_back(std::move(intersectArtifact));
-          }
-        }
-      }
-      for(auto &entity : second.entities) {
-        for(auto &childOfFirst : first.children) {
-          if(entity->getEntityType() == EntityType::Class && (entity->name == childOfFirst->name)) {
-            std::cout << "hre";
-            std::unique_ptr<Artifact_t> intersectArtifact(new Artifact_t(childOfFirst->name, parent));
-            for(auto &child : childOfFirst->children) {
-              intersectArtifact->children.emplace_back(new Artifact_t(child->name, intersectArtifact.get()));
-              for(auto childEntity : child->entities) {
-                intersectArtifact->entities.insert(childEntity);
-              }
-            }
-
-            for(auto entityFromSecond : childOfFirst->entities)
-              intersectArtifact->entities.insert(entityFromSecond);
-
-            archSet.children.push_back(std::move(intersectArtifact));
-          }
-        }
-
-      }
-    }
-    for(auto &firstChild : first.children)
-      for(auto &secondChild : second.children)
-        findIntersectionOfArtifacts(*firstChild, *secondChild, *parent);
-  }*/
 
 }

@@ -20,37 +20,6 @@ namespace pcv {
                                                                       firstArtifact_(firstArtifact),
                                                                       secondArtifact_(secondArtifact) {}
 
-  void getClassesInArtifact(Artifact_t &artifact, std::unordered_set<const Class *> &classes) {
-    if (artifact.entity && artifact.entity->getEntityType() == pcv::entity::EntityType::Class) {
-      classes.insert(static_cast<const Class*>(artifact.entity));
-    }
-    for(auto &child : artifact.children) {
-      getClassesInArtifact(*child, classes);
-    }
-  }
-
-  void getRoutinesInArtifact(Artifact_t &artifact, std::unordered_set<const Routine *> &routines, ArchRule::added_t &added) {
-    if (artifact.entity && artifact.entity->getEntityType() == pcv::entity::EntityType::Routine) {
-      if(added.find(artifact.entity) == std::end(added)) {
-        routines.insert(static_cast<const Routine*>(artifact.entity));
-      }
-    }
-    for(auto &child : artifact.children) {
-      getRoutinesInArtifact(*child, routines, added);
-    }
-  }
-
-  void getGlobalVariablesInArtifact(Artifact_t &artifact, std::unordered_set<const Variable *> &variables, ArchRule::added_t &added) {
-    if (artifact.entity && artifact.entity->getEntityType() == pcv::entity::EntityType::Variable) {
-      if(added.find(artifact.entity) == std::end(added)) {
-        variables.insert(static_cast<const Variable*>(artifact.entity));
-      }
-    }
-    for(auto &child : artifact.children) {
-      getGlobalVariablesInArtifact(*child, variables, added);
-    }
-  }
-
   std::unique_ptr<ArchRule::artifacts_t> OrOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
     artifact_ = new Artifact_t(artifactName_, &archSet);

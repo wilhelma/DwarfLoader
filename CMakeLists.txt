@@ -32,6 +32,7 @@ set(SOURCE_FILES
         ${ARCHITECTURE_SOURCE_DIR}/RegexFileRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexNameRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexRule.cpp
+        ${ARCHITECTURE_SOURCE_DIR}/BinaryOperatorRule.cpp
         ${AST_DIR}/visitor/ASTVisitor.cpp
         ${AST_DIR}/visitor/VisitorContext.cpp
         ${AST_DIR}/ast-from-json/CreateAstFromJson.cpp
