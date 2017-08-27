@@ -7,15 +7,18 @@
 
 #include "Visitor.h"
 #include "VisitorContext.h"
+#include "../nodes/AssignmentExpression.h"
 
 #include <iostream>
 
 class ASTVisitor : public Visitor {
   virtual void visit(AndExpression &el) override;
 
+  virtual void visit(AssignmentExpression& el) override ;
+
   virtual void visit(AtomExpression &el) override;
 
-  virtual void visit(Component &el) override;
+  virtual void visit(Artifact &el) override;
 
   virtual void visit(DefinitionExpression &el) override;
 

@@ -5,7 +5,7 @@
 #include "CreateAstFromJson.h"
 
 Program CreateAstFromJson::generateAst(Json json) {
-    std::vector<std::unique_ptr<DefinitionExpression>> definitionExpressions;
+    std::vector<std::unique_ptr<Expression>> definitionExpressions;
     Json::array statements = json.array_items();
 
     for (size_t i = 0; i < statements.size(); i++) {
@@ -15,7 +15,7 @@ Program CreateAstFromJson::generateAst(Json json) {
 }
 
 DefinitionExpression* CreateAstFromJson::generateDefinitionExpressionFromJson(Json json) {
-    std::unique_ptr<Component> left(generateComponentFromJson(json["left"]));
+    std::unique_ptr<Artifact> left(generateArtifactFromJson(json["left"]));
     Json rightSide = json["right"];
     std::unique_ptr<Expression> right;
     if(rightSide["type"] == "OrExpression") {
@@ -26,8 +26,8 @@ DefinitionExpression* CreateAstFromJson::generateDefinitionExpressionFromJson(Js
         right.reset(generateNotExpressionFromJson(rightSide));
     } else if(rightSide["type"] == "AtomExpression") {
         right.reset(generateAtomExpressionFromJson(rightSide));
-    }  else if(rightSide["type"] == "Component") {
-        right.reset(generateComponentFromJson(rightSide));
+    }  else if(rightSide["type"] == "Artifact") {
+        right.reset(generateArtifactFromJson(rightSide));
     } else if(rightSide["type"] == "SetExpression") {
         right.reset(generateSetTermFromJson(rightSide));
     }
@@ -47,8 +47,8 @@ T* CreateAstFromJson::generateBinaryExpressionFromJson(Json json) {
         left = std::unique_ptr<NotExpression>(generateNotExpressionFromJson(leftSide));
     } else if(leftSide["type"] == "AtomExpression") {
         left = std::unique_ptr<AtomExpression>(generateAtomExpressionFromJson(leftSide));
-    }  else if(leftSide["type"] == "Component") {
-        left = std::unique_ptr<Component>(generateComponentFromJson(leftSide));
+    }  else if(leftSide["type"] == "Artifact") {
+        left = std::unique_ptr<Artifact>(generateArtifactFromJson(leftSide));
     } else if(leftSide["type"] == "SetExpression") {
         left = std::unique_ptr<SetExpression>(generateSetTermFromJson(leftSide));
     }
@@ -63,8 +63,8 @@ T* CreateAstFromJson::generateBinaryExpressionFromJson(Json json) {
         right = std::unique_ptr<NotExpression>(generateNotExpressionFromJson(rightSide));
     } else if(rightSide["type"] == "AtomExpression") {
         right = std::unique_ptr<AtomExpression>(generateAtomExpressionFromJson(rightSide));
-    }  else if(rightSide["type"] == "Component") {
-        right = std::unique_ptr<Component>(generateComponentFromJson(rightSide));
+    }  else if(rightSide["type"] == "Artifact") {
+        right = std::unique_ptr<Artifact>(generateArtifactFromJson(rightSide));
     } else if(rightSide["type"] == "SetExpression") {
         right = std::unique_ptr<SetExpression>(generateSetTermFromJson(rightSide));
     }
@@ -83,8 +83,8 @@ NotExpression* CreateAstFromJson::generateNotExpressionFromJson(Json json) {
         right = std::unique_ptr<NotExpression>(generateNotExpressionFromJson(rightSide));
     } else if(rightSide["type"] == "AtomExpression") {
         right = std::unique_ptr<AtomExpression>(generateAtomExpressionFromJson(rightSide));
-    }  else if(rightSide["type"] == "Component") {
-        right = std::unique_ptr<Component>(generateComponentFromJson(rightSide));
+    }  else if(rightSide["type"] == "Artifact") {
+        right = std::unique_ptr<Artifact>(generateArtifactFromJson(rightSide));
     } else if(rightSide["type"] == "SetExpression") {
         right = std::unique_ptr<SetExpression>(generateSetTermFromJson(rightSide));
     }
@@ -97,27 +97,15 @@ AtomExpression* CreateAstFromJson::generateAtomExpressionFromJson(Json json) {
 }
 
 SetExpression* CreateAstFromJson::generateSetTermFromJson(Json json) {
-    std::vector<std::unique_ptr<Expression>> elements;
+    std::vector<std::unique_ptr<Artifact>> elements;
     Json::array jsonElements = json["elements"].array_items();
 
-    for(size_t i = 0; i < jsonElements.size(); i++) {
-      if(jsonElements[i]["type"] == "OrExpression") {
-        elements.push_back(std::unique_ptr<OrExpression>(generateBinaryExpressionFromJson<OrExpression>(jsonElements[i])));
-      } else if(jsonElements[i]["type"] == "AndExpression") {
-        elements.push_back(std::unique_ptr<AndExpression>(generateBinaryExpressionFromJson<AndExpression>(jsonElements[i])));
-      } else if(jsonElements[i]["type"] == "NotExpression") {
-        elements.push_back(std::unique_ptr<NotExpression>(generateNotExpressionFromJson(jsonElements[i])));
-      } else if(jsonElements[i]["type"] == "AtomExpression") {
-        elements.push_back(std::unique_ptr<AtomExpression>(generateAtomExpressionFromJson(jsonElements[i])));
-      }  else if(jsonElements[i]["type"] == "Component") {
-        elements.push_back(std::unique_ptr<Component>(generateComponentFromJson(jsonElements[i])));
-      } else if(jsonElements[i]["type"] == "SetExpression") {
-        elements.push_back(std::unique_ptr<SetExpression>(generateSetTermFromJson(jsonElements[i])));
-      }
-    }
+    for(size_t i = 0; i < jsonElements.size(); i++)
+        elements.push_back(std::unique_ptr<Artifact>(generateArtifactFromJson(jsonElements[i])));
+
     return new SetExpression{elements};
 }
 
-Component* CreateAstFromJson::generateComponentFromJson(Json json) {
-    return new Component{json["name"].string_value()};
+Artifact* CreateAstFromJson::generateArtifactFromJson(Json json) {
+    return new Artifact{json["name"].string_value()};
 }

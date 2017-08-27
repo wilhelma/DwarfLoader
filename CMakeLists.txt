@@ -38,13 +38,14 @@ set(SOURCE_FILES
         ${AST_DIR}/ast-from-json/CreateAstFromJson.cpp
         ${AST_DIR}/nodes/Program.cpp
         ${AST_DIR}/nodes/DefinitionExpression.cpp
-        ${AST_DIR}/nodes/Component.cpp
+        ${AST_DIR}/nodes/Artifact.cpp
         ${AST_DIR}/nodes/AndExpression.cpp
         ${AST_DIR}/nodes/OrExpression.cpp
         ${AST_DIR}/nodes/NotExpression.cpp
         ${AST_DIR}/nodes/AtomExpression.cpp
         ${AST_DIR}/nodes/SetExpression.cpp
-        ${AST_DIR}/nodes/Expression.cpp)
+        ${AST_DIR}/nodes/Expression.cpp
+        ${AST_DIR}/nodes/AssignmentExpression.cpp)
 
 #------------------------------ json11 library ----------------------------------------------------#
 ExternalProject_Add(json11

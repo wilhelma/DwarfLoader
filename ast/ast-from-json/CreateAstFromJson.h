@@ -13,7 +13,7 @@
 #include "../nodes/NotExpression.h"
 #include "../nodes/AtomExpression.h"
 #include "../nodes/SetExpression.h"
-#include "../nodes/Component.h"
+#include "../nodes/Artifact.h"
 
 
 #include <json11.hpp>
@@ -37,7 +37,7 @@ private:
 
     static SetExpression* generateSetTermFromJson(Json json);
 
-    static Component* generateComponentFromJson(Json json);
+    static Artifact* generateArtifactFromJson(Json json);
 
 };
 

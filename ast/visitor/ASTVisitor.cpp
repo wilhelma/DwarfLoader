@@ -35,6 +35,13 @@ void ASTVisitor::visit(AndExpression &el) {
   visitorContext_->applyRuleToBuilder(archRule);
 }
 
+void ASTVisitor::visit(AssignmentExpression &el) {
+  el.getArtifact()->accept(*this);
+  el.getExpression()->accept(*this);
+  ArchRule *archRule = visitorContext_->popFromArchRulesStack();
+  visitorContext_->addArtifactToArchBuilder(visitorContext_->popFromArtifactNamesStack(), archRule);
+}
+
 void ASTVisitor::visit(AtomExpression &el) {
   if (el.getRule() == "class") {
     ArchRule *archRule = new ClassRule("", el.getRegex());
@@ -59,12 +66,12 @@ void ASTVisitor::visit(AtomExpression &el) {
   }
 }
 
-void ASTVisitor::visit(Component &el) {
+void ASTVisitor::visit(Artifact &el) {
   visitorContext_->pushToArtifactNamesStack(el.getName());
 }
 
 void ASTVisitor::visit(DefinitionExpression &el) {
-  el.getComponent()->accept(*this);
+  el.getArtifact()->accept(*this);
   el.getExpression()->accept(*this);
   ArchRule *archRule = visitorContext_->popFromArchRulesStack();
   visitorContext_->addArtifactToArchBuilder(visitorContext_->popFromArtifactNamesStack(), archRule);
@@ -75,10 +82,10 @@ void ASTVisitor::visit(Expression &el) {
 
 void ASTVisitor::visit(NotExpression &el) {
   ArchRule *archRule;
-  if (dynamic_cast<Component *>(el.getOperand().get())) {
+  if (dynamic_cast<Artifact *>(el.getOperand().get())) {
     std::cout << "hre";
     archRule = new NotOperatorRule("", visitorContext_->getArtifactFromArchBuilder(
-            dynamic_cast<Component *>(el.getOperand().get())->getName()));
+            dynamic_cast<Artifact *>(el.getOperand().get())->getName()));
   }
 
   else {
@@ -108,9 +115,9 @@ void ASTVisitor::visit(Program &el) {
 void ASTVisitor::visit(SetExpression &el) {
   std::vector<Artifact_t *> artifactsFromStack;
   for (size_t i = 0; i < el.getTerms().size(); i++) {
-    if (dynamic_cast<Component *>(el.getTerms()[i].get()))
+    if (dynamic_cast<Artifact *>(el.getTerms()[i].get()))
       artifactsFromStack.push_back(visitorContext_->getArtifactFromArchBuilder(
-              dynamic_cast<Component *>(el.getTerms()[i].get())->getName()));
+              dynamic_cast<Artifact *>(el.getTerms()[i].get())->getName()));
     else {
       el.getTerms()[i]->accept(*this);
       artifactsFromStack.push_back(visitorContext_->popFromArchRulesStack()->getArchSet());

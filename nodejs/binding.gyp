@@ -28,7 +28,7 @@
         "../ast/ast-from-json/CreateAstFromJson.cpp",
         "../ast/nodes/AndExpression.cpp",
         "../ast/nodes/AtomExpression.cpp",
-        "../ast/nodes/Component.cpp",
+        "../ast/nodes/Artifact.cpp",
         "../ast/nodes/DefinitionExpression.cpp",
         "../ast/nodes/Expression.cpp",
         "../ast/nodes/NotExpression.cpp",
