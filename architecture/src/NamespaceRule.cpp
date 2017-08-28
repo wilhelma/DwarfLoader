@@ -25,6 +25,7 @@ namespace pcv {
     static std::unordered_map<Namespace *, Artifact_t *> addedArtifacts;
 
     artifact_ = new Artifact_t(artifactName_, &archSet);
+    artifact_->entity = nullptr;
 
     for (auto &nmsp : ctxt.namespaces) {
       if(std::regex_match(nmsp->name, rx_)) {

@@ -3,18 +3,19 @@
 //
 
 #include "CreateAstFromJson.h"
+#include "../nodes/AssignmentExpression.h"
 
 Program CreateAstFromJson::generateAst(Json json) {
     std::vector<std::unique_ptr<Expression>> definitionExpressions;
     Json::array statements = json.array_items();
 
     for (size_t i = 0; i < statements.size(); i++) {
-        definitionExpressions.push_back(std::unique_ptr<DefinitionExpression>(generateDefinitionExpressionFromJson(statements[i])));
+        definitionExpressions.push_back(std::unique_ptr<Expression>(generateDefinitionExpressionFromJson(statements[i])));
     }
     return Program{definitionExpressions};
 }
 
-DefinitionExpression* CreateAstFromJson::generateDefinitionExpressionFromJson(Json json) {
+Expression* CreateAstFromJson::generateDefinitionExpressionFromJson(Json json) {
     std::unique_ptr<Artifact> left(generateArtifactFromJson(json["left"]));
     Json rightSide = json["right"];
     std::unique_ptr<Expression> right;
@@ -31,8 +32,10 @@ DefinitionExpression* CreateAstFromJson::generateDefinitionExpressionFromJson(Js
     } else if(rightSide["type"] == "SetExpression") {
         right.reset(generateSetTermFromJson(rightSide));
     }
-
-    return new DefinitionExpression(left, right);
+    if(json["operator"] == "=")
+        return new DefinitionExpression(left, right);
+    else
+        return new AssignmentExpression(left, right);
 }
 
 template <typename T>

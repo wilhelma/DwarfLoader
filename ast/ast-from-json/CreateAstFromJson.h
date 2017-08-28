@@ -26,7 +26,7 @@ public:
     static Program generateAst(Json json);
 
 private:
-    static DefinitionExpression* generateDefinitionExpressionFromJson(Json json);
+    static Expression* generateDefinitionExpressionFromJson(Json json);
 
     template <typename T>
     static T* generateBinaryExpressionFromJson(Json json);
