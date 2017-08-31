@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <NamespaceRule.h>
 #include "OrOperatorRule.h"
 #include "ArchBuilder.h"
 #include "Context.h"
@@ -23,11 +24,20 @@ namespace pcv {
   std::unique_ptr<ArchRule::artifacts_t> OrOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
     artifact_ = new Artifact_t(artifactName_, &archSet);
+    artifact_->entity = nullptr;
 
     Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
     Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
 
     ArchRule::added_t added;
+
+    //consider namespaces
+    std::unordered_set<const Namespace *> namespaces;
+    getNamespacesInArtifact(*firstArtifactSet, namespaces);
+    getNamespacesInArtifact(*secondArtifactSet, namespaces);
+    NamespaceRule namespaceRule;
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(*artifact_, namespaces, false);
+
     // consider classes
     {
       std::unordered_set<const Class *> classes;
@@ -54,6 +64,13 @@ namespace pcv {
       getGlobalVariablesInArtifact(*secondArtifactSet, variables, added);
       VariableRule vRule;
       vRule.apply(*artifact_, variables);
+    }
+
+    for(auto &child : artifact_->children) {
+      auto nmsp = child.get()->entity->nmsp;
+      if(nmsp && namespacesAdded[nmsp]) {
+        child.get()->parent = namespacesAdded[nmsp];
+      }
     }
 
     return artifacts;

@@ -26,6 +26,7 @@ class ClassRule : public ArchRule {
 
   std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
   std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;
+  added_t generateArtifactFromClass(Artifact_t *artifact, const Class &cls);
 
   /**
    * @brief Applies the class rule to build class hierarchies on the given classes and append

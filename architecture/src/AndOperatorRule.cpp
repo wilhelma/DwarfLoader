@@ -2,6 +2,7 @@
 // Created by Faris Cakaric on 19.06.17.
 //
 
+#include <NamespaceRule.h>
 #include "AndOperatorRule.h"
 #include "ClassRule.h"
 #include "FunctionRule.h"
@@ -36,6 +37,20 @@ namespace pcv {
     Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
 
     ArchRule::added_t added;
+
+    std::unordered_set<const Namespace *> namespacesInFirstArtifact;
+    std::unordered_set<const Namespace *> namespacesInSecondArtifact;
+    getNamespacesInArtifact(*firstArtifactSet, namespacesInFirstArtifact);
+    getNamespacesInArtifact(*secondArtifactSet, namespacesInSecondArtifact);
+    std::unordered_set<const Namespace *> namespaces;
+    unordered_set_intersection(
+            namespacesInFirstArtifact.begin(), namespacesInFirstArtifact.end(),
+            namespacesInSecondArtifact.begin(), namespacesInSecondArtifact.end(),
+            std::inserter(namespaces, namespaces.begin())
+    );
+    NamespaceRule namespaceRule;
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(*artifact_, namespaces, false);
+
     // consider classes
     {
       std::unordered_set<const Class *> classesInFirstArtifact;
@@ -84,6 +99,15 @@ namespace pcv {
       VariableRule vRule;
       vRule.apply(*artifact_, variables);
     }
+
+
+    for(auto &child : artifact_->children) {
+      auto nmsp = child.get()->entity->nmsp;
+      if(nmsp && namespacesAdded[nmsp]) {
+        child.get()->parent = namespacesAdded[nmsp];
+      }
+    }
+
 
     return artifacts;
   }

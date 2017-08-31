@@ -124,4 +124,27 @@ namespace pcv {
     return added;
   }
 
+  ClassRule::added_t ClassRule::generateArtifactFromClass(Artifact_t *artifact,
+                                      const Class &cls) {
+    artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
+            new Artifact_t(cls.name, artifact)
+    });
+    auto newArtifact = artifact->children.back().get();
+    newArtifact->entity = &cls;
+    added.insert(&cls);
+
+    for (auto &member : cls.members) {
+      newArtifact->children.emplace_back(new Artifact_t(member->name, newArtifact));
+      newArtifact->children.back().get()->entity = member;
+      //newArtifact->entities.insert(member);
+      added.insert(member);
+    }
+
+    for (auto method: cls.methods) {
+      addMethod(method, newArtifact);
+    }
+
+    return added;
+  }
+
 }  // namespace pcv

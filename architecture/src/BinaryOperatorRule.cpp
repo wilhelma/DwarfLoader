@@ -5,6 +5,16 @@
 #include "BinaryOperatorRule.h"
 
 namespace pcv {
+  void BinaryOperatorRule::getNamespacesInArtifact(Artifact_t &artifact,
+                                                   std::unordered_set<const Namespace *> &namespaces) {
+    if (artifact.entity != nullptr && artifact.entity->getEntityType() == pcv::entity::EntityType::Namespace) {
+      namespaces.insert(static_cast<const Namespace*>(artifact.entity));
+    }
+    for(auto &child : artifact.children) {
+      getNamespacesInArtifact(*child, namespaces);
+    }
+  }
+
   void BinaryOperatorRule::getClassesInArtifact(Artifact_t &artifact, std::unordered_set<const Class *> &classes) {
     if (artifact.entity != nullptr && artifact.entity->getEntityType() == pcv::entity::EntityType::Class) {
       classes.insert(static_cast<const Class*>(artifact.entity));
