@@ -45,7 +45,8 @@ set(SOURCE_FILES
         ${AST_DIR}/nodes/AtomExpression.cpp
         ${AST_DIR}/nodes/SetExpression.cpp
         ${AST_DIR}/nodes/Expression.cpp
-        ${AST_DIR}/nodes/AssignmentExpression.cpp)
+        ${AST_DIR}/nodes/AssignmentExpression.cpp
+        ${PROJECT_INCLUDE_DIR}/entities/SoftwareEntity.cpp)
 
 #------------------------------ json11 library ----------------------------------------------------#
 ExternalProject_Add(json11
