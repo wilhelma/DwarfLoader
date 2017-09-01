@@ -16,21 +16,9 @@ namespace pcv {
     std::vector<Artifact_t*> artifacts;
 
   public:
-/*    template <class U>
-    SetOperatorRule(const std::string artifactName, U n) {
-      artifactName_ = artifactName;
-      artifacts.push_back(n);
-    }
-
-    template <class U, class... Ts>
-    SetOperatorRule(const std::string artifactName, U n, Ts... rest) : SetOperatorRule(artifactName, rest...) {
-      artifactName_ = artifactName;
-      artifacts.push_back(n);
-    }*/
-
     SetOperatorRule(const std::string artifactName, std::vector<Artifact_t*> artifacts) : artifactName_(artifactName), artifacts(artifacts) {}
 
-    Artifact_t* copyChildren(Artifact_t &parent, Artifact_t &artifact);
+    void copyChildren(Artifact_t &parent, Artifact_t &artifact);
 
     std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
     std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;
