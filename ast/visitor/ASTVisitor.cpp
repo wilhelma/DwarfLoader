@@ -112,14 +112,9 @@ void ASTVisitor::visit(Program &el) {
 void ASTVisitor::visit(SetExpression &el) {
   std::vector<Artifact_t *> artifactsFromStack;
   for (size_t i = 0; i < el.getTerms().size(); i++) {
-    if (dynamic_cast<Artifact *>(el.getTerms()[i].get()))
-      artifactsFromStack.push_back(visitorContext_->getArtifactFromArchBuilder(
-              dynamic_cast<Artifact *>(el.getTerms()[i].get())->getName()));
-    else {
-      el.getTerms()[i]->accept(*this);
-      artifactsFromStack.push_back(visitorContext_->popFromArchRulesStack()->getArchSet());
-    }
+      artifactsFromStack.push_back(expressions[el.getTerms()[i].get()->getName()]->getArchSet());
   }
+
   ArchRule *archRule = new SetOperatorRule("", artifactsFromStack);
   visitorContext_->pushToArchRulesStack(archRule);
   visitorContext_->applyRuleToBuilder(archRule);
