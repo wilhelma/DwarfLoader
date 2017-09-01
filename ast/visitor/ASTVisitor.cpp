@@ -36,10 +36,10 @@ void ASTVisitor::visit(AndExpression &el) {
 }
 
 void ASTVisitor::visit(AssignmentExpression &el) {
-  el.getArtifact()->accept(*this);
   el.getExpression()->accept(*this);
   ArchRule *archRule = visitorContext_->popFromArchRulesStack();
-  visitorContext_->addArtifactToArchBuilder(visitorContext_->popFromArtifactNamesStack(), archRule);
+  visitorContext_->addArtifactToArchBuilder(el.getArtifact().get()->getName(), archRule);
+  expressions[el.getArtifact().get()->getName()] = archRule;
 }
 
 void ASTVisitor::visit(AtomExpression &el) {
@@ -67,14 +67,14 @@ void ASTVisitor::visit(AtomExpression &el) {
 }
 
 void ASTVisitor::visit(Artifact &el) {
-  visitorContext_->pushToArtifactNamesStack(el.getName());
+  visitorContext_->pushToArchRulesStack(expressions[el.getName()]);
 }
 
 void ASTVisitor::visit(DefinitionExpression &el) {
-  el.getArtifact()->accept(*this);
   el.getExpression()->accept(*this);
   ArchRule *archRule = visitorContext_->popFromArchRulesStack();
-  visitorContext_->addArtifactToArchBuilder(visitorContext_->popFromArtifactNamesStack(), archRule);
+  expressions[el.getArtifact().get()->getName()] = archRule;
+
 }
 
 void ASTVisitor::visit(Expression &el) {
@@ -83,12 +83,9 @@ void ASTVisitor::visit(Expression &el) {
 void ASTVisitor::visit(NotExpression &el) {
   ArchRule *archRule;
   if (dynamic_cast<Artifact *>(el.getOperand().get())) {
-    std::cout << "hre";
     archRule = new NotOperatorRule("", visitorContext_->getArtifactFromArchBuilder(
             dynamic_cast<Artifact *>(el.getOperand().get())->getName()));
-  }
-
-  else {
+  } else {
     el.getOperand()->accept(*this);
     archRule = new NotOperatorRule("", visitorContext_->popFromArchRulesStack()->getArchSet());
   }

@@ -33,6 +33,8 @@ class ASTVisitor : public Visitor {
   virtual void visit(SetExpression &el) override;
 
   VisitorContext* visitorContext_;
+
+  std::unordered_map<std::string, ArchRule *> expressions;
 public:
   ASTVisitor(VisitorContext* visitorContext);
 };

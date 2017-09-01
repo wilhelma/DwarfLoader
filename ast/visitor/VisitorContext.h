@@ -30,10 +30,6 @@ public:
 
   ArchRule* popFromArchRulesStack();
 
-  void pushToArtifactNamesStack(const std::string artifactName);
-
-  std::string popFromArtifactNamesStack();
-
   void addArtifactToArchBuilder(std::string artifactName, ArchRule* archRule);
 
   Artifact_t* getArtifactFromArchBuilder(std::string artifactName);

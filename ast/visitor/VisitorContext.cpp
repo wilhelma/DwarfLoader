@@ -24,16 +24,6 @@ ArchRule* VisitorContext::popFromArchRulesStack() {
   return topElement;
 }
 
-void VisitorContext::pushToArtifactNamesStack(const std::string artifactName) {
-  artifactNamesStack.push(artifactName);
-}
-
-std::string VisitorContext::popFromArtifactNamesStack() {
-  std::string artifactName = artifactNamesStack.top();
-  artifactNamesStack.pop();
-  return artifactName;
-}
-
 void VisitorContext::addArtifactToArchBuilder(std::string artifactName, ArchRule *archRule) {
   archRule->setArtifactName(artifactName);
   archBuilder_.getArchSet()->children.push_back(std::unique_ptr<Artifact_t>(archRule->getArchSet()));
