@@ -13,6 +13,8 @@ namespace pcv {
       auto copied = parent.children.back().get();
       if(child->entity) {
         copied->entity = child->entity;
+      } else {
+        copied->entity = nullptr;
       }
       copyChildren(*copied, *child);
     }
@@ -26,6 +28,7 @@ namespace pcv {
     for(auto &memberArtifact : artifacts) {
       artifact_->children.emplace_back(new Artifact_t(memberArtifact->name, artifact_));
       Artifact_t* parent = artifact_->children.back().get();
+      parent->entity = memberArtifact->entity;
       copyChildren(*parent, *memberArtifact);
     }
 

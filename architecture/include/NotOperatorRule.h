@@ -7,33 +7,16 @@
 
 #include <regex>
 #include <memory>
-#include "ArchRule.h"
-#include "ArchBuilder.h"
-
-using pcv::entity::Class;
+#include "BinaryOperatorRule.h"
 
 namespace pcv {
 
-  class NotOperatorRule : public ArchRule {
+  class NotOperatorRule : public BinaryOperatorRule {
     std::string artifactName_;
     Artifact_t* operand_;
 
-    added_t added;
-
-    const Class* getBaseClass(const Class *currentClass);
-
-    void addMethod(const Routine* routine, Artifact_t* artifact);
-
-    void traverseHierarchy(const Class* cls,
-                           Artifact_t* artifact,
-                           const std::unordered_set<const Class *>& classes);
-
-    bool checkIfClassIsInherited(const Class *cls, const std::unordered_set<const Class *> &classes);
-
   public:
     NotOperatorRule(const std::string &artifactName_, Artifact_t* operand_);
-
-    bool checkIfOperandContainsClass(const Class* cls, Artifact_t* artifact);
 
     std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
     std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;
