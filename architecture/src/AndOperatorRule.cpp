@@ -32,6 +32,7 @@ namespace pcv {
   std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
     artifact_ = new Artifact_t(artifactName_, &archSet);
+    artifact_->entity = nullptr;
 
     Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
     Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();

@@ -73,6 +73,7 @@ void ASTVisitor::visit(Artifact &el) {
 void ASTVisitor::visit(DefinitionExpression &el) {
   el.getExpression()->accept(*this);
   ArchRule *archRule = visitorContext_->popFromArchRulesStack();
+  archRule->setArtifactName(el.getArtifact().get()->getName());
   expressions[el.getArtifact().get()->getName()] = archRule;
 }
 
