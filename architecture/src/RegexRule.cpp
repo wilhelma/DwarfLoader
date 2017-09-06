@@ -72,6 +72,7 @@ RegexRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   auto artifacts = std::unique_ptr<artifacts_t> { new artifacts_t };
 
   artifact_ = new Artifact_t(artifactName_, &archSet);
+  artifact_->entity = nullptr;
 
   artifacts->emplace_back( artifact_ );
   for (auto &image : ctxt.images) {
