@@ -59,7 +59,7 @@ void ASTVisitor::visit(AtomExpression &el) {
     ArchRule *archRule = new FunctionRule("", el.getRegex());
     visitorContext_->pushToArchRulesStack(archRule);
     visitorContext_->applyRuleToBuilder(archRule);
-  } else if (el.getRule() == "file") {
+  } else if (el.getRule() == "infile") {
     ArchRule *archRule = new RegexFileRule("", EntityType::All, el.getRegex());
     visitorContext_->pushToArchRulesStack(archRule);
     visitorContext_->applyRuleToBuilder(archRule);
