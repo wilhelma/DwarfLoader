@@ -51,7 +51,8 @@ namespace pcv {
                 std::unique_ptr<Artifact_t>{new Artifact_t(name, artifact_)}
         );
 
-        artifact_->children.back().get()->entity = nmsp;
+        auto parent = artifact.children.back().get();
+        parent->entity = nmsp;
 
         addedArtifacts[nmsp] = artifact_->children.back().get();
         if(abstraction) {
@@ -65,7 +66,7 @@ namespace pcv {
               }
             }
             ClassRule cRule;
-            added = cRule.apply(*artifact_, classes);
+            added = cRule.apply(*parent, classes);
           }
 
           // consider routines
@@ -79,7 +80,7 @@ namespace pcv {
               }
             }
             FunctionRule fRule;
-            auto fAdded = fRule.apply(*artifact_, routines);
+            auto fAdded = fRule.apply(*parent, routines);
             added.insert(begin(fAdded), end(fAdded));
           }
 
@@ -94,7 +95,7 @@ namespace pcv {
               }
             }
             VariableRule vRule;
-            vRule.apply(*artifact_, variables);
+            vRule.apply(*parent, variables);
           }
         }
       }
