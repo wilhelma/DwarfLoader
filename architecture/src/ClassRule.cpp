@@ -62,7 +62,7 @@ namespace pcv {
 
   void ClassRule::traverseHierarchy(const Class *cls,
                                     Artifact_t *artifact,
-                                    const std::unordered_set<const Class *> &classes) {
+                                    const std::unordered_set<const Class *> &classes, bool useAllClassesFromCtxt) {
     artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
             new pcv::Artifact_t(cls->name, artifact)
     });
@@ -82,7 +82,8 @@ namespace pcv {
     }
 
     for (auto childClass : cls->inheritClasses) {
-      if (checkIfClassIsInherited(childClass, classes)) {
+      if (checkIfClassIsInherited(childClass, classes) && added.find(childClass) == std::end(added) &&
+          (!useAllClassesFromCtxt ? (classes.find(childClass) != std::end(classes)) : true)) {
         traverseHierarchy(childClass, newArtifact, classes);
       }
     }
@@ -113,35 +114,15 @@ namespace pcv {
   }
 
   ClassRule::added_t ClassRule::apply(Artifact_t &artifact,
-                                      const std::unordered_set<const Class *> &classes) {
+                                      const std::unordered_set<const Class *> &classes, bool useAllClassesFromCtxt) {
     for (auto cls : classes) {
       if (added.find(cls) == std::end(added)) {
         const Class *baseClass = getBaseClass(cls);
-        traverseHierarchy(baseClass, &artifact, classes);
+        if (useAllClassesFromCtxt && classes.find(baseClass) != std::end(classes))
+          traverseHierarchy(baseClass, &artifact, classes, useAllClassesFromCtxt);
+        else
+          traverseHierarchy(cls, &artifact, classes, useAllClassesFromCtxt);
       }
-    }
-
-    return added;
-  }
-
-  ClassRule::added_t ClassRule::generateArtifactFromClass(Artifact_t *artifact,
-                                      const Class &cls) {
-    artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
-            new Artifact_t(cls.name, artifact)
-    });
-    auto newArtifact = artifact->children.back().get();
-    newArtifact->entity = &cls;
-    added.insert(&cls);
-
-    for (auto &member : cls.members) {
-      newArtifact->children.emplace_back(new Artifact_t(member->name, newArtifact));
-      newArtifact->children.back().get()->entity = member;
-      //newArtifact->entities.insert(member);
-      added.insert(member);
-    }
-
-    for (auto method: cls.methods) {
-      addMethod(method, newArtifact);
     }
 
     return added;

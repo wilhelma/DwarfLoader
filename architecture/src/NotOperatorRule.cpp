@@ -42,7 +42,7 @@ namespace pcv {
     }
 
     ClassRule cRule;
-    added = cRule.apply(*artifact_, classes);
+    added = cRule.apply(*artifact_, classes, false);
 
     for(auto &routine : ctxt.routines) {
       if(routinesInOperand.find(routine.get()) == std::end(routinesInOperand) && added.find(routine.get()) == std::end(added)) {

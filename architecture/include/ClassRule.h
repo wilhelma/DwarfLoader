@@ -26,7 +26,6 @@ class ClassRule : public ArchRule {
 
   std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
   std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;
-  added_t generateArtifactFromClass(Artifact_t *artifact, const Class &cls);
 
   /**
    * @brief Applies the class rule to build class hierarchies on the given classes and append
@@ -35,7 +34,8 @@ class ClassRule : public ArchRule {
    */
   added_t apply(
      Artifact_t& artifact,                            /** [in,out] The base artifact. */
-     const std::unordered_set<const Class*>& classes  /** [in] The classes to consider. */);
+     const std::unordered_set<const Class*>& classes,  /** [in] The classes to consider. */
+     bool useAllClassesFromCtxt = true);
 
  private:
   const std::string artifactName_;
@@ -45,11 +45,12 @@ class ClassRule : public ArchRule {
 
   const Class* getBaseClass(const Class *currentClass);
 
-  void addMethod(const Routine* routine, Artifact_t* artifact);
+  void addMethod(const Routine *routine, Artifact_t *artifact);
 
-  void traverseHierarchy(const Class* cls,
-                         Artifact_t* artifact,
-                         const std::unordered_set<const Class *>& classes);
+  void traverseHierarchy(const Class *cls,
+                         Artifact_t *artifact,
+                         const std::unordered_set<const Class *> &classes,
+                         bool useAllClassesFromCtxt = true);
 };
 
 }  // namespace pcv
