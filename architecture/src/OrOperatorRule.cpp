@@ -44,7 +44,7 @@ namespace pcv {
       getClassesInArtifact(*firstArtifactSet, classes);
       getClassesInArtifact(*secondArtifactSet, classes);
       ClassRule cRule;
-      added = cRule.apply(*artifact_, classes);
+      added = cRule.apply(*artifact_, classes, false);
     }
 
     // consider routines

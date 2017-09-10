@@ -65,7 +65,7 @@ namespace pcv {
               std::inserter(classes, classes.begin())
       );
       ClassRule cRule;
-      added = cRule.apply(*artifact_, classes);
+      added = cRule.apply(*artifact_, classes, false);
     }
 
     // consider routines
