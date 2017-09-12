@@ -5,17 +5,16 @@
 #include "Program.h"
 #include "../visitor/Visitor.h"
 
-
 void Program::accept(Visitor &v) {
     v.visit(*this);
 }
 
 Program::Program(
-        std::vector<std::unique_ptr<DefinitionExpression>> &expressions) {
+        std::vector<std::unique_ptr<Expression>> &expressions) {
     this->expressions = std::move(expressions);
 }
 
-const std::vector<std::unique_ptr<DefinitionExpression>, std::allocator<std::unique_ptr<DefinitionExpression>>> &
+const std::vector<std::unique_ptr<Expression>, std::allocator<std::unique_ptr<Expression>>> &
 Program::getExpressions() const {
     return expressions;
 }

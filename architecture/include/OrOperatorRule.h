@@ -7,11 +7,11 @@
 
 #include <regex>
 #include <memory>
-#include "ArchRule.h"
+#include "BinaryOperatorRule.h"
 
 namespace pcv {
 
-  class OrOperatorRule : public ArchRule {
+  class OrOperatorRule : public BinaryOperatorRule {
     std::string artifactName_;
     ArchRule* firstArtifact_;
     ArchRule* secondArtifact_;
@@ -19,8 +19,6 @@ namespace pcv {
   public:
     OrOperatorRule(const std::string &artifactName_, ArchRule* firstArtifact_,
             ArchRule* secondArtifact_);
-
-    Artifact_t* copyChildren(Artifact_t &parent, Artifact_t &artifact);
 
     std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
     std::unique_ptr<artifacts_t> append(Artifact_t &archSet, const dwarf::Context &ctxt) override;

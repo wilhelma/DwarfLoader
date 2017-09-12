@@ -26,23 +26,27 @@ set(SOURCE_FILES
         ${ARCHITECTURE_SOURCE_DIR}/ArchRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/ClassRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/NamespaceRule.cpp
+        ${ARCHITECTURE_SOURCE_DIR}/NotOperatorRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/FunctionRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/VariableRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexFileRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexNameRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexRule.cpp
+        ${ARCHITECTURE_SOURCE_DIR}/BinaryOperatorRule.cpp
         ${AST_DIR}/visitor/ASTVisitor.cpp
         ${AST_DIR}/visitor/VisitorContext.cpp
         ${AST_DIR}/ast-from-json/CreateAstFromJson.cpp
         ${AST_DIR}/nodes/Program.cpp
         ${AST_DIR}/nodes/DefinitionExpression.cpp
-        ${AST_DIR}/nodes/Component.cpp
+        ${AST_DIR}/nodes/Artifact.cpp
         ${AST_DIR}/nodes/AndExpression.cpp
         ${AST_DIR}/nodes/OrExpression.cpp
         ${AST_DIR}/nodes/NotExpression.cpp
         ${AST_DIR}/nodes/AtomExpression.cpp
         ${AST_DIR}/nodes/SetExpression.cpp
-        ${AST_DIR}/nodes/Expression.cpp)
+        ${AST_DIR}/nodes/Expression.cpp
+        ${AST_DIR}/nodes/AssignmentExpression.cpp
+        ${PROJECT_INCLUDE_DIR}/entities/SoftwareEntity.cpp)
 
 #------------------------------ json11 library ----------------------------------------------------#
 ExternalProject_Add(json11

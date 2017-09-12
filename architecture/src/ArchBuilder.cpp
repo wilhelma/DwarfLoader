@@ -79,19 +79,18 @@ void removeDuplicates(Artifact_t &as, Artifact_t &newArtifact, Artifact_t *root 
     return tSet;
   };
 
-  for (auto i = begin(as.entities); i != end(as.entities);) {
-    auto s = addedEntities.find(*i);
-    if (s == end(addedEntities)) {
-      addedEntities[*i] = &as;
-      ++i;
-    } else {
-      auto commonSet = getCommonAncestor(&as, s->second);
-      commonSet->entities.insert(*i);
-      addedEntities[*i]->entities.erase(s->first);
-      addedEntities[*i] = commonSet;
-      i = as.entities.erase(i);
-    }
+
+  auto s = addedEntities.find(as.entity);
+  if (s == end(addedEntities)) {
+    addedEntities[as.entity] = &as;
+  } else {
+    auto commonSet = getCommonAncestor(&as, s->second);
+    commonSet->entity = as.entity;
+    addedEntities[as.entity]->entity = nullptr;
+    addedEntities[as.entity] = commonSet;
+    as.entity = nullptr;
   }
+
 
   for (auto &child : as.children)
      removeDuplicates(*child.get(), newArtifact, root);

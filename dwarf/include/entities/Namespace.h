@@ -8,18 +8,20 @@
 #include <string>
 #include <vector>
 
+#include "SoftwareEntity.h"
+
 namespace pcv {
 namespace entity {
 
-struct SoftwareEntity;
-
-struct Namespace {
+struct Namespace : public SoftwareEntity {
     std::string name;
     Namespace *parent;
     std::vector<Namespace*> children;
     std::vector<SoftwareEntity*> entities;
 
-    Namespace(std::string &&name, Namespace *parent) : name(name), parent(parent) {}
+    Namespace(std::string &&name, Namespace *parent) : SoftwareEntity(), name(name), parent(parent) {}
+
+    EntityType getEntityType() const override { return EntityType::Namespace; }
 };
 
 }  // namespace pcv

@@ -10,15 +10,15 @@ void DefinitionExpression::accept(Visitor &v) {
     v.visit(*this);
 }
 
-DefinitionExpression::DefinitionExpression(std::unique_ptr<Component> &component,
+DefinitionExpression::DefinitionExpression(std::unique_ptr<Artifact> &artifact,
                                            std::unique_ptr<Expression> &expression) {
 
-    this->component = std::move(component);
+    this->artifact = std::move(artifact);
     this->expression = std::move(expression);
 }
 
-const std::unique_ptr<Component> &DefinitionExpression::getComponent() const {
-    return component;
+const std::unique_ptr<Artifact> &DefinitionExpression::getArtifact() const {
+    return artifact;
 }
 
 const std::unique_ptr<Expression> &DefinitionExpression::getExpression() const {

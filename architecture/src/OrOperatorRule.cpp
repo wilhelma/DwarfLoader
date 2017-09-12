@@ -3,57 +3,75 @@
 //
 
 #include <iostream>
+#include <NamespaceRule.h>
 #include "OrOperatorRule.h"
 #include "ArchBuilder.h"
 #include "Context.h"
+#include "ClassRule.h"
+#include "FunctionRule.h"
+#include "VariableRule.h"
+#include "entities/Variable.h"
 
 
 namespace pcv {
+  using entity::Variable;
+
   OrOperatorRule::OrOperatorRule(const std::string &artifactName, ArchRule* firstArtifact,
                     ArchRule* secondArtifact) : artifactName_(artifactName),
                                                                       firstArtifact_(firstArtifact),
                                                                       secondArtifact_(secondArtifact) {}
-  Artifact_t* OrOperatorRule::copyChildren(Artifact_t &parent, Artifact_t &artifact) {
-    for(auto &child : artifact.children) {
-      parent.children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(child->name, &parent)});
-
-      for(auto &entity : child->entities)
-        parent.children.back().get()->entities.insert(entity);
-      copyChildren(*(parent.children.back().get()), *child);
-    }
-    return &parent;
-  }
-
-  void findUnionOfArtifacts(Artifact_t &first, Artifact_t &second, Artifact_t &archSet) {
-    Artifact_t* parent = &archSet;
-    if(first.name == second.name) {
-      std::unique_ptr<Artifact_t> intersectArtifact(new Artifact_t(first.name, parent));
-      for(auto &firstChild : first.children)
-        for(auto &secondChild : second.children)
-          if(firstChild->name == secondChild->name) {
-            intersectArtifact->children.push_back(std::unique_ptr<Artifact_t>{new Artifact_t(firstChild->name, intersectArtifact.get())});
-            for(auto entity : firstChild->entities)
-              if(secondChild->entities.find(entity) != secondChild->entities.end())
-                intersectArtifact->children.back()->entities.insert(entity);
-          }
-
-      for(auto entity : first.entities)
-        if(second.entities.find(entity) != second.entities.end())
-          intersectArtifact->entities.insert(entity);
-      archSet.children.push_back(std::move(intersectArtifact));
-    }
-  }
 
   std::unique_ptr<ArchRule::artifacts_t> OrOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
     artifact_ = new Artifact_t(artifactName_, &archSet);
+    artifact_->entity = nullptr;
 
     Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
     Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
 
-    for(auto &firstArtifact : firstArtifactSet->children)
-      for(auto &secondArtifact : secondArtifactSet->children)
-        findUnionOfArtifacts(*firstArtifact, *secondArtifact, *artifact_);
+    ArchRule::added_t added;
+
+    //consider namespaces
+    std::unordered_set<const Namespace *> namespaces;
+    getNamespacesInArtifact(*firstArtifactSet, namespaces);
+    getNamespacesInArtifact(*secondArtifactSet, namespaces);
+    NamespaceRule namespaceRule;
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(*artifact_, namespaces, false);
+
+    // consider classes
+    {
+      std::unordered_set<const Class *> classes;
+      getClassesInArtifact(*firstArtifactSet, classes);
+      getClassesInArtifact(*secondArtifactSet, classes);
+      ClassRule cRule;
+      added = cRule.apply(*artifact_, classes, false);
+    }
+
+    // consider routines
+    {
+      std::unordered_set<const Routine *> routines;
+      getRoutinesInArtifact(*firstArtifactSet, routines, added);
+      getRoutinesInArtifact(*secondArtifactSet, routines, added);
+      FunctionRule fRule;
+      auto fAdded = fRule.apply(*artifact_, routines);
+      added.insert(begin(fAdded), end(fAdded));
+    }
+
+    //consider global variables
+    {
+      std::unordered_set<const Variable *> variables;
+      getGlobalVariablesInArtifact(*firstArtifactSet, variables, added);
+      getGlobalVariablesInArtifact(*secondArtifactSet, variables, added);
+      VariableRule vRule;
+      vRule.apply(*artifact_, variables);
+    }
+
+    for(auto &child : artifact_->children) {
+      auto nmsp = child.get()->entity->nmsp;
+      if(nmsp && namespacesAdded[nmsp]) {
+        child.get()->parent = namespacesAdded[nmsp];
+      }
+    }
 
     return artifacts;
   }

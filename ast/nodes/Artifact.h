@@ -13,10 +13,10 @@
 
 using json11::Json;
 
-class Component : public virtual Expression {
+class Artifact : public virtual Expression {
     std::string name;
 public:
-    Component(const std::string &name);
+    Artifact(const std::string &name);
 
     const std::string &getName() const;
 

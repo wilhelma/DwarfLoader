@@ -41,7 +41,9 @@ namespace pcv {
     added.insert(routine);
 
     for (auto variable : routine->locals) {
-      newArtifact->entities.insert(variable);
+      newArtifact->children.emplace_back(new Artifact_t(variable->name, newArtifact));
+      newArtifact->children.back().get()->entity = variable;
+      //newArtifact->entities.insert(variable);
       added.insert(variable);
     }
   }
@@ -60,8 +62,8 @@ namespace pcv {
 
   void ClassRule::traverseHierarchy(const Class *cls,
                                     Artifact_t *artifact,
-                                    const std::unordered_set<const Class *> &classes)
-  {
+                                    const std::unordered_set<const Class *> &classes, bool useAllClassesFromCtxt) {
+    //std::cout << cls->name << std::endl;
     artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
             new pcv::Artifact_t(cls->name, artifact)
     });
@@ -70,7 +72,9 @@ namespace pcv {
     added.insert(cls);
 
     for (auto member : cls->members) {
-      newArtifact->entities.insert(member);
+      newArtifact->children.emplace_back(new Artifact_t(member->name, newArtifact));
+      newArtifact->children.back().get()->entity = member;
+      //newArtifact->entities.insert(member);
       added.insert(member);
     }
 
@@ -79,7 +83,8 @@ namespace pcv {
     }
 
     for (auto childClass : cls->inheritClasses) {
-      if (checkIfClassIsInherited(childClass, classes)) {
+      if (checkIfClassIsInherited(childClass, classes) && added.find(childClass) == std::end(added) &&
+          (!useAllClassesFromCtxt ? (classes.find(childClass) != std::end(classes)) : true)) {
         traverseHierarchy(childClass, newArtifact, classes);
       }
     }
@@ -89,6 +94,7 @@ namespace pcv {
   std::unique_ptr<ArchRule::artifacts_t>
   ClassRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     artifact_ = new Artifact_t(artifactName_, &archSet);
+    artifact_->entity = nullptr;
     auto newArtifact = artifact_;
     std::unordered_set<const Class *> classes;
 
@@ -109,11 +115,19 @@ namespace pcv {
   }
 
   ClassRule::added_t ClassRule::apply(Artifact_t &artifact,
-                                      const std::unordered_set<const Class *> &classes) {
+                                      const std::unordered_set<const Class *> &classes, bool useAllClassesFromCtxt) {
     for (auto cls : classes) {
       if (added.find(cls) == std::end(added)) {
+<<<<<<< HEAD
         const auto *baseClass = getBaseClass(cls);
         traverseHierarchy(baseClass, &artifact, classes);
+=======
+        const Class *baseClass = getBaseClass(cls);
+        if (useAllClassesFromCtxt)
+          traverseHierarchy(baseClass, &artifact, classes, useAllClassesFromCtxt);
+        else
+          traverseHierarchy(cls, &artifact, classes, useAllClassesFromCtxt);
+>>>>>>> eba3998b98ffc85fdfdfd7043a987abac3a6b5f5
       }
     }
 
