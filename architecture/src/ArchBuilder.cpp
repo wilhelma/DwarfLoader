@@ -15,6 +15,8 @@
 
 using json11::Json;
 
+static uint32_t artifactId {0};
+
 namespace pcv {
 
 void removeDuplicates(Artifact_t &as, Artifact_t &newArtifact, Artifact_t *root = nullptr)
@@ -134,52 +136,48 @@ void ArchBuilder::apply(ArchRule *rule) noexcept
   rule->apply(artifact_, ctxt_);
 }
 
-void addArtifact(Json::array *entities,
-                 const Artifact_t *artifact,
-                 const std::string &artifactName = "")
+void addArtifact(Json::array *entities, const Artifact_t *artifact)
 {
   for (auto &entity : artifact->entities) {
     entities->emplace_back(
         Json::object {
-            {"id", entity->name},
-            {"Id", static_cast<int>(entity->id)},
-            {"Type", static_cast<int>(entity->getEntityType())},
-            {"Name", entity->name},
-            {"Image", entity->img->name},
-            {"Namespace", entity->nmsp->name},
-            {"File", entity->file},
-            {"Line", static_cast<int>(entity->line)},
+            {"id", static_cast<int>(entity->id)},
+            {"type", static_cast<int>(entity->getEntityType())},
+            {"name", entity->name},
+            {"image", entity->img->name},
+            {"namespace", entity->nmsp->name},
+            {"file", entity->file},
+            {"line", static_cast<int>(entity->line)},
         }
     );
   }
 
   for (auto &child : artifact->children) {
-    auto childObjects = Json::array {};
-    addArtifact(&childObjects, child.get(), child->name);
+     auto childObjects = Json::array {};
+     addArtifact(&childObjects, child.get());
 
-    if (artifact->entity != nullptr) {
-      entities->emplace_back(
-         Json::object {
-            {"id", child->name},
-            {"Id", static_cast<int>(artifact->entity->id)},
-            {"Type", static_cast<int>(artifact->entity->getEntityType())},
-            {"Name", artifact->entity->name},
-            {"Image", artifact->entity->img->name},
-            {"Namespace", artifact->entity->nmsp->name},
-            {"File", artifact->entity->file},
-            {"Line", static_cast<int>(artifact->entity->line)},
-            {"children", childObjects},
-         }
-      );
-    } else {
-      entities->emplace_back(
-         Json::object {
-            {"id", child->name},
-            {"children", childObjects},
-         }
-      );
-    }
-
+    if (child->entity == nullptr) {
+       entities->emplace_back(
+          Json::object {
+             {"id", 'a' + std::to_string(artifactId++)},
+             {"name", child->name},
+             {"children", childObjects},
+          }
+       );
+     } else {
+       entities->emplace_back(
+          Json::object {
+             {"id", static_cast<int>(child->entity->id)},
+             {"type", static_cast<int>(child->entity->getEntityType())},
+             {"name", child->entity->name},
+             {"image", child->entity->img->name},
+             {"namespace", child->entity->nmsp->name},
+             {"file", child->entity->file},
+             {"line", static_cast<int>(child->entity->line)},
+             {"children", childObjects},
+          }
+       );
+     }
   }
 }
 

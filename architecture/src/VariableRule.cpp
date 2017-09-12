@@ -24,6 +24,8 @@ namespace pcv {
     for (auto &variable : ctxt.variables) {
       if (std::regex_match(variable->name, rx_)) {
         parent->children.emplace_back(new Artifact_t(variable->name, parent));
+        auto newArtifact = parent->children.back().get();
+        newArtifact->entity = variable.get();
         artifacts->emplace_back(parent->children.back().get());
       }
     }
