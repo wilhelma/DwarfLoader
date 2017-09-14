@@ -118,16 +118,11 @@ namespace pcv {
                                       const std::unordered_set<const Class *> &classes, bool useAllClassesFromCtxt) {
     for (auto cls : classes) {
       if (added.find(cls) == std::end(added)) {
-<<<<<<< HEAD
-        const auto *baseClass = getBaseClass(cls);
-        traverseHierarchy(baseClass, &artifact, classes);
-=======
         const Class *baseClass = getBaseClass(cls);
         if (useAllClassesFromCtxt)
           traverseHierarchy(baseClass, &artifact, classes, useAllClassesFromCtxt);
         else
           traverseHierarchy(cls, &artifact, classes, useAllClassesFromCtxt);
->>>>>>> eba3998b98ffc85fdfdfd7043a987abac3a6b5f5
       }
     }
 

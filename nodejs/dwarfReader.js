@@ -5,20 +5,20 @@ var filterStr = process.argv[3];
 
 var ast = [
              {
-                "type": "DefinitionExpression",
+                "type": "AssignmentExpression",
                 "operator": ":=",
                 "left": {
-                   "type": "Component",
-                   "name": "Checks"
+                   "type": "Artifact",
+                   "name": "rules"
                 },
                 "right": {
                    "type": "AtomExpression",
-                   "rule": "class",
-                   "regex": "^Check.*"
+                   "rule": "infile",
+                   "regex": ".*"
                 }
              }
           ];
 
-var dwarfReader = new dwarfLoader.dwarf(filename, filterStr, JSON.stringify(ast));
+var dwarfReader = new dwarfLoader.dwarf(filename, filterStr, "");
 
-console.log(dwarfReader.start());
+console.log(dwarfReader.start(JSON.stringify(ast)));

@@ -44,7 +44,6 @@ ArchRule::added_t FunctionRule::apply(Artifact_t &artifact,
     auto newRoutine = artifact.children.back().get();
     newRoutine->entity = routine;
     added_.insert(routine);
-    newArtifact->entity = routine;
 
     for (auto variable : routine->locals) {
       newRoutine->children.emplace_back(new Artifact_t(variable->name, newRoutine));
