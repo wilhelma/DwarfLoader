@@ -28,7 +28,7 @@ DwarfReader::DwarfReader(const std::string &filename,
   dbgGuard_ = std::unique_ptr<DbgGuard> {new DbgGuard(fileGuard_->fd, errHandler)};
   ctxt_.dbg = dbgGuard_->dbg;
 
-  ctxt_.namespaces.emplace_back(new Namespace(std::string(""), nullptr));
+  ctxt_.namespaces.emplace_back(new Namespace(0, std::string(""), nullptr, nullptr, std::string(""), 0, nullptr));
   ctxt_.emptyNamespace = ctxt_.currentNamespace = ctxt_.namespaces.back().get();
 }
 
