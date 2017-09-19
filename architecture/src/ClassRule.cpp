@@ -121,8 +121,13 @@ namespace pcv {
         const Class *baseClass = getBaseClass(cls);
         if (useAllClassesFromCtxt)
           traverseHierarchy(baseClass, &artifact, classes, useAllClassesFromCtxt);
-        else
-          traverseHierarchy(cls, &artifact, classes, useAllClassesFromCtxt);
+        else {
+          if(classes.find(baseClass) == std::end(classes))
+            traverseHierarchy(cls, &artifact, classes, useAllClassesFromCtxt);
+          else
+            traverseHierarchy(baseClass, &artifact, classes, useAllClassesFromCtxt);
+        }
+
       }
     }
 
