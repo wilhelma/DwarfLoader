@@ -11,20 +11,26 @@
 #include "SoftwareEntity.h"
 
 namespace pcv {
-namespace entity {
+  namespace entity {
 
-struct Namespace : public SoftwareEntity {
-    std::string name;
-    Namespace *parent;
-    std::vector<Namespace*> children;
-    std::vector<SoftwareEntity*> entities;
+    struct Namespace : public SoftwareEntity {
+      Namespace *parent;
+      std::vector<Namespace *> children;
+      std::vector<SoftwareEntity *> entities;
 
-    Namespace(std::string &&name, Namespace *parent) : SoftwareEntity(), name(name), parent(parent) {}
+      Namespace(Id_t id,
+                name_t name,
+                Image *img,
+                Namespace *nmsp,
+                file_t file,
+                line_t line,
+                Namespace *parent)
+              : SoftwareEntity(id, name, img, nmsp, nullptr, file, line), parent(parent) {}
 
-    EntityType getEntityType() const override { return EntityType::Namespace; }
-};
+      EntityType getEntityType() const override { return EntityType::Namespace; }
+    };
 
-}  // namespace pcv
+  }  // namespace pcv
 }  // namespace entity
 
 #endif //DWARFLOADER_NAMESPACE_H

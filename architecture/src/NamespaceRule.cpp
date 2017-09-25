@@ -31,8 +31,12 @@ namespace pcv {
     artifact_ = new Artifact_t(artifactName_, &archSet);
     artifact_->entity = nullptr;
 
+    auto newArtifact = artifact_;
+
     for (auto &nmsp : ctxt.namespaces) {
-      namespaces.insert(nmsp.get());
+      if(std::regex_match(nmsp->name, rx_)) {
+        namespaces.insert(nmsp.get());
+      }
     }
 
     added_t added;
@@ -47,17 +51,16 @@ namespace pcv {
      added_t* added)
   {
     std::unordered_map<const Namespace *, Artifact_t *> addedArtifacts;
-    for (auto nmsp : namespaces) {
-      if(std::regex_match(nmsp->name, rx_)) {
+    for (auto *nmsp : namespaces) {
+
         if (nmsp->parent && addedArtifacts.find(nmsp->parent) != end(addedArtifacts))
-          artifact_ = addedArtifacts[nmsp->parent];
+          artifact = addedArtifacts[nmsp->parent];
 
         std::string name = nmsp->name.empty() ? "empty" : nmsp->name;
-        artifact_->children.push_back(
-                std::unique_ptr<Artifact_t>{new Artifact_t(name, artifact_)}
-        );
+        artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
+                new pcv::Artifact_t(name, artifact)});
 
-        auto parent = artifact.children.back().get();
+        auto parent = artifact->children.back().get();
         parent->entity = nmsp;
 
         addedArtifacts[nmsp] = artifact_->children.back().get();
@@ -105,7 +108,7 @@ namespace pcv {
             added->insert(std::begin(tmpAdded), std::end(tmpAdded));
           }
         }
-      }
+
     }
 
     return addedArtifacts;

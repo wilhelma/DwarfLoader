@@ -10,8 +10,10 @@ namespace pcv {
     SoftwareEntity::SoftwareEntity(Id_t id, name_t name, Image *img, Namespace *nmsp, Class *cls, file_t file,
                                    line_t line) : id(id), name(std::move(name)), img(img), nmsp(nmsp), cls(cls), file(std::move(file)), line(line)
     {
-      nmsp->entities.push_back(this);
-      img->entities.push_back(this);
+      if(nmsp!= nullptr)
+        nmsp->entities.push_back(this);
+      if(img != nullptr)
+        img->entities.push_back(this);
     }
   }
 }

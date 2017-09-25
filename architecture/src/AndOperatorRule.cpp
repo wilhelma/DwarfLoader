@@ -34,6 +34,9 @@ namespace pcv {
     artifact_ = new Artifact_t(artifactName_, &archSet);
     artifact_->entity = nullptr;
 
+    Artifact_t newArtifact("newArtifact", nullptr);
+    Artifact_t nmspArtifact("newArtifact1", nullptr);
+
     Artifact_t* firstArtifactSet = firstArtifact_->getArchSet();
     Artifact_t* secondArtifactSet = secondArtifact_->getArchSet();
 
@@ -50,7 +53,7 @@ namespace pcv {
             std::inserter(namespaces, namespaces.begin())
     );
     NamespaceRule namespaceRule;
-    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(*artifact_, namespaces);
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespaces);
 
     // consider classes
     {
@@ -65,7 +68,7 @@ namespace pcv {
               std::inserter(classes, classes.begin())
       );
       ClassRule cRule;
-      added = cRule.apply(*artifact_, classes, false);
+      added = cRule.apply(newArtifact, classes, false);
     }
 
     // consider routines
@@ -81,7 +84,7 @@ namespace pcv {
               std::inserter(routines, routines.begin())
       );
       FunctionRule fRule;
-      auto fAdded = fRule.apply(*artifact_, routines);
+      auto fAdded = fRule.apply(newArtifact, routines);
       added.insert(begin(fAdded), end(fAdded));
     }
 
@@ -98,17 +101,30 @@ namespace pcv {
               std::inserter(variables, variables.begin())
       );
       VariableRule vRule;
-      vRule.apply(*artifact_, variables);
+      vRule.apply(newArtifact, variables);
     }
 
-
-    for(auto &child : artifact_->children) {
-      auto nmsp = child.get()->entity->nmsp;
-      if(nmsp && namespacesAdded[nmsp]) {
-        child.get()->parent = namespacesAdded[nmsp];
+    for(auto &child : newArtifact.children) {
+      bool hasMapping = false;
+      if(child.get()->entity->nmsp) {
+        for(auto &nmsp : nmspArtifact.children) {
+          if(nmsp.get()->entity == child.get()->entity->nmsp) {
+            child.get()->parent = nmsp.get();
+            nmsp->children.push_back(std::move(child));
+            hasMapping = true;
+            break;
+          }
+        }
+      }
+      if(!hasMapping) {
+        child.get()->parent = artifact_;
+        artifact_->children.push_back(std::move(child));
       }
     }
 
+    for(auto &nmsp : nmspArtifact.children) {
+      artifact_->children.push_back(std::move(nmsp));
+    }
 
     return artifacts;
   }

@@ -5,6 +5,7 @@
 #include <Context.h>
 #include <ClassRule.h>
 #include <FunctionRule.h>
+#include <NamespaceRule.h>
 #include <VariableRule.h>
 #include "NotOperatorRule.h"
 
@@ -19,7 +20,12 @@ namespace pcv {
 
     ArchRule::added_t added;
 
+    Artifact_t newArtifact("newArtifact", nullptr);
+    Artifact_t nmspArtifact("newArtifact1", nullptr);
+
     //find namespaces, classes, functions and variables mapped in the operand
+    std::unordered_set<const Namespace *> namespacesInOperand;
+    getNamespacesInArtifact(*operand_, namespacesInOperand);
 
     std::unordered_set<const Class *> classesInOperand;
     getClassesInArtifact(*operand_, classesInOperand);
@@ -31,9 +37,19 @@ namespace pcv {
     getGlobalVariablesInArtifact(*operand_, variablesInOperand, added);
 
     //find namespaces, classes, functions and variables which are not in the operand
+    std::unordered_set<const Namespace *> namespaces;
     std::unordered_set<const Class *> classes;
     std::unordered_set<const Routine *> routines;
     std::unordered_set<const Variable *> variables;
+
+    for(auto &nmsp : ctxt.namespaces) {
+      if(namespacesInOperand.find(nmsp.get()) == std::end(namespacesInOperand)) {
+        namespaces.insert(nmsp.get());
+      }
+    }
+
+    NamespaceRule namespaceRule;
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespaces, false);
 
     for(auto &cls : ctxt.classes) {
       if(classesInOperand.find(cls.get()) == std::end(classesInOperand)) {
@@ -42,7 +58,7 @@ namespace pcv {
     }
 
     ClassRule cRule;
-    added = cRule.apply(*artifact_, classes, false);
+    added = cRule.apply(newArtifact, classes, false);
 
     for(auto &routine : ctxt.routines) {
       if(routinesInOperand.find(routine.get()) == std::end(routinesInOperand) && added.find(routine.get()) == std::end(added)) {
@@ -51,7 +67,7 @@ namespace pcv {
     }
 
     FunctionRule fRule;
-    auto fAdded = fRule.apply(*artifact_, routines);
+    auto fAdded = fRule.apply(newArtifact, routines);
     added.insert(std::begin(fAdded), std::end(fAdded));
 
     for(auto &var : ctxt.variables) {
@@ -61,7 +77,29 @@ namespace pcv {
     }
 
     VariableRule vRule;
-    vRule.apply(*artifact_, variables);
+    vRule.apply(newArtifact, variables);
+
+    for(auto &child : newArtifact.children) {
+      bool hasMapping = false;
+      if(child.get()->entity->nmsp) {
+        for(auto &nmsp : nmspArtifact.children) {
+          if(nmsp.get()->entity == child.get()->entity->nmsp) {
+            child.get()->parent = nmsp.get();
+            nmsp->children.push_back(std::move(child));
+            hasMapping = true;
+            break;
+          }
+        }
+      }
+      if(!hasMapping) {
+        child.get()->parent = artifact_;
+        artifact_->children.push_back(std::move(child));
+      }
+    }
+
+    for(auto &nmsp : nmspArtifact.children) {
+      artifact_->children.push_back(std::move(nmsp));
+    }
 
     return artifacts;
   }
