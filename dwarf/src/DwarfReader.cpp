@@ -7,6 +7,18 @@
 #include "tag/TagGeneric.h"
 #include "entities/Variable.h"
 
+namespace {
+
+Namespace* getTopNamespace(Namespace* nmsp, Namespace* emptyNmsp)
+{
+  if (nmsp == emptyNmsp || nmsp->parent == emptyNmsp)
+    return nmsp;
+
+  return getTopNamespace(nmsp->parent, emptyNmsp);
+}
+
+}  // namespace
+
 namespace pcv {
 namespace dwarf {
 
@@ -100,7 +112,7 @@ bool DwarfReader::handle(Dwarf_Die die)
   Dwarf_Half tag{};
   if (dwarf_tag(die, &tag, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
 
-  if (hasAttr(ctxt_.die, DW_AT_decl_file)) {
+  if (hasAttr(die, DW_AT_decl_file)) {
     Dwarf_Unsigned fileNo{};
     getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_file, &fileNo);
     if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
@@ -118,9 +130,34 @@ void DwarfReader::start()
 
 void DwarfReader::processContext()
 {
+  //removeExcludedNamespaces();
   ctxt_.establishInheritance();
   ctxt_.establishComposition();
   ctxt_.establishTypedefs();
+}
+
+void DwarfReader::removeExcludedNamespaces()
+{
+  ctxt_.variables.erase(std::remove_if(std::begin(ctxt_.variables),
+                                       std::end(ctxt_.variables),
+                                       [&](const std::unique_ptr<Variable>& v) {
+                                         auto nmsp = getTopNamespace(v->nmsp, ctxt_.emptyNamespace);
+                                         return isExcluded(nmsp->name);
+                                       }));
+
+  ctxt_.routines.erase(std::remove_if(std::begin(ctxt_.routines),
+                                      std::end(ctxt_.routines),
+                                      [&](const std::unique_ptr<Routine>& r) {
+                                        auto nmsp = getTopNamespace(r->nmsp, ctxt_.emptyNamespace);
+                                        return isExcluded(nmsp->name);
+                                      }));
+
+  ctxt_.namespaces.erase(std::remove_if(std::begin(ctxt_.namespaces),
+                                        std::begin(ctxt_.namespaces),
+                                        [&](const std::unique_ptr<Namespace>& n) {
+                                          auto nmsp = getTopNamespace(n.get(), ctxt_.emptyNamespace);
+                                          return isExcluded(nmsp->name);
+                                        }));
 }
 
 }  // namespace dwarf

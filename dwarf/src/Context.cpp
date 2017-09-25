@@ -49,7 +49,7 @@ void Context::linkNameToRoutine(const std::string &rtnName, Routine *rtn) {
   nameRtnMap_[rtnName] = rtn;
 }
 
-Routine* Context::getRoutine(Dwarf_Off off) {
+Routine* Context::getRoutine(Dwarf_Off off) const {
   auto tmp = offRoutineMap_.find(off);
   if (tmp != std::end(offRoutineMap_))
     return tmp->second;
@@ -63,6 +63,20 @@ Routine* Context::getRoutine(const Routine::name_t &name) const {
     return rtn->second;
   else
     return nullptr;
+}
+
+void Context::addVariable(Dwarf_Off off, std::unique_ptr<Variable> var)
+{
+  offVariableMap_[off] = var.get();
+  variables.emplace_back(std::move(var));
+}
+
+Variable* Context::getVariable(Dwarf_Off off) const {
+  auto tmp = offVariableMap_.find(off);
+  if (tmp != std::end(offVariableMap_))
+    return tmp->second;
+
+  return nullptr;
 }
 
 void Context::addTypedef(Dwarf_Off off, const std::string &name)
@@ -120,6 +134,7 @@ void Context::reset() noexcept
 void Context::clearCache() noexcept
 {
   offRoutineMap_.clear();
+  offVariableMap_.clear();
   nameRtnMap_.clear();
   offTypedefName_.clear();
 }

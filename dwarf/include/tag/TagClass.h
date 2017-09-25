@@ -10,6 +10,16 @@
 namespace pcv {
 namespace dwarf {
 
+bool isValid(const Context& ctxt)
+{
+  Dwarf_Unsigned lineNo{};
+  getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &lineNo);
+  if (lineNo == 0)
+    return false;
+
+  return true;
+}
+
 bool handleStructClass(Context &ctxt)
 {
   Dwarf_Off off{};
@@ -56,8 +66,7 @@ bool handleStructClass(Context &ctxt)
       cls->size = size;
       ctxt.addClass(off, cls);
     }
-  }
-  else {
+  } else {
     char *clsChar{nullptr};
     std::string clsString{};
 
@@ -109,8 +118,6 @@ struct TagHandler<DW_TAG_class_type> {
 
   static bool handleDuplicate(Context &ctxt)
   {
-    Dwarf_Off off;
-    dwarf_dieoffset(ctxt.die, &off, nullptr);
     return handleStructClassDuplicate(ctxt);
   }
 };
@@ -119,11 +126,17 @@ template<>
 struct TagHandler<DW_TAG_structure_type> {
   static bool handle(Context &ctxt)
   {
+    if (hasAttr(ctxt.die, DW_AT_decl_file) && !isValid(ctxt))
+      return true;
+
     return handleStructClass(ctxt);
   }
 
   static bool handleDuplicate(Context &ctxt)
   {
+    if (hasAttr(ctxt.die, DW_AT_decl_file) && !isValid(ctxt))
+      return true;
+
     return handleStructClassDuplicate(ctxt);
   }
 };
@@ -132,11 +145,17 @@ template<>
 struct TagLeaver<DW_TAG_class_type> {
   static void leave(Context &ctxt)
   {
-      ctxt.currentClass.pop();
+    if (hasAttr(ctxt.die, DW_AT_decl_file) && !isValid(ctxt))
+        return;
+
+    ctxt.currentClass.pop();
   }
   static void leaveDuplicate(Context &ctxt)
   {
-      ctxt.currentClass.pop();
+    if (hasAttr(ctxt.die, DW_AT_decl_file) && !isValid(ctxt))
+      return;
+
+    ctxt.currentClass.pop();
   }
 };
 
@@ -144,11 +163,17 @@ template<>
 struct TagLeaver<DW_TAG_structure_type> {
   static void leave(Context &ctxt)
   {
-      ctxt.currentClass.pop();
+    if (hasAttr(ctxt.die, DW_AT_decl_file) && !isValid(ctxt))
+      return;
+
+    ctxt.currentClass.pop();
   }
   static void leaveDuplicate(Context &ctxt)
   {
-      ctxt.currentClass.pop();
+    if (hasAttr(ctxt.die, DW_AT_decl_file) && !isValid(ctxt))
+      return;
+
+    ctxt.currentClass.pop();
   }
 };
 

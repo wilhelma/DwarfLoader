@@ -36,7 +36,7 @@ namespace pcv {
     getNamespacesInArtifact(*firstArtifactSet, namespaces);
     getNamespacesInArtifact(*secondArtifactSet, namespaces);
     NamespaceRule namespaceRule;
-    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(*artifact_, namespaces, false);
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(*artifact_, namespaces);
 
     // consider classes
     {

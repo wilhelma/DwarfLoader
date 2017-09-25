@@ -18,7 +18,7 @@ namespace pcv {
     const std::regex rx_;
   public:
     NamespaceRule() = default;
-
+    NamespaceRule(const std::regex &rx);
     NamespaceRule(const std::string &artifactName, const std::string &regexString);
 
     std::unique_ptr<artifacts_t> execute(Artifact_t &archSet, const dwarf::Context &ctxt) override;
@@ -33,7 +33,7 @@ namespace pcv {
     std::unordered_map<const Namespace *, Artifact_t *> apply(
             Artifact_t& artifact,                            /** [in,out] The base artifact. */
             const std::unordered_set<const Namespace*>& namespaces,  /** [in] The namespaces to consider. */
-            bool abstraction /**[in] Indicates whether classes and routines should be considered. */);
+            added_t* added = nullptr /**[out] The added software entities, if abstraction is wished. */);
   };
 
 }  // namespace pcv

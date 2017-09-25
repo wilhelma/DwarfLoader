@@ -50,7 +50,7 @@ namespace pcv {
             std::inserter(namespaces, namespaces.begin())
     );
     NamespaceRule namespaceRule;
-    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(*artifact_, namespaces, false);
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(*artifact_, namespaces);
 
     // consider classes
     {

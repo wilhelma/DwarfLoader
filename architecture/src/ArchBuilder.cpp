@@ -147,8 +147,7 @@ void addArtifact(Json::array *entities, const Artifact_t *artifact)
             {"namespace", entity->nmsp->name},
             {"file", entity->file},
             {"line", static_cast<int>(entity->line)},
-        }
-    );
+        });
   }
 
   for (auto &child : artifact->children) {
@@ -161,8 +160,7 @@ void addArtifact(Json::array *entities, const Artifact_t *artifact)
              {"id", 'a' + std::to_string(artifactId++)},
              {"name", child->name},
              {"children", childObjects},
-          }
-       );
+          });
      } else {
        entities->emplace_back(
           Json::object {
@@ -174,8 +172,7 @@ void addArtifact(Json::array *entities, const Artifact_t *artifact)
              {"file", child->entity->file},
              {"line", static_cast<int>(child->entity->line)},
              {"children", childObjects},
-          }
-       );
+          });
      }
   }
 }

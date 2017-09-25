@@ -61,6 +61,7 @@ class DwarfReader {
 
   // post-processing
   void processContext();
+  void removeExcludedNamespaces();
 
   // members
   const Filter &filter_;

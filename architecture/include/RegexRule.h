@@ -8,6 +8,7 @@
 #include <regex>
 #include "ArchRule.h"
 #include "entities/SoftwareEntity.h"
+#include "entities/Namespace.h"
 
 namespace pcv {
 
@@ -37,7 +38,11 @@ class RegexRule : public ArchRule {
   EntityType type_;
   const std::regex rx_;
 
-  void fillArtifact(const std::vector<SoftwareEntity*> &entities, Artifact_t *toFill) const;
+  void fillArtifact(
+     const std::vector<SoftwareEntity*> &entities /**[in] The (deep) software entities that will fill the artifact.*/,
+     Artifact_t *toFill                           /**[out] The artifact that will be filled.*/,
+     ArchRule::added_t& added                     /**[out] The added artifacts.*/
+  ) const;
 };
 
 }  // namespace pcv

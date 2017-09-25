@@ -19,6 +19,8 @@ namespace pcv {
   NamespaceRule::NamespaceRule(const std::string &artifactName, const std::string &regexString) : artifactName_(
           artifactName), rx_(regexString) {}
 
+  NamespaceRule::NamespaceRule(const std::regex &rx) : rx_(rx) {}
+
   std::unique_ptr<ArchRule::artifacts_t>
   NamespaceRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) { return nullptr; }
 
@@ -33,13 +35,17 @@ namespace pcv {
       namespaces.insert(nmsp.get());
     }
 
-    apply(*artifact_, namespaces, true);
+    added_t added;
+    apply(*artifact_, namespaces, &added);
 
     return nullptr;
   }
 
-  std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(Artifact_t &artifact,
-                                      const std::unordered_set<const Namespace *> &namespaces, bool abstraction) {
+  std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
+     Artifact_t &artifact,
+     const std::unordered_set<const Namespace *> &namespaces,
+     added_t* added)
+  {
     std::unordered_map<const Namespace *, Artifact_t *> addedArtifacts;
     for (auto nmsp : namespaces) {
       if(std::regex_match(nmsp->name, rx_)) {
@@ -55,8 +61,7 @@ namespace pcv {
         parent->entity = nmsp;
 
         addedArtifacts[nmsp] = artifact_->children.back().get();
-        if(abstraction) {
-          ArchRule::added_t added;
+        if(added != nullptr) {
           // consider classes
           {
             std::unordered_set<const Class *> classes;
@@ -66,7 +71,8 @@ namespace pcv {
               }
             }
             ClassRule cRule;
-            added = cRule.apply(*parent, classes);
+            auto tmpAdded = cRule.apply(*parent, classes);
+            added->insert(std::begin(tmpAdded), std::end(tmpAdded));
           }
 
           // consider routines
@@ -74,14 +80,14 @@ namespace pcv {
             std::unordered_set<const Routine *> routines;
             for (auto entity : nmsp->entities) {
               if (entity->getEntityType() == pcv::entity::EntityType::Routine) {
-                if (added.find(entity) == std::end(added)) {
+                if (added->find(entity) == std::end(*added)) {
                   routines.insert(static_cast<const Routine *>(entity));
                 }
               }
             }
             FunctionRule fRule;
-            auto fAdded = fRule.apply(*parent, routines);
-            added.insert(begin(fAdded), end(fAdded));
+            auto tmpAdded = fRule.apply(*parent, routines);
+            added->insert(std::begin(tmpAdded), std::end(tmpAdded));
           }
 
           // consider global variables
@@ -89,13 +95,14 @@ namespace pcv {
             std::unordered_set<const Variable *> variables;
             for (auto entity : nmsp->entities) {
               if (entity->getEntityType() == pcv::entity::EntityType::Variable) {
-                if (added.find(entity) == std::end(added)) {
+                if (added->find(entity) == std::end(*added)) {
                   variables.insert(static_cast<const Variable *>(entity));
                 }
               }
             }
             VariableRule vRule;
-            vRule.apply(*parent, variables);
+            auto tmpAdded = vRule.apply(*parent, variables);
+            added->insert(std::begin(tmpAdded), std::end(tmpAdded));
           }
         }
       }

@@ -126,13 +126,28 @@ template<>
 struct TagHandler<DW_TAG_subprogram> {
   static bool handle(Context &ctxt)
   {
-    bool handled = false;
+    bool handled = true;
 
     if (hasAttr(ctxt.die, DW_AT_specification)) {
-      Dwarf_Off off;
+      Dwarf_Off off{}, specOff{};
       auto specDie = jump(ctxt.dbg, ctxt.die, DW_AT_specification);
-      if (dwarf_dieoffset(ctxt.die, &off, 0) == DW_DLV_OK)
-        handled = handleSubProgram(ctxt, specDie, off);
+      if (dwarf_dieoffset(ctxt.die, &off, 0) == DW_DLV_OK) {
+        if (dwarf_dieoffset(specDie, &specOff, 0) == DW_DLV_OK) {
+          auto specRoutine = ctxt.getRoutine(specOff);
+          if (specRoutine == nullptr)
+            return true;
+
+          auto tmpNmsp = ctxt.currentNamespace;
+          if (specRoutine != nullptr) {
+            ctxt.currentNamespace = specRoutine->nmsp;
+          }
+
+          handled = handleSubProgram(ctxt, specDie, off);
+
+          if (specRoutine != nullptr)
+            ctxt.currentNamespace = tmpNmsp;
+        }
+      }
       dwarf_dealloc(ctxt.dbg, specDie, DW_DLA_DIE);
     } else {
       handled = handleSubProgram(ctxt, ctxt.die);
