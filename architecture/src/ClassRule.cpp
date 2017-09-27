@@ -86,7 +86,7 @@ namespace pcv {
     for (auto childClass : cls->inheritClasses) {
       if (checkIfClassIsInherited(childClass, classes) && added.find(childClass) == std::end(added) &&
           (!useAllClassesFromCtxt ? (classes.find(childClass) != std::end(classes)) : true)) {
-        traverseHierarchy(childClass, newArtifact, classes);
+        traverseHierarchy(childClass, artifact, classes);
       }
     }
   }
@@ -115,7 +115,7 @@ namespace pcv {
     return nullptr;
   }
 
-  ClassRule::added_t ClassRule::apply(Artifact_t* artifact,
+  ClassRule::added_t ClassRule::apply(Artifact_t *artifact,
                                       const std::unordered_set<const Class *> &classes,
                                       bool useAllClassesFromCtxt) {
     for (auto cls : classes) {
@@ -124,7 +124,7 @@ namespace pcv {
         if (useAllClassesFromCtxt)
           traverseHierarchy(baseClass, artifact, classes, useAllClassesFromCtxt);
         else {
-          if(classes.find(baseClass) == std::end(classes))
+          if (classes.find(baseClass) == std::end(classes))
             traverseHierarchy(cls, artifact, classes, useAllClassesFromCtxt);
           else
             traverseHierarchy(baseClass, artifact, classes, useAllClassesFromCtxt);
