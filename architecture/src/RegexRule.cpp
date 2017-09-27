@@ -36,7 +36,8 @@ void RegexRule::fillArtifact(const std::vector<SoftwareEntity *> &entities,
       }
     }
     ClassRule cRule;
-    added = cRule.apply(*toFill, classes);
+    auto tmpAdded = cRule.apply(toFill, classes);
+    added.insert(std::begin(tmpAdded), std::end(tmpAdded));
   }
 
   // consider functions
@@ -52,14 +53,14 @@ void RegexRule::fillArtifact(const std::vector<SoftwareEntity *> &entities,
       }
     }
     FunctionRule fRule;
-    auto added2 = fRule.apply(*toFill, routines);
-    added.insert(std::begin(added2), std::end(added2));
+    auto tmpAdded = fRule.apply(toFill, routines);
+    added.insert(std::begin(tmpAdded), std::end(tmpAdded));
   }
 
-  // fill rest
+  // consider variables
   {
     for (auto &entity : entities) {
-      if ((entity->getEntityType() & type_) != EntityType::None) {
+      if (entity->getEntityType() == EntityType::Variable) {
         if (std::regex_match(getMatchString(*entity), rx_)) {
           if (added.find(entity) == std::end(added))
             toFill->entities.insert(entity);
@@ -81,12 +82,13 @@ RegexRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 
   added_t added;
 
-  NamespaceRule nRule(rx_);
-  std::unordered_set<const Namespace *> namespaces;
+  NamespaceRule nRule;
   for (auto& nmsp : ctxt.namespaces) {
-    namespaces.insert(nmsp.get());
+    if (nmsp->parent && nmsp->parent == ctxt.emptyNamespace) {
+      auto tmpAdded = nRule.apply(artifact_, *nmsp.get());
+      added.insert(std::begin(tmpAdded), std::end(tmpAdded));
+    }
   }
-  nRule.apply(*artifact_, namespaces, &added);
 
   for (auto &image : ctxt.images) {
     fillArtifact(image->entities, artifact_, added);

@@ -25,7 +25,7 @@ FunctionRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
     }
   }
 
-  apply(*artifact_, routines);
+  apply(artifact_, routines);
 
   return nullptr;
 }
@@ -36,12 +36,12 @@ std::unique_ptr<ArchRule::artifacts_t> FunctionRule::append(Artifact_t &archSet,
   return nullptr;
 }
 
-ArchRule::added_t FunctionRule::apply(Artifact_t &artifact,
+ArchRule::added_t FunctionRule::apply(Artifact_t* artifact,
                                       const std::unordered_set<const Routine *> &routines)
 {
   for (auto routine : routines) {
-    artifact.children.emplace_back(new Artifact_t(routine->name, &artifact));
-    auto newRoutine = artifact.children.back().get();
+    artifact->children.emplace_back(new Artifact_t(routine->name, artifact));
+    auto newRoutine = artifact->children.back().get();
     newRoutine->entity = routine;
     added_.insert(routine);
 

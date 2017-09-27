@@ -49,7 +49,7 @@ namespace pcv {
     }
 
     NamespaceRule namespaceRule;
-    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespaces, false);
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespaces);
 
     for(auto &cls : ctxt.classes) {
       if(classesInOperand.find(cls.get()) == std::end(classesInOperand)) {
@@ -58,7 +58,7 @@ namespace pcv {
     }
 
     ClassRule cRule;
-    added = cRule.apply(newArtifact, classes, false);
+    added = cRule.apply(&newArtifact, classes);
 
     for(auto &routine : ctxt.routines) {
       if(routinesInOperand.find(routine.get()) == std::end(routinesInOperand) && added.find(routine.get()) == std::end(added)) {
@@ -67,7 +67,7 @@ namespace pcv {
     }
 
     FunctionRule fRule;
-    auto fAdded = fRule.apply(newArtifact, routines);
+    auto fAdded = fRule.apply(&newArtifact, routines);
     added.insert(std::begin(fAdded), std::end(fAdded));
 
     for(auto &var : ctxt.variables) {

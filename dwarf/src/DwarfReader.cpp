@@ -130,36 +130,10 @@ void DwarfReader::start()
 
 void DwarfReader::processContext()
 {
-  //removeExcludedNamespaces();
   ctxt_.establishInheritance();
   ctxt_.establishComposition();
   ctxt_.establishTypedefs();
 }
-
-void DwarfReader::removeExcludedNamespaces()
-{
-  ctxt_.variables.erase(std::remove_if(std::begin(ctxt_.variables),
-                                       std::end(ctxt_.variables),
-                                       [&](const std::unique_ptr<Variable>& v) {
-                                         auto nmsp = getTopNamespace(v->nmsp, ctxt_.emptyNamespace);
-                                         return isExcluded(nmsp->name);
-                                       }));
-
-  ctxt_.routines.erase(std::remove_if(std::begin(ctxt_.routines),
-                                      std::end(ctxt_.routines),
-                                      [&](const std::unique_ptr<Routine>& r) {
-                                        auto nmsp = getTopNamespace(r->nmsp, ctxt_.emptyNamespace);
-                                        return isExcluded(nmsp->name);
-                                      }));
-
-  ctxt_.namespaces.erase(std::remove_if(std::begin(ctxt_.namespaces),
-                                        std::begin(ctxt_.namespaces),
-                                        [&](const std::unique_ptr<Namespace>& n) {
-                                          auto nmsp = getTopNamespace(n.get(), ctxt_.emptyNamespace);
-                                          return isExcluded(nmsp->name);
-                                        }));
-}
-
 }  // namespace dwarf
 }  // namespace pcv
 

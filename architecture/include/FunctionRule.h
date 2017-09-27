@@ -32,7 +32,7 @@ using entity::Routine;
      * @returns the set of added software entities
      */
     added_t apply(
-       Artifact_t& artifact,                               /** [in,out] The base artifact. */
+       Artifact_t* artifact,                               /** [in,out] The base artifact. */
        const std::unordered_set<const Routine*>& routines  /** [in] The routines to consider. */);
   };
 

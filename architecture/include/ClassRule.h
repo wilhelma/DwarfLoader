@@ -33,7 +33,7 @@ class ClassRule : public ArchRule {
    * @returns the set of added software entities
    */
   added_t apply(
-     Artifact_t& artifact,                            /** [in,out] The base artifact. */
+     Artifact_t* artifact,                             /** [in,out] The base artifact. */
      const std::unordered_set<const Class*>& classes,  /** [in] The classes to consider. */
      bool useAllClassesFromCtxt = true);
 

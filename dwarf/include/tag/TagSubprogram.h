@@ -149,7 +149,7 @@ struct TagHandler<DW_TAG_subprogram> {
         }
       }
       dwarf_dealloc(ctxt.dbg, specDie, DW_DLA_DIE);
-    } else {
+    } else if (hasAttr(ctxt.die, DW_AT_decl_file)) {
       handled = handleSubProgram(ctxt, ctxt.die);
     }
 

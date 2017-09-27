@@ -73,7 +73,12 @@ struct TagHandler<DW_TAG_variable> {
       };
 
       auto staticGlobalHandler = [&](Dwarf_Debug dbg, Dwarf_Die die, Variable::offset_t offset) {
-        addVariable(dbg, die, offset, Variable::Type::GLOBAL);
+        if (ctxt.currentRoutine.empty()) {
+          addVariable(dbg, die, offset, Variable::Type::GLOBAL);
+        } else {
+          addVariable(dbg, die, offset, Variable::Type::STATICVAR);
+          ctxt.currentRoutine.top()->locals.emplace_back(ctxt.variables.back().get());
+        }
       };
 
       handleLocListFromExpr(ctxt.dbg, ctxt.die, stackHandler, staticGlobalHandler);

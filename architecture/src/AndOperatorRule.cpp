@@ -68,7 +68,7 @@ namespace pcv {
               std::inserter(classes, classes.begin())
       );
       ClassRule cRule;
-      added = cRule.apply(newArtifact, classes, false);
+      added = cRule.apply(&newArtifact, classes);
     }
 
     // consider routines
@@ -84,7 +84,7 @@ namespace pcv {
               std::inserter(routines, routines.begin())
       );
       FunctionRule fRule;
-      auto fAdded = fRule.apply(newArtifact, routines);
+      auto fAdded = fRule.apply(&newArtifact, routines);
       added.insert(begin(fAdded), end(fAdded));
     }
 
