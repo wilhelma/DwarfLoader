@@ -31,8 +31,6 @@ NamespaceRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   artifact_ = new Artifact_t(artifactName_, &archSet);
   artifact_->entity = nullptr;
 
-  auto newArtifact = artifact_;
-
   for (auto &nmsp : ctxt.namespaces) {
     if (std::regex_match(nmsp->name, rx_)) {
       namespaces.insert(nmsp.get());
@@ -70,7 +68,8 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
         std::unordered_set<const Class *> classes;
         for (auto entity : nmsp->entities) {
           if (entity->getEntityType() == pcv::entity::EntityType::Class) {
-            classes.insert(static_cast<const Class *>(entity));
+            if (entity->cls == nullptr)
+              classes.insert(static_cast<const Class *>(entity));
           }
         }
         ClassRule cRule;
@@ -129,7 +128,8 @@ ArchRule::added_t NamespaceRule::apply(Artifact_t *artifact, const Namespace &nm
     std::unordered_set<const Class *> classes;
     for (auto entity : nmsp.entities) {
       if (entity->getEntityType() == pcv::entity::EntityType::Class) {
-        classes.insert(static_cast<const Class *>(entity));
+        if (entity->cls == nullptr)
+          classes.insert(static_cast<const Class *>(entity));
       }
     }
     ClassRule cRule;

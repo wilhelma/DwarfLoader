@@ -2,7 +2,7 @@
 // Created by wilhelma on 1/7/17.
 //
 
-#include <iostream>
+#include <algorithm>
 #include "Context.h"
 
 namespace pcv {
@@ -17,6 +17,17 @@ void Context::addClass(Dwarf_Off off, Class *cls)
   offClassMap_[off] = cls;
   if (getClass(*cls->nmsp, cls->name) == nullptr)
     nameClassMap_[cls->nmsp->name + cls->name] = cls;
+
+  // add nested classes
+  if (cls->cls != nullptr) {
+    if (std::find(std::begin(cls->cls->nestedClasses),
+                  std::end(cls->cls->nestedClasses),
+                  cls) == std::end(cls->cls->nestedClasses))
+    {
+      cls->cls->nestedClasses.push_back(cls);
+    }
+  }
+
   currentClass.push(cls);
 }
 

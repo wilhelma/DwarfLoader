@@ -21,7 +21,6 @@ namespace pcv {
     artifact_ = new Artifact_t(artifactName_, &archSet);
     artifact_->entity = nullptr;
 
-    Artifact_t *parent = artifact_;
     std::unordered_set<const Variable*> variables;
     for (auto &variable : ctxt.variables) {
       if (std::regex_match(variable->name, rx_)) {

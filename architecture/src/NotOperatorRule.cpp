@@ -104,5 +104,8 @@ namespace pcv {
     return artifacts;
   }
 
-  std::unique_ptr<ArchRule::artifacts_t> NotOperatorRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) {}
+  std::unique_ptr<ArchRule::artifacts_t> NotOperatorRule::append(Artifact_t &archSet, const dwarf::Context &ctxt)
+  {
+    return nullptr;
+  }
 }

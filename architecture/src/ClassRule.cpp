@@ -64,7 +64,6 @@ namespace pcv {
                                     Artifact_t *artifact,
                                     const std::unordered_set<const Class *> &classes,
                                     bool useAllClassesFromCtxt) {
-    //std::cout << cls->name << std::endl;
     artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
             new pcv::Artifact_t(cls->name, artifact)
     });
@@ -75,12 +74,15 @@ namespace pcv {
     for (auto member : cls->members) {
       newArtifact->children.emplace_back(new Artifact_t(member->name, newArtifact));
       newArtifact->children.back().get()->entity = member;
-      //newArtifact->entities.insert(member);
       added.insert(member);
     }
 
     for (auto method: cls->methods) {
       addMethod(method, newArtifact);
+    }
+
+    for (auto nested : cls->nestedClasses) {
+      traverseHierarchy(nested, newArtifact, classes, useAllClassesFromCtxt);
     }
 
     for (auto childClass : cls->inheritClasses) {

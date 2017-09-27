@@ -43,7 +43,7 @@ bool handleNamespace(Context &ctxt)
   if (getDieName(ctxt.dbg, ctxt.die, &nmspChar)) {
     auto nmsp = getNamespaceString(nmspChar, ctxt.currentNamespace);
     Dwarf_Off off{};
-    Dwarf_Unsigned fileNo{}, lineNo{}, size{};
+    Dwarf_Unsigned fileNo{}, lineNo{};
     if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_file, &fileNo);
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &lineNo);
