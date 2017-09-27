@@ -26,14 +26,19 @@ NamespaceRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) { return 
 std::unique_ptr<ArchRule::artifacts_t>
 NamespaceRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 {
-  std::unordered_set<const Namespace *> namespaces;
+  std::vector<const Namespace *> namespaces;
 
   artifact_ = new Artifact_t(artifactName_, &archSet);
   artifact_->entity = nullptr;
 
   for (auto &nmsp : ctxt.namespaces) {
     if (std::regex_match(nmsp->name, rx_)) {
-      namespaces.insert(nmsp.get());
+      namespaces.push_back(nmsp.get());
+    }
+  }
+  for(auto &nmsp : namespaces) {
+    if(nmsp->children.size() != 0) {
+      std::copy(nmsp->children.begin(), nmsp->children.end(), std::inserter(namespaces, namespaces.end()));
     }
   }
 
@@ -45,7 +50,7 @@ NamespaceRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 
 std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
    Artifact_t *artifact,
-   const std::unordered_set<const Namespace *> &namespaces,
+   const std::vector<const Namespace *> &namespaces,
    added_t *added)
 {
   std::unordered_map<const Namespace *, Artifact_t *> addedArtifacts;
@@ -73,7 +78,7 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
           }
         }
         ClassRule cRule;
-        auto tmpAdded = cRule.apply(parent, classes);
+        auto tmpAdded = cRule.apply(parent, classes, false);
         added->insert(std::begin(tmpAdded), std::end(tmpAdded));
       }
 
@@ -107,7 +112,6 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
         added->insert(std::begin(tmpAdded), std::end(tmpAdded));
       }
     }
-
   }
 
   return addedArtifacts;

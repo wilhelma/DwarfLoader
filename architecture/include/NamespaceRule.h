@@ -31,7 +31,7 @@ namespace pcv {
    */
     std::unordered_map<const Namespace *, Artifact_t *> apply(
             Artifact_t* artifact,                                    /** [in,out] The base artifact. */
-            const std::unordered_set<const Namespace*>& namespaces,  /** [in] The namespaces to consider. */
+            const std::vector<const Namespace *>& namespaces,  /** [in] The namespaces to consider. */
             added_t* added = nullptr /**[out] The added software entities, if abstraction is wished. */);
 
    /**

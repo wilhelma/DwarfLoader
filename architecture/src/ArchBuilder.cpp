@@ -164,13 +164,9 @@ namespace pcv {
       } else {
         Json::array baseClassesArray;
         if (child->entity->getEntityType() == EntityType::Class) {
-
-          for (auto &otherChild : artifact->children) {
-            std::vector<Class *> baseClasses = (static_cast<const Class *>(child->entity))->baseClasses;
-            if (std::find(baseClasses.begin(), baseClasses.end(), otherChild->entity) != baseClasses.end()) {
-
-              baseClassesArray.push_back(Json::object{{"id", static_cast<int>(otherChild->entity->id)}});
-            }
+          std::vector<Class *> baseClasses = (static_cast<const Class *>(child->entity))->baseClasses;
+          for (auto &baseClass : baseClasses) {
+            baseClassesArray.push_back(Json::object{{"id", static_cast<int>(baseClass->id)}});
           }
         }
         entities->emplace_back(

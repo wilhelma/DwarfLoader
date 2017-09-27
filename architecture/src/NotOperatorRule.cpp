@@ -48,8 +48,10 @@ namespace pcv {
       }
     }
 
+    std::vector<const Namespace *> namespacesVector;
+    std::copy(namespaces.begin(), namespaces.end(), std::inserter(namespacesVector, namespacesVector.end()));
     NamespaceRule namespaceRule;
-    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespaces);
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespacesVector);
 
     for(auto &cls : ctxt.classes) {
       if(classesInOperand.find(cls.get()) == std::end(classesInOperand)) {
