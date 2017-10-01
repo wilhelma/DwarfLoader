@@ -32,7 +32,7 @@ class ClassRule : public ArchRule {
    * them on the given artifact.
    * @returns the set of added software entities
    */
-  added_t apply(
+  std::unordered_map<const SoftwareEntity *, Artifact_t *> apply(
      Artifact_t* artifact,                             /** [in,out] The base artifact. */
      const std::unordered_set<const Class*>& classes,  /** [in] The classes to consider. */
      bool useAllClassesFromCtxt = true);
@@ -41,7 +41,7 @@ class ClassRule : public ArchRule {
   const std::string artifactName_;
   const std::regex rx_;
   const std::regex fileRx_;
-  added_t added;
+  std::unordered_map<const SoftwareEntity *, Artifact_t *> added;
 
   const Class* getBaseClass(const Class *currentClass);
 
@@ -49,7 +49,7 @@ class ClassRule : public ArchRule {
 
   void traverseHierarchy(const Class *cls,
                          Artifact_t *artifact,
-                         const std::unordered_set<const Class *> &classes,
+                         const std::vector<const Class *> &classes,
                          bool useAllClassesFromCtxt = true);
 };
 

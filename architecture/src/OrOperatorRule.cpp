@@ -40,6 +40,21 @@ namespace pcv {
     getNamespacesInArtifact(*secondArtifactSet, namespaces);
     std::vector<const Namespace *> namespacesVector;
     std::copy(namespaces.begin(), namespaces.end(), std::inserter(namespacesVector, namespacesVector.end()));
+    auto nmsp1 = namespacesVector.begin();
+    while(nmsp1 != std::end(namespacesVector)) {
+      if((*nmsp1)->name != "") {
+        auto nmspBefore = namespacesVector.begin();
+        while(nmspBefore != nmsp1) {
+          if(std::find((*nmsp1)->children.begin(), (*nmsp1)->children.end(), *nmspBefore) != (*nmsp1)->children.end()) {
+            std::swap(*nmsp1, *nmspBefore);
+            break;
+          }
+          ++nmspBefore;
+        }
+      }
+
+      ++nmsp1;
+    }
     NamespaceRule namespaceRule;
     std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespacesVector);
 
@@ -49,7 +64,9 @@ namespace pcv {
       getClassesInArtifact(*firstArtifactSet, classes);
       getClassesInArtifact(*secondArtifactSet, classes);
       ClassRule cRule;
-      added = cRule.apply(&newArtifact, classes);
+      std::unordered_map<const SoftwareEntity *, Artifact_t *> addedCls = cRule.apply(&newArtifact, classes, false);
+      for(auto cls : addedCls)
+        added.insert(cls.first);
     }
 
     // consider routines
@@ -81,13 +98,15 @@ namespace pcv {
     for(auto &child : newArtifact.children) {
       bool hasMapping = false;
       if(child.get()->entity->nmsp) {
-        for(auto &nmsp : nmspArtifact.children) {
-          if(nmsp.get()->entity == child.get()->entity->nmsp) {
-            child.get()->parent = nmsp.get();
-            nmsp->children.push_back(std::move(child));
+        auto nmsp = namespacesAdded.begin();
+        while(nmsp != std::end(namespacesAdded)) {
+          if((*nmsp).first == child.get()->entity->nmsp) {
+            child.get()->parent = (*nmsp).second;
+            (*nmsp).second->children.push_back(std::move(child));
             hasMapping = true;
             break;
           }
+          ++nmsp;
         }
       }
       if(!hasMapping) {
@@ -101,6 +120,10 @@ namespace pcv {
     }
 
     return artifacts;
+  }
+
+  void matchNamespaces(Artifact_t* child, Artifact_t* nmsp) {
+
   }
 
 

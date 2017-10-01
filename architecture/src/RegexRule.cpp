@@ -37,7 +37,8 @@ void RegexRule::fillArtifact(const std::vector<SoftwareEntity *> &entities,
     }
     ClassRule cRule;
     auto tmpAdded = cRule.apply(toFill, classes);
-    added.insert(std::begin(tmpAdded), std::end(tmpAdded));
+    for(auto cls : tmpAdded)
+      added.insert(cls.first);
   }
 
   // consider functions

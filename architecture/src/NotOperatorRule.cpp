@@ -42,28 +42,50 @@ namespace pcv {
     std::unordered_set<const Routine *> routines;
     std::unordered_set<const Variable *> variables;
 
-    for(auto &nmsp : ctxt.namespaces) {
-      if(namespacesInOperand.find(nmsp.get()) == std::end(namespacesInOperand)) {
+    for (auto &nmsp : ctxt.namespaces) {
+      if (namespacesInOperand.find(nmsp.get()) == std::end(namespacesInOperand)) {
         namespaces.insert(nmsp.get());
       }
     }
 
     std::vector<const Namespace *> namespacesVector;
     std::copy(namespaces.begin(), namespaces.end(), std::inserter(namespacesVector, namespacesVector.end()));
-    NamespaceRule namespaceRule;
-    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespacesVector);
+    auto nmsp1 = namespacesVector.begin();
+    while(nmsp1 != std::end(namespacesVector)) {
+      if((*nmsp1)->name != "") {
+        auto nmspBefore = namespacesVector.begin();
+        while(nmspBefore != nmsp1) {
+          if(std::find((*nmsp1)->children.begin(), (*nmsp1)->children.end(), *nmspBefore) != (*nmsp1)->children.end()) {
+            std::swap(*nmsp1, *nmspBefore);
+            break;
+          }
+          ++nmspBefore;
+        }
+      }
 
-    for(auto &cls : ctxt.classes) {
-      if(classesInOperand.find(cls.get()) == std::end(classesInOperand)) {
+      ++nmsp1;
+    }
+
+
+
+    NamespaceRule namespaceRule;
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact,
+                                                                                              namespacesVector);
+
+    for (auto &cls : ctxt.classes) {
+      if (classesInOperand.find(cls.get()) == std::end(classesInOperand)) {
         classes.insert(cls.get());
       }
     }
 
     ClassRule cRule;
-    added = cRule.apply(&newArtifact, classes);
+    std::unordered_map<const SoftwareEntity *, Artifact_t *> addedCls = cRule.apply(&newArtifact, classes, false);
+    for(auto cls : addedCls)
+      added.insert(cls.first);
 
-    for(auto &routine : ctxt.routines) {
-      if(routinesInOperand.find(routine.get()) == std::end(routinesInOperand) && added.find(routine.get()) == std::end(added)) {
+    for (auto &routine : ctxt.routines) {
+      if (routinesInOperand.find(routine.get()) == std::end(routinesInOperand) &&
+          added.find(routine.get()) == std::end(added)) {
         routines.insert(routine.get());
       }
     }
@@ -72,8 +94,9 @@ namespace pcv {
     auto fAdded = fRule.apply(&newArtifact, routines);
     added.insert(std::begin(fAdded), std::end(fAdded));
 
-    for(auto &var : ctxt.variables) {
-      if(variablesInOperand.find(var.get()) == std::end(variablesInOperand) && added.find(var.get()) == std::end(added)) {
+    for (auto &var : ctxt.variables) {
+      if (variablesInOperand.find(var.get()) == std::end(variablesInOperand) &&
+          added.find(var.get()) == std::end(added)) {
         variables.insert(var.get());
       }
     }
@@ -81,33 +104,41 @@ namespace pcv {
     VariableRule vRule;
     vRule.apply(newArtifact, variables);
 
-    for(auto &child : newArtifact.children) {
+    auto child = std::begin(newArtifact.children);
+    while (child != std::end(newArtifact.children)) {
       bool hasMapping = false;
-      if(child.get()->entity->nmsp) {
-        for(auto &nmsp : nmspArtifact.children) {
-          if(nmsp.get()->entity == child.get()->entity->nmsp) {
-            child.get()->parent = nmsp.get();
-            nmsp->children.push_back(std::move(child));
+      if ((*child)->entity->nmsp->name != "") {
+        for (auto &nmsp : nmspArtifact.children) {
+          if (nmsp.get()->entity == (*child)->entity->nmsp) {
+            (*child)->parent = nmsp.get();
+            nmsp->children.push_back(std::move(*child));
             hasMapping = true;
             break;
           }
         }
       }
-      if(!hasMapping) {
-        child.get()->parent = artifact_;
-        artifact_->children.push_back(std::move(child));
+      if (!hasMapping) {
+        (*child)->parent = artifact_;
+        artifact_->children.push_back(std::move(*child));
       }
+      ++child;
     }
 
-    for(auto &nmsp : nmspArtifact.children) {
-      artifact_->children.push_back(std::move(nmsp));
+
+    auto nmsp = std::begin(nmspArtifact.children);
+    while (nmsp != std::end(nmspArtifact.children)) {
+      if ((*nmsp).get()->name != "empty") {
+        (*nmsp)->parent = artifact_;
+        artifact_->children.push_back(std::move(*nmsp));
+      }
+      ++nmsp;
     }
+
 
     return artifacts;
   }
 
-  std::unique_ptr<ArchRule::artifacts_t> NotOperatorRule::append(Artifact_t &archSet, const dwarf::Context &ctxt)
-  {
+  std::unique_ptr<ArchRule::artifacts_t> NotOperatorRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) {
     return nullptr;
   }
 }

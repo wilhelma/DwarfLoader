@@ -66,7 +66,7 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
     auto parent = artifact->children.back().get();
     parent->entity = nmsp;
 
-    addedArtifacts[nmsp] = artifact_->children.back().get();
+    addedArtifacts[nmsp] = parent;
     if (added != nullptr) {
       // consider classes
       {
@@ -79,7 +79,8 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
         }
         ClassRule cRule;
         auto tmpAdded = cRule.apply(parent, classes, false);
-        added->insert(std::begin(tmpAdded), std::end(tmpAdded));
+        for(auto cls : tmpAdded)
+          added->insert(cls.first);
       }
 
       // consider routines
@@ -112,6 +113,7 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
         added->insert(std::begin(tmpAdded), std::end(tmpAdded));
       }
     }
+
   }
 
   return addedArtifacts;
@@ -138,7 +140,8 @@ ArchRule::added_t NamespaceRule::apply(Artifact_t *artifact, const Namespace &nm
     }
     ClassRule cRule;
     auto tmpAdded = cRule.apply(parent, classes);
-    added.insert(std::begin(tmpAdded), std::end(tmpAdded));
+    for(auto cls : tmpAdded)
+      added.insert(cls.first);
   }
 
   // consider routines

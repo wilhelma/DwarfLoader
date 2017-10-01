@@ -38,18 +38,19 @@ namespace pcv {
     });
     auto newArtifact = artifact->children.back().get();
     newArtifact->entity = routine;
-    added.insert(routine);
+    added[routine] = newArtifact;
 
     for (auto variable : routine->locals) {
       newArtifact->children.emplace_back(new Artifact_t(variable->name, newArtifact));
-      newArtifact->children.back().get()->entity = variable;
+      auto varArtifact = newArtifact->children.back().get();
+      varArtifact->entity = variable;
       //newArtifact->entities.insert(variable);
-      added.insert(variable);
+      added[variable] = varArtifact;
     }
   }
 
-  bool checkIfClassIsInherited(const Class *cls, const std::unordered_set<const Class *> &classes) {
-    if (classes.find(cls) != std::end(classes)) {
+  bool checkIfClassIsInherited(const Class *cls, const std::vector<const Class *> &classes) {
+    if (std::find(classes.begin(), classes.end(), cls) != std::end(classes)) {
       return true;
     } else {
       for (auto childClass : cls->inheritClasses) {
@@ -62,19 +63,20 @@ namespace pcv {
 
   void ClassRule::traverseHierarchy(const Class *cls,
                                     Artifact_t *artifact,
-                                    const std::unordered_set<const Class *> &classes,
+                                    const std::vector<const Class *> &classes,
                                     bool useAllClassesFromCtxt) {
     artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
             new pcv::Artifact_t(cls->name, artifact)
     });
     auto newArtifact = artifact->children.back().get();
     newArtifact->entity = cls;
-    added.insert(cls);
+    added[cls] = newArtifact;
 
     for (auto member : cls->members) {
       newArtifact->children.emplace_back(new Artifact_t(member->name, newArtifact));
-      newArtifact->children.back().get()->entity = member;
-      added.insert(member);
+      auto clsArtifact = newArtifact->children.back().get();
+      clsArtifact->entity = member;
+      added[member] = clsArtifact;
     }
 
     for (auto method: cls->methods) {
@@ -87,7 +89,7 @@ namespace pcv {
 
     for (auto childClass : cls->inheritClasses) {
       if (checkIfClassIsInherited(childClass, classes) && added.find(childClass) == std::end(added) &&
-          (!useAllClassesFromCtxt ? (classes.find(childClass) != std::end(classes)) : true)) {
+          (!useAllClassesFromCtxt ? (std::find(classes.begin(), classes.end(), childClass) != std::end(classes)) : true)) {
         traverseHierarchy(childClass, artifact, classes);
       }
     }
@@ -117,25 +119,41 @@ namespace pcv {
     return nullptr;
   }
 
-  ClassRule::added_t ClassRule::apply(Artifact_t *artifact,
-                                      const std::unordered_set<const Class *> &classes,
-                                      bool useAllClassesFromCtxt) {
-    for (auto cls : classes) {
+  std::unordered_map<const SoftwareEntity *, Artifact_t *> ClassRule::apply(Artifact_t *artifact,
+                                                                            const std::unordered_set<const Class *> &classes,
+                                                                            bool useAllClassesFromCtxt) {
+    std::vector<const Class *> classesVector;
+    std::copy(classes.begin(), classes.end(), std::inserter(classesVector, classesVector.end()));
+    auto nmsp1 = classesVector.begin();
+    while(nmsp1 != std::end(classesVector)) {
+        auto nmspBefore = classesVector.begin();
+        while(nmspBefore != nmsp1) {
+          if(std::find((*nmsp1)->nestedClasses.begin(), (*nmsp1)->nestedClasses.end(), *nmspBefore) != (*nmsp1)->nestedClasses.end()) {
+            std::swap(*nmsp1, *nmspBefore);
+            break;
+          }
+          ++nmspBefore;
+        }
+      ++nmsp1;
+    }
+
+    for (auto cls : classesVector) {
       if (added.find(cls) == std::end(added)) {
         const Class *baseClass = getBaseClass(cls);
         if (useAllClassesFromCtxt)
-          traverseHierarchy(baseClass, artifact, classes, useAllClassesFromCtxt);
+          traverseHierarchy(baseClass, artifact, classesVector, useAllClassesFromCtxt);
         else {
           if (classes.find(baseClass) == std::end(classes))
-            traverseHierarchy(cls, artifact, classes, useAllClassesFromCtxt);
+            traverseHierarchy(cls, artifact, classesVector, useAllClassesFromCtxt);
           else
-            traverseHierarchy(baseClass, artifact, classes, useAllClassesFromCtxt);
+            traverseHierarchy(baseClass, artifact, classesVector, useAllClassesFromCtxt);
         }
 
       }
     }
 
     return added;
+
   }
 
 }  // namespace pcv
