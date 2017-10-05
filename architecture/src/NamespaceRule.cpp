@@ -33,12 +33,12 @@ NamespaceRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   artifact_->entity = nullptr;
 
   for (auto &nmsp : ctxt.namespaces) {
-    if (std::regex_match(nmsp->name, rx_)) {
+    if (std::regex_match(nmsp->name, rx_) && nmsp->name != "") {
       namespaces.push_back(nmsp.get());
     }
   }
   for(auto &nmsp : namespaces) {
-    if(nmsp->children.size() != 0) {
+    if(nmsp->children.size() != 0 && std::find(namespaces.begin(), namespaces.end(), nmsp) == namespaces.end()) {
       std::copy(nmsp->children.begin(), nmsp->children.end(), std::inserter(namespaces, namespaces.end()));
     }
   }
