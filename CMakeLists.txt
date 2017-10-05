@@ -46,7 +46,7 @@ set(SOURCE_FILES
         ${AST_DIR}/nodes/SetExpression.cpp
         ${AST_DIR}/nodes/Expression.cpp
         ${AST_DIR}/nodes/AssignmentExpression.cpp
-        ${PROJECT_INCLUDE_DIR}/entities/SoftwareEntity.cpp)
+        ${PROJECT_INCLUDE_DIR}/entities/SoftwareEntity.cpp architecture/src/TemplateHelper.cpp)
 
 #------------------------------ json11 library ----------------------------------------------------#
 ExternalProject_Add(json11

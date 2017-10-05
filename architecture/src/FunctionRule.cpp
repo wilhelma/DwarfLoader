@@ -3,8 +3,11 @@
 //
 
 #include <iostream>
-#include "FunctionRule.h"
+
+#include "TemplateHelper.h"
 #include "Context.h"
+
+#include "FunctionRule.h"
 
 namespace pcv {
 FunctionRule::FunctionRule(const std::string &artifactName,
@@ -19,7 +22,6 @@ FunctionRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
 
   std::unordered_set<const Routine*> routines;
   for (auto &f : ctxt.routines) {
-    //std::cout << f->name << std::endl;
     if (std::regex_match(f->name, rx_)) {
       routines.insert(f.get());
     }
@@ -39,9 +41,11 @@ std::unique_ptr<ArchRule::artifacts_t> FunctionRule::append(Artifact_t &archSet,
 ArchRule::added_t FunctionRule::apply(Artifact_t* artifact,
                                       const std::unordered_set<const Routine *> &routines)
 {
+  TemplateHelper helper(artifact);
   for (auto routine : routines) {
-    artifact->children.emplace_back(new Artifact_t(routine->name, artifact));
-    auto newRoutine = artifact->children.back().get();
+    auto tmpArtifact = helper.processRoutine(routine);
+    tmpArtifact->children.emplace_back(new Artifact_t(routine->name, tmpArtifact));
+    auto newRoutine = tmpArtifact->children.back().get();
     newRoutine->entity = routine;
     added_.insert(routine);
 

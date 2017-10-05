@@ -21,6 +21,7 @@ bool isRealDuplicate(Dwarf_Debug dbg, Dwarf_Die rhs, Dwarf_Die lhs)
   pcv::dwarf::getAttrUint(dbg, rhs, DW_AT_decl_line, &lineR);
 
   char *lhsChr{}, *rhsChr{};
+
   if (pcv::dwarf::getDieName(dbg, rhs, &rhsChr) && pcv::dwarf::getDieName(dbg, lhs, &lhsChr)) {
     return (tagL == tagR && lineL == lineR && std::string(lhsChr) == std::string(rhsChr));
   }
@@ -80,8 +81,12 @@ Dwarf_Off DieDuplicate::isDuplicate(const Context &ctxt) const
       Dwarf_Die d{};
       if (dwarf_offdie(ctxt.dbg, dup->second, &d, nullptr) != DW_DLV_OK) throw DwarfError("offDie");
 
-      if (isRealDuplicate(ctxt.dbg, ctxt.die, d))
+      if (isRealDuplicate(ctxt.dbg, ctxt.die, d)) {
+        Dwarf_Off off;
+        dwarf_dieoffset(ctxt.die, &off, 0);
+
         return dup->second;
+      }
     }
   }
 

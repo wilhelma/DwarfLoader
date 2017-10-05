@@ -6,6 +6,7 @@
 #include <entities/SoftwareEntity.h>
 #include <FunctionRule.h>
 #include <VariableRule.h>
+#include <TemplateHelper.h>
 #include "NamespaceRule.h"
 #include "ArchBuilder.h"
 #include "Context.h"
@@ -93,6 +94,7 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
             }
           }
         }
+
         FunctionRule fRule;
         auto tmpAdded = fRule.apply(parent, routines);
         added->insert(std::begin(tmpAdded), std::end(tmpAdded));

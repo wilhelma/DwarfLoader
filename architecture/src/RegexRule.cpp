@@ -86,8 +86,10 @@ RegexRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
   NamespaceRule nRule;
   for (auto& nmsp : ctxt.namespaces) {
     if (nmsp->parent && nmsp->parent == ctxt.emptyNamespace) {
-      auto tmpAdded = nRule.apply(artifact_, *nmsp.get());
-      added.insert(std::begin(tmpAdded), std::end(tmpAdded));
+      if (std::regex_match(getMatchString(*nmsp.get()), rx_)) {
+        auto tmpAdded = nRule.apply(artifact_, *nmsp.get());
+        added.insert(std::begin(tmpAdded), std::end(tmpAdded));
+      }
     }
   }
 

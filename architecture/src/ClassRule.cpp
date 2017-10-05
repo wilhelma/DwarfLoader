@@ -8,6 +8,7 @@
 #include <iostream>
 #include <regex>
 
+#include "TemplateHelper.h"
 #include "ArchBuilder.h"
 #include "Context.h"
 
@@ -44,7 +45,6 @@ namespace pcv {
       newArtifact->children.emplace_back(new Artifact_t(variable->name, newArtifact));
       auto varArtifact = newArtifact->children.back().get();
       varArtifact->entity = variable;
-      //newArtifact->entities.insert(variable);
       added[variable] = varArtifact;
     }
   }
@@ -79,8 +79,12 @@ namespace pcv {
       added[member] = clsArtifact;
     }
 
-    for (auto method: cls->methods) {
-      addMethod(method, newArtifact);
+    { // add methods
+      TemplateHelper helper(newArtifact);
+      for (auto method: cls->methods) {
+        auto tmpArtifact = helper.processRoutine(method);
+        addMethod(method, tmpArtifact);
+      }
     }
 
     for (auto nested : cls->nestedClasses) {

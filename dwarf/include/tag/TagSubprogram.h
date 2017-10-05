@@ -134,8 +134,8 @@ struct TagHandler<DW_TAG_subprogram> {
       if (dwarf_dieoffset(ctxt.die, &off, 0) == DW_DLV_OK) {
         if (dwarf_dieoffset(specDie, &specOff, 0) == DW_DLV_OK) {
           auto specRoutine = ctxt.getRoutine(specOff);
-          if (specRoutine == nullptr)
-            return true;
+//          if (specRoutine == nullptr)
+//            return true;
 
           auto tmpNmsp = ctxt.currentNamespace;
           if (specRoutine != nullptr) {
@@ -158,9 +158,12 @@ struct TagHandler<DW_TAG_subprogram> {
   static bool handleDuplicate(Context &ctxt)
   {
     auto rtn = ctxt.getRoutine(ctxt.duplicate);
-    if (rtn) ctxt.currentRoutine.emplace(rtn);
-
-    return false;  // continue
+    if (rtn) {
+      ctxt.currentRoutine.push(rtn);
+      return false;  // continue
+    } else {
+      return true;  // stop traversing
+    }
   }
 };
 

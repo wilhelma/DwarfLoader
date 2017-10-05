@@ -20,6 +20,7 @@
         "../architecture/src/RegexRule.cpp",
         "../architecture/src/SetOperatorRule.cpp",
         "../architecture/src/VariableRule.cpp",
+        "../architecture/src/TemplateHelper.cpp",
         "../dwarf/src/Context.cpp",
         "../dwarf/src/Duplicate.cpp",
         "../dwarf/src/DwarfHelper.cpp",
