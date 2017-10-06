@@ -133,18 +133,20 @@ struct TagHandler<DW_TAG_subprogram> {
       auto specDie = jump(ctxt.dbg, ctxt.die, DW_AT_specification);
       if (dwarf_dieoffset(ctxt.die, &off, 0) == DW_DLV_OK) {
         if (dwarf_dieoffset(specDie, &specOff, 0) == DW_DLV_OK) {
+          auto dupOff = ctxt.getDuplicate(specOff);
+          specOff = (dupOff) ? dupOff : specOff;
           auto specRoutine = ctxt.getRoutine(specOff);
-//          if (specRoutine == nullptr)
-//            return true;
 
           auto tmpNmsp = ctxt.currentNamespace;
-          if (specRoutine != nullptr) {
+          if (specRoutine) {
+            if (specRoutine->cls) ctxt.currentClass.push(specRoutine->cls);
             ctxt.currentNamespace = specRoutine->nmsp;
           }
 
           handled = handleSubProgram(ctxt, specDie, off);
 
           if (specRoutine != nullptr)
+            if (specRoutine->cls) ctxt.currentClass.pop();
             ctxt.currentNamespace = tmpNmsp;
         }
       }

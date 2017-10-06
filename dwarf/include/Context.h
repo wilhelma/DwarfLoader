@@ -81,6 +81,10 @@ struct Context {
   void addVariable(Dwarf_Off off, std::unique_ptr<Variable> var);
   Variable* getVariable(Dwarf_Off off) const;
 
+  // duplicates
+  void addDuplicate(Dwarf_Off original, Dwarf_Off duplicate);
+  Dwarf_Off getDuplicate(Dwarf_Off original) const;
+
   void clearCache() noexcept;
 
  private:
@@ -91,6 +95,7 @@ struct Context {
   std::unordered_map<Routine::name_t, Routine*> nameRtnMap_;
   std::unordered_map<Dwarf_Off, std::string> offTypedefName_;
   std::unordered_map<Dwarf_Off, Variable*> offStaticVariableMap_;
+  std::unordered_map<Dwarf_Off, Dwarf_Off> duplicates_;
   std::vector<ClassRelation_t> inheritances_;
   std::vector<ClassRelation_t> compositions_;
 };

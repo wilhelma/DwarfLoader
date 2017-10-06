@@ -58,7 +58,7 @@ void DieDuplicate::addDie(const Context &ctxt)
   }
 }
 
-void DieDuplicate::addDuplicate(const Context &ctxt)
+void DieDuplicate::addDuplicate(Context &ctxt)
 {
   if (hasAttr(ctxt.die, DW_AT_decl_file) &&
       hasAttr(ctxt.die, DW_AT_decl_line)) {
@@ -66,7 +66,7 @@ void DieDuplicate::addDuplicate(const Context &ctxt)
     if (dup != end(duplicates_)) {
       Dwarf_Off off;
       if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
-      mappings_[off] = dup->second;
+      ctxt.addDuplicate(dup->second, off);
     }
   }
 }

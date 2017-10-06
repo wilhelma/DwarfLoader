@@ -165,6 +165,20 @@ Variable* Context::getStaticVariable(Dwarf_Off off) const
     return nullptr;
 }
 
+void Context::addDuplicate(Dwarf_Off original, Dwarf_Off duplicate)
+{
+  duplicates_[duplicate] = original;
+}
+
+Dwarf_Off Context::getDuplicate(Dwarf_Off original) const
+{
+  auto result = duplicates_.find(original);
+  if (result == std::end(duplicates_))
+    return 0;
+  else
+    return result->second;
+}
+
 }  // namespace dwarf
 }  // namespace pcv
 
