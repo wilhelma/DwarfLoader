@@ -56,8 +56,7 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
 {
   std::unordered_map<const Namespace *, Artifact_t *> addedArtifacts;
   for (auto *nmsp : namespaces) {
-
-    if (nmsp->parent && addedArtifacts.find(nmsp->parent) != end(addedArtifacts))
+    if (nmsp->parent && nmsp->parent->name != "" && addedArtifacts.find(nmsp->parent) != end(addedArtifacts))
       artifact = addedArtifacts[nmsp->parent];
 
     std::string name = nmsp->name.empty() ? "empty" : nmsp->name;

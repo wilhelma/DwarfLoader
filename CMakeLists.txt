@@ -33,6 +33,8 @@ set(SOURCE_FILES
         ${ARCHITECTURE_SOURCE_DIR}/RegexNameRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/RegexRule.cpp
         ${ARCHITECTURE_SOURCE_DIR}/BinaryOperatorRule.cpp
+        ${ARCHITECTURE_SOURCE_DIR}/TemplateHelper.cpp
+        ${ARCHITECTURE_SOURCE_DIR}/ClassHierarchyRule.cpp
         ${AST_DIR}/visitor/ASTVisitor.cpp
         ${AST_DIR}/visitor/VisitorContext.cpp
         ${AST_DIR}/ast-from-json/CreateAstFromJson.cpp
@@ -46,7 +48,7 @@ set(SOURCE_FILES
         ${AST_DIR}/nodes/SetExpression.cpp
         ${AST_DIR}/nodes/Expression.cpp
         ${AST_DIR}/nodes/AssignmentExpression.cpp
-        ${PROJECT_INCLUDE_DIR}/entities/SoftwareEntity.cpp architecture/src/TemplateHelper.cpp)
+        ${PROJECT_INCLUDE_DIR}/entities/SoftwareEntity.cpp)
 
 #------------------------------ json11 library ----------------------------------------------------#
 ExternalProject_Add(json11

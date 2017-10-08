@@ -37,7 +37,7 @@ class ClassRule : public ArchRule {
      const std::unordered_set<const Class*>& classes,  /** [in] The classes to consider. */
      bool useAllClassesFromCtxt = true);
 
- private:
+ protected:
   const std::string artifactName_;
   const std::regex rx_;
   const std::regex fileRx_;

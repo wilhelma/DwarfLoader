@@ -2,9 +2,10 @@
 // Created by Faris Cakaric on 25.05.17.
 //
 
+
 #include "ASTVisitor.h"
 #include "AndOperatorRule.h"
-#include "ClassRule.h"
+#include "ClassHierarchyRule.h"
 #include "NamespaceRule.h"
 #include "FunctionRule.h"
 #include "OrOperatorRule.h"
@@ -15,6 +16,7 @@
 
 using pcv::AndOperatorRule;
 using pcv::ClassRule;
+using pcv::ClassHierarchyRule;
 using pcv::NamespaceRule;
 using pcv::FunctionRule;
 using pcv::OrOperatorRule;
@@ -43,7 +45,11 @@ void ASTVisitor::visit(AssignmentExpression &el) {
 }
 
 void ASTVisitor::visit(AtomExpression &el) {
-  if (el.getRule() == "class") {
+  if (el.getRule() == "classHierarchy") {
+    ArchRule *archRule = new ClassHierarchyRule("", el.getRegex());
+    visitorContext_->pushToArchRulesStack(archRule);
+    visitorContext_->applyRuleToBuilder(archRule);
+  } else if (el.getRule() == "class") {
     ArchRule *archRule = new ClassRule("", el.getRegex());
     visitorContext_->pushToArchRulesStack(archRule);
     visitorContext_->applyRuleToBuilder(archRule);
