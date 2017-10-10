@@ -92,7 +92,7 @@ namespace pcv {
     auto child = std::begin(newArtifact.children);
     while (child != std::end(newArtifact.children)) {
       bool hasMapping = false;
-      if ((*child)->entity->nmsp->name != "") {
+      if ((*child)->entity && (*child)->entity->nmsp->name != "") {
         for (auto &nmsp : nmspArtifact.children) {
           if (nmsp.get()->entity == (*child)->entity->nmsp) {
             (*child)->parent = nmsp.get();

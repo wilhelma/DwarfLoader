@@ -110,7 +110,7 @@ namespace pcv {
 
     for(auto &child : newArtifact.children) {
       bool hasMapping = false;
-      if(child.get()->entity->nmsp) {
+      if(child.get()->entity && child.get()->entity->nmsp) {
         auto nmsp = namespacesAdded.begin();
         while(nmsp != std::end(namespacesAdded)) {
           if((*nmsp).first == child.get()->entity->nmsp) {
