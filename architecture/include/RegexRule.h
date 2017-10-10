@@ -39,7 +39,7 @@ class RegexRule : public ArchRule {
   const std::regex rx_;
 
   void fillArtifact(
-     const std::vector<SoftwareEntity*> &entities /**[in] The (deep) software entities that will fill the artifact.*/,
+          const dwarf::Context &ctxt             /**[in] The context.*/,
      Artifact_t *toFill                           /**[out] The artifact that will be filled.*/,
      ArchRule::added_t& added                     /**[out] The added artifacts.*/
   ) const;

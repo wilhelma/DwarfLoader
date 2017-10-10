@@ -18,23 +18,27 @@ RegexRule::RegexRule(const std::string &artifactName, EntityType type, const std
 std::unique_ptr<ArchRule::artifacts_t>
 RegexRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) { return nullptr; }
 
-void RegexRule::fillArtifact(const std::vector<SoftwareEntity *> &entities,
+void RegexRule::fillArtifact(const dwarf::Context &ctxt,
                              Artifact_t *toFill,
                              ArchRule::added_t& added) const
 {
 
+
   // consider classes
   {
     std::unordered_set<const Class *> classes;
-    for (auto& entity : entities) {
-      if (entity->getEntityType() == EntityType::Class) {
-        if (added.find(entity) == std::end(added)) {
-          if (std::regex_match(getMatchString(*entity), rx_)) {
-            classes.insert(static_cast<const Class *>(entity));
+    for(auto &entities : ctxt.images) {
+      for (auto& entity : entities.get()->entities) {
+        if (entity->getEntityType() == EntityType::Class) {
+          if (added.find(entity) == std::end(added)) {
+            if (std::regex_match(getMatchString(*entity), rx_) && classes.find(static_cast<const Class*>(entity)) == std::end(classes)) {
+              classes.insert(static_cast<const Class *>(entity));
+            }
           }
         }
       }
     }
+
     ClassRule cRule;
     auto tmpAdded = cRule.apply(toFill, classes);
     for(auto cls : tmpAdded)
@@ -44,11 +48,13 @@ void RegexRule::fillArtifact(const std::vector<SoftwareEntity *> &entities,
   // consider functions
   {
     std::unordered_set<const Routine *> routines;
-    for (auto &entity : entities) {
-      if (entity->getEntityType() == EntityType::Routine) {
-        if (added.find(entity) == std::end(added)) {
-          if (std::regex_match(getMatchString(*entity), rx_)) {
-            routines.insert(static_cast<const Routine *>(entity));
+    for(auto &entities : ctxt.images) {
+      for (auto &entity : entities.get()->entities) {
+        if (entity->getEntityType() == EntityType::Routine) {
+          if (added.find(entity) == std::end(added)) {
+            if (std::regex_match(getMatchString(*entity), rx_)) {
+              routines.insert(static_cast<const Routine *>(entity));
+            }
           }
         }
       }
@@ -60,11 +66,13 @@ void RegexRule::fillArtifact(const std::vector<SoftwareEntity *> &entities,
 
   // consider variables
   {
-    for (auto &entity : entities) {
-      if (entity->getEntityType() == EntityType::Variable) {
-        if (std::regex_match(getMatchString(*entity), rx_)) {
-          if (added.find(entity) == std::end(added))
-            toFill->entities.insert(entity);
+    for(auto &entities : ctxt.images) {
+      for (auto &entity : entities.get()->entities) {
+        if (entity->getEntityType() == EntityType::Variable) {
+          if (std::regex_match(getMatchString(*entity), rx_)) {
+            if (added.find(entity) == std::end(added))
+              toFill->entities.insert(entity);
+          }
         }
       }
     }
@@ -93,9 +101,7 @@ RegexRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
     }
   }
 
-  for (auto &image : ctxt.images) {
-    fillArtifact(image->entities, artifact_, added);
-  }
+  fillArtifact(ctxt, artifact_, added);
 
   return artifacts;
 }
