@@ -10,6 +10,11 @@
 #include "NotOperatorRule.h"
 
 namespace pcv {
+
+  bool isParent (const Namespace* nmspL, const Namespace* nmspR) {
+    return nmspR->parent && (nmspR->parent == nmspL || isParent(nmspL, nmspR->parent));
+  };
+
   NotOperatorRule::NotOperatorRule(const std::string &artifactName_, Artifact_t *operand_) : artifactName_(
           artifactName_), operand_(operand_) {}
 
@@ -37,40 +42,22 @@ namespace pcv {
     getGlobalVariablesInArtifact(*operand_, variablesInOperand, added);
 
     //find namespaces, classes, functions and variables which are not in the operand
-    std::unordered_set<const Namespace *> namespaces;
+    std::vector<const Namespace *> namespaces;
     std::unordered_set<const Class *> classes;
     std::unordered_set<const Routine *> routines;
     std::unordered_set<const Variable *> variables;
 
     for (auto &nmsp : ctxt.namespaces) {
-      if (namespacesInOperand.find(nmsp.get()) == std::end(namespacesInOperand)) {
-        namespaces.insert(nmsp.get());
+      if (namespacesInOperand.find(nmsp.get()) == std::end(namespacesInOperand) && nmsp->name != "") {
+        namespaces.push_back(nmsp.get());
       }
     }
 
-    std::vector<const Namespace *> namespacesVector;
-    std::copy(namespaces.begin(), namespaces.end(), std::inserter(namespacesVector, namespacesVector.end()));
-    auto nmsp1 = namespacesVector.begin();
-    while(nmsp1 != std::end(namespacesVector)) {
-      if((*nmsp1)->name != "") {
-        auto nmspBefore = namespacesVector.begin();
-        while(nmspBefore != nmsp1) {
-          if(std::find((*nmsp1)->children.begin(), (*nmsp1)->children.end(), *nmspBefore) != (*nmsp1)->children.end()) {
-            std::swap(*nmsp1, *nmspBefore);
-            break;
-          }
-          ++nmspBefore;
-        }
-      }
-
-      ++nmsp1;
-    }
-
-
+    std::sort(std::begin(namespaces), std::end(namespaces), isParent);
 
     NamespaceRule namespaceRule;
     std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact,
-                                                                                              namespacesVector);
+                                                                                              namespaces);
 
     for (auto &cls : ctxt.classes) {
       if (classesInOperand.find(cls.get()) == std::end(classesInOperand)) {

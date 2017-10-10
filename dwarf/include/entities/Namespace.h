@@ -10,6 +10,8 @@
 
 #include "SoftwareEntity.h"
 
+#include <iostream>
+
 namespace pcv {
   namespace entity {
 

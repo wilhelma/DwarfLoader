@@ -54,6 +54,8 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
    const std::vector<const Namespace *> &namespaces,
    added_t *added)
 {
+  auto baseArtifact = artifact;
+
   std::unordered_map<const Namespace *, Artifact_t *> addedArtifacts;
   for (auto *nmsp : namespaces) {
     if (nmsp->parent && nmsp->parent->name != "" && addedArtifacts.find(nmsp->parent) != end(addedArtifacts))
@@ -114,7 +116,7 @@ std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
         added->insert(std::begin(tmpAdded), std::end(tmpAdded));
       }
     }
-
+    artifact = baseArtifact;
   }
 
   return addedArtifacts;
