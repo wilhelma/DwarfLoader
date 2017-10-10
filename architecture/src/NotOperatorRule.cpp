@@ -11,9 +11,7 @@
 
 namespace pcv {
 
-  bool isParent (const Namespace* nmspL, const Namespace* nmspR) {
-    return nmspR->parent && (nmspR->parent == nmspL || isParent(nmspL, nmspR->parent));
-  };
+
 
   NotOperatorRule::NotOperatorRule(const std::string &artifactName_, Artifact_t *operand_) : artifactName_(
           artifactName_), operand_(operand_) {}
@@ -29,7 +27,7 @@ namespace pcv {
     Artifact_t nmspArtifact("newArtifact1", nullptr);
 
     //find namespaces, classes, functions and variables mapped in the operand
-    std::unordered_set<const Namespace *> namespacesInOperand;
+    std::vector<const Namespace *> namespacesInOperand;
     getNamespacesInArtifact(*operand_, namespacesInOperand);
 
     std::unordered_set<const Class *> classesInOperand;
@@ -48,7 +46,7 @@ namespace pcv {
     std::unordered_set<const Variable *> variables;
 
     for (auto &nmsp : ctxt.namespaces) {
-      if (namespacesInOperand.find(nmsp.get()) == std::end(namespacesInOperand) && nmsp->name != "") {
+      if (std::find(namespacesInOperand.begin(), namespacesInOperand.end(), nmsp.get()) == std::end(namespacesInOperand) && nmsp->name != "") {
         namespaces.push_back(nmsp.get());
       }
     }

@@ -14,170 +14,175 @@
 
 namespace pcv {
 
-using entity::Namespace;
-using entity::Variable;
+  using entity::Namespace;
+  using entity::Variable;
 
-NamespaceRule::NamespaceRule(const std::string &artifactName, const std::string &regexString)
-   : artifactName_(
-   artifactName), rx_(regexString) {}
+  NamespaceRule::NamespaceRule(const std::string &artifactName, const std::string &regexString)
+          : artifactName_(
+          artifactName), rx_(regexString) {}
 
-std::unique_ptr<ArchRule::artifacts_t>
-NamespaceRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) { return nullptr; }
+  std::unique_ptr<ArchRule::artifacts_t>
+  NamespaceRule::append(Artifact_t &archSet, const dwarf::Context &ctxt) { return nullptr; }
 
-std::unique_ptr<ArchRule::artifacts_t>
-NamespaceRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt)
-{
-  std::vector<const Namespace *> namespaces;
+  bool isParent(const Namespace *nmspL, const Namespace *nmspR) {
+    return nmspR->parent && (nmspR->parent == nmspL || isParent(nmspL, nmspR->parent));
+  };
 
-  artifact_ = new Artifact_t(artifactName_, &archSet);
-  artifact_->entity = nullptr;
+  std::unique_ptr<ArchRule::artifacts_t>
+  NamespaceRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
+    std::vector<const Namespace *> namespaces;
 
-  for (auto &nmsp : ctxt.namespaces) {
-    if (std::regex_match(nmsp->name, rx_) && nmsp->name != "") {
-      namespaces.push_back(nmsp.get());
+    artifact_ = new Artifact_t(artifactName_, &archSet);
+    artifact_->entity = nullptr;
+
+    for (auto &nmsp : ctxt.namespaces) {
+      if (std::regex_match(nmsp->name, rx_) && nmsp->name != "") {
+        namespaces.push_back(nmsp.get());
+      }
     }
-  }
-  for(auto &nmsp : namespaces) {
-    if(nmsp->children.size() != 0 && std::find(namespaces.begin(), namespaces.end(), nmsp) == namespaces.end()) {
-      std::copy(nmsp->children.begin(), nmsp->children.end(), std::inserter(namespaces, namespaces.end()));
+    for (auto &nmsp : namespaces) {
+      if (nmsp->children.size() != 0) {
+        for(auto &nmspChild : nmsp->children) {
+          if(std::find(namespaces.begin(), namespaces.end(), nmspChild) == std::end(namespaces)) {
+            namespaces.emplace_back(nmspChild);
+          }
+        }
+      }
     }
+
+    added_t added;
+    apply(artifact_, namespaces, &added);
+
+    return nullptr;
   }
 
-  added_t added;
-  apply(artifact_, namespaces, &added);
+  std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
+          Artifact_t *artifact,
+          const std::vector<const Namespace *> &namespaces,
+          added_t *added) {
+    auto baseArtifact = artifact;
 
-  return nullptr;
-}
+    std::unordered_map<const Namespace *, Artifact_t *> addedArtifacts;
+    for (auto *nmsp : namespaces) {
+      if (nmsp->parent && nmsp->parent->name != "" && addedArtifacts.find(nmsp->parent) != end(addedArtifacts))
+        artifact = addedArtifacts[nmsp->parent];
 
-std::unordered_map<const Namespace *, Artifact_t *> NamespaceRule::apply(
-   Artifact_t *artifact,
-   const std::vector<const Namespace *> &namespaces,
-   added_t *added)
-{
-  auto baseArtifact = artifact;
+      std::string name = nmsp->name.empty() ? "empty" : nmsp->name;
+      artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
+              new pcv::Artifact_t(name, artifact)});
 
-  std::unordered_map<const Namespace *, Artifact_t *> addedArtifacts;
-  for (auto *nmsp : namespaces) {
-    if (nmsp->parent && nmsp->parent->name != "" && addedArtifacts.find(nmsp->parent) != end(addedArtifacts))
-      artifact = addedArtifacts[nmsp->parent];
+      auto parent = artifact->children.back().get();
+      parent->entity = nmsp;
 
-    std::string name = nmsp->name.empty() ? "empty" : nmsp->name;
+      addedArtifacts[nmsp] = parent;
+      if (added != nullptr) {
+        // consider classes
+        {
+          std::unordered_set<const Class *> classes;
+          for (auto entity : nmsp->entities) {
+            if (entity->getEntityType() == pcv::entity::EntityType::Class) {
+              if (entity->cls == nullptr)
+                classes.insert(static_cast<const Class *>(entity));
+            }
+          }
+          ClassRule cRule;
+          auto tmpAdded = cRule.apply(parent, classes, false);
+          for (auto cls : tmpAdded)
+            added->insert(cls.first);
+        }
+
+        // consider routines
+        {
+          std::unordered_set<const Routine *> routines;
+          for (auto entity : nmsp->entities) {
+            if (entity->getEntityType() == pcv::entity::EntityType::Routine) {
+              if (added->find(entity) == std::end(*added)) {
+                routines.insert(static_cast<const Routine *>(entity));
+              }
+            }
+          }
+
+          FunctionRule fRule;
+          auto tmpAdded = fRule.apply(parent, routines);
+          added->insert(std::begin(tmpAdded), std::end(tmpAdded));
+        }
+
+        // consider global variables
+        {
+          std::unordered_set<const Variable *> variables;
+          for (auto entity : nmsp->entities) {
+            if (entity->getEntityType() == pcv::entity::EntityType::Variable) {
+              if (added->find(entity) == std::end(*added)) {
+                variables.insert(static_cast<const Variable *>(entity));
+              }
+            }
+          }
+          VariableRule vRule;
+          auto tmpAdded = vRule.apply(*parent, variables);
+          added->insert(std::begin(tmpAdded), std::end(tmpAdded));
+        }
+      }
+      artifact = baseArtifact;
+    }
+
+    return addedArtifacts;
+  }
+
+  ArchRule::added_t NamespaceRule::apply(Artifact_t *artifact, const Namespace &nmsp) {
+    added_t added;
+
     artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
-       new pcv::Artifact_t(name, artifact)});
-
+            new pcv::Artifact_t(nmsp.name, artifact)
+    });
     auto parent = artifact->children.back().get();
-    parent->entity = nmsp;
 
-    addedArtifacts[nmsp] = parent;
-    if (added != nullptr) {
-      // consider classes
-      {
-        std::unordered_set<const Class *> classes;
-        for (auto entity : nmsp->entities) {
-          if (entity->getEntityType() == pcv::entity::EntityType::Class) {
-            if (entity->cls == nullptr)
-              classes.insert(static_cast<const Class *>(entity));
+
+    // consider classes
+    {
+      std::unordered_set<const Class *> classes;
+      for (auto entity : nmsp.entities) {
+        if (entity->getEntityType() == pcv::entity::EntityType::Class) {
+          if (entity->cls == nullptr)
+            classes.insert(static_cast<const Class *>(entity));
+        }
+      }
+      ClassRule cRule;
+      auto tmpAdded = cRule.apply(parent, classes);
+      for (auto cls : tmpAdded)
+        added.insert(cls.first);
+    }
+
+    // consider routines
+    {
+      std::unordered_set<const Routine *> routines;
+      for (auto entity : nmsp.entities) {
+        if (entity->getEntityType() == pcv::entity::EntityType::Routine) {
+          if (added.find(entity) == std::end(added)) {
+            routines.insert(static_cast<const Routine *>(entity));
           }
         }
-        ClassRule cRule;
-        auto tmpAdded = cRule.apply(parent, classes, false);
-        for(auto cls : tmpAdded)
-          added->insert(cls.first);
       }
+      FunctionRule fRule;
+      auto tmpAdded = fRule.apply(parent, routines);
+      added.insert(std::begin(tmpAdded), std::end(tmpAdded));
+    }
 
-      // consider routines
-      {
-        std::unordered_set<const Routine *> routines;
-        for (auto entity : nmsp->entities) {
-          if (entity->getEntityType() == pcv::entity::EntityType::Routine) {
-            if (added->find(entity) == std::end(*added)) {
-              routines.insert(static_cast<const Routine *>(entity));
-            }
+    // consider global variables
+    {
+      std::unordered_set<const Variable *> variables;
+      for (auto entity : nmsp.entities) {
+        if (entity->getEntityType() == pcv::entity::EntityType::Variable) {
+          if (added.find(entity) == std::end(added)) {
+            variables.insert(static_cast<const Variable *>(entity));
           }
         }
-
-        FunctionRule fRule;
-        auto tmpAdded = fRule.apply(parent, routines);
-        added->insert(std::begin(tmpAdded), std::end(tmpAdded));
       }
-
-      // consider global variables
-      {
-        std::unordered_set<const Variable *> variables;
-        for (auto entity : nmsp->entities) {
-          if (entity->getEntityType() == pcv::entity::EntityType::Variable) {
-            if (added->find(entity) == std::end(*added)) {
-              variables.insert(static_cast<const Variable *>(entity));
-            }
-          }
-        }
-        VariableRule vRule;
-        auto tmpAdded = vRule.apply(*parent, variables);
-        added->insert(std::begin(tmpAdded), std::end(tmpAdded));
-      }
+      VariableRule vRule;
+      auto tmpAdded = vRule.apply(*parent, variables);
+      added.insert(std::begin(tmpAdded), std::end(tmpAdded));
     }
-    artifact = baseArtifact;
+
+    return added;
   }
-
-  return addedArtifacts;
-}
-
-ArchRule::added_t NamespaceRule::apply(Artifact_t *artifact, const Namespace &nmsp)
-{
-  added_t added;
-
-  artifact->children.emplace_back(std::unique_ptr<Artifact_t> {
-     new pcv::Artifact_t(nmsp.name, artifact)
-  });
-  auto parent = artifact->children.back().get();
-
-
-  // consider classes
-  {
-    std::unordered_set<const Class *> classes;
-    for (auto entity : nmsp.entities) {
-      if (entity->getEntityType() == pcv::entity::EntityType::Class) {
-        if (entity->cls == nullptr)
-          classes.insert(static_cast<const Class *>(entity));
-      }
-    }
-    ClassRule cRule;
-    auto tmpAdded = cRule.apply(parent, classes);
-    for(auto cls : tmpAdded)
-      added.insert(cls.first);
-  }
-
-  // consider routines
-  {
-    std::unordered_set<const Routine *> routines;
-    for (auto entity : nmsp.entities) {
-      if (entity->getEntityType() == pcv::entity::EntityType::Routine) {
-        if (added.find(entity) == std::end(added)) {
-          routines.insert(static_cast<const Routine *>(entity));
-        }
-      }
-    }
-    FunctionRule fRule;
-    auto tmpAdded = fRule.apply(parent, routines);
-    added.insert(std::begin(tmpAdded), std::end(tmpAdded));
-  }
-
-  // consider global variables
-  {
-    std::unordered_set<const Variable *> variables;
-    for (auto entity : nmsp.entities) {
-      if (entity->getEntityType() == pcv::entity::EntityType::Variable) {
-        if (added.find(entity) == std::end(added)) {
-          variables.insert(static_cast<const Variable *>(entity));
-        }
-      }
-    }
-    VariableRule vRule;
-    auto tmpAdded = vRule.apply(*parent, variables);
-    added.insert(std::begin(tmpAdded), std::end(tmpAdded));
-  }
-
-  return added;
-}
 
 }  // namespace pcv

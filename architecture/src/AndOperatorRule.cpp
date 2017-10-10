@@ -29,6 +29,7 @@ namespace pcv {
     return out;
   }
 
+
   std::unique_ptr<ArchRule::artifacts_t> AndOperatorRule::execute(Artifact_t &archSet, const dwarf::Context &ctxt) {
     auto artifacts = std::unique_ptr<artifacts_t> {new artifacts_t};
     artifact_ = new Artifact_t(artifactName_, &archSet);
@@ -42,35 +43,19 @@ namespace pcv {
 
     ArchRule::added_t added;
 
-    std::unordered_set<const Namespace *> namespacesInFirstArtifact;
-    std::unordered_set<const Namespace *> namespacesInSecondArtifact;
+    std::vector<const Namespace *> namespacesInFirstArtifact;
+    std::vector<const Namespace *> namespacesInSecondArtifact;
     getNamespacesInArtifact(*firstArtifactSet, namespacesInFirstArtifact);
     getNamespacesInArtifact(*secondArtifactSet, namespacesInSecondArtifact);
-    std::unordered_set<const Namespace *> namespaces;
+    std::vector<const Namespace *> namespaces;
     unordered_set_intersection(
             namespacesInFirstArtifact.begin(), namespacesInFirstArtifact.end(),
             namespacesInSecondArtifact.begin(), namespacesInSecondArtifact.end(),
             std::inserter(namespaces, namespaces.begin())
     );
-    std::vector<const Namespace *> namespacesVector;
-    std::copy(namespaces.begin(), namespaces.end(), std::inserter(namespacesVector, namespacesVector.end()));
-    auto nmsp1 = namespacesVector.begin();
-    while(nmsp1 != std::end(namespacesVector)) {
-      if((*nmsp1)->name != "") {
-        auto nmspBefore = namespacesVector.begin();
-        while(nmspBefore != nmsp1) {
-          if(std::find((*nmsp1)->children.begin(), (*nmsp1)->children.end(), *nmspBefore) != (*nmsp1)->children.end()) {
-            std::swap(*nmsp1, *nmspBefore);
-            break;
-          }
-          ++nmspBefore;
-        }
-      }
-
-      ++nmsp1;
-    }
+    std::sort(std::begin(namespaces), std::end(namespaces), isParent);
     NamespaceRule namespaceRule;
-    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespacesVector);
+    std::unordered_map<const Namespace *, Artifact_t *> namespacesAdded = namespaceRule.apply(&nmspArtifact, namespaces);
 
     // consider classes
     {

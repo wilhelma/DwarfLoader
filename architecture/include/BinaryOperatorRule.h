@@ -21,7 +21,8 @@ namespace pcv {
   class BinaryOperatorRule : public ArchRule {
 
   public:
-    void getNamespacesInArtifact(Artifact_t &artifact, std::unordered_set<const Namespace *> &namespaces);
+    static bool isParent (const Namespace* nmspL, const Namespace* nmspR);
+    void getNamespacesInArtifact(Artifact_t &artifact, std::vector<const Namespace *> &namespaces);
     void getClassesInArtifact(Artifact_t &artifact, std::unordered_set<const Class *> &classes);
     void getRoutinesInArtifact(Artifact_t &artifact, std::unordered_set<const Routine *> &routines, ArchRule::added_t &added);
     void getGlobalVariablesInArtifact(Artifact_t &artifact, std::unordered_set<const Variable *> &variables, ArchRule::added_t &added);

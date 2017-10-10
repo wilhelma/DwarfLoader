@@ -93,7 +93,8 @@ namespace pcv {
 
     for (auto childClass : cls->inheritClasses) {
       if (checkIfClassIsInherited(childClass, classes) && added.find(childClass) == std::end(added) &&
-          (!useAllClassesFromCtxt ? (std::find(classes.begin(), classes.end(), childClass) != std::end(classes)) : true)) {
+          (!useAllClassesFromCtxt ? (std::find(classes.begin(), classes.end(), childClass) != std::end(classes))
+                                  : true)) {
         traverseHierarchy(childClass, artifact, classes);
       }
     }
@@ -123,23 +124,18 @@ namespace pcv {
     return nullptr;
   }
 
+  bool isNested(const Class *clsL, const Class *clsR) {
+    return clsL->nestedClasses.size() != 0 &&
+           (std::find(clsL->nestedClasses.begin(), clsL->nestedClasses.end(), clsR) !=
+            std::end(clsL->nestedClasses));
+  };
+
   std::unordered_map<const SoftwareEntity *, Artifact_t *> ClassRule::apply(Artifact_t *artifact,
                                                                             const std::unordered_set<const Class *> &classes,
                                                                             bool useAllClassesFromCtxt) {
     std::vector<const Class *> classesVector;
     std::copy(classes.begin(), classes.end(), std::inserter(classesVector, classesVector.end()));
-    auto nmsp1 = classesVector.begin();
-    while(nmsp1 != std::end(classesVector)) {
-        auto nmspBefore = classesVector.begin();
-        while(nmspBefore != nmsp1) {
-          if(std::find((*nmsp1)->nestedClasses.begin(), (*nmsp1)->nestedClasses.end(), *nmspBefore) != (*nmsp1)->nestedClasses.end()) {
-            std::swap(*nmsp1, *nmspBefore);
-            break;
-          }
-          ++nmspBefore;
-        }
-      ++nmsp1;
-    }
+    std::sort(std::begin(classesVector), std::end(classesVector), isNested);
 
     for (auto cls : classesVector) {
       if (added.find(cls) == std::end(added)) {

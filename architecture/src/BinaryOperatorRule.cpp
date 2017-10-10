@@ -5,10 +5,14 @@
 #include "BinaryOperatorRule.h"
 
 namespace pcv {
+  bool BinaryOperatorRule::isParent (const Namespace* nmspL, const Namespace* nmspR) {
+    return nmspR->parent && (nmspR->parent == nmspL || isParent(nmspL, nmspR->parent));
+  };
+
   void BinaryOperatorRule::getNamespacesInArtifact(Artifact_t &artifact,
-                                                   std::unordered_set<const Namespace *> &namespaces) {
+                                                   std::vector<const Namespace *> &namespaces) {
     if (artifact.entity != nullptr && artifact.entity->getEntityType() == pcv::entity::EntityType::Namespace) {
-      namespaces.insert(static_cast<const Namespace*>(artifact.entity));
+      namespaces.push_back(static_cast<const Namespace*>(artifact.entity));
     }
     for(auto &child : artifact.children) {
       getNamespacesInArtifact(*child, namespaces);
