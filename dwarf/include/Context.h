@@ -19,6 +19,8 @@
 #include "entities/Class.h"
 #include "entities/Variable.h"
 
+#include <iostream>
+
 namespace pcv {
 namespace dwarf {
 
@@ -70,12 +72,18 @@ struct Context {
   // routine
   void addRoutine(Dwarf_Off off, std::unique_ptr<Routine> rtn);
   void linkNameToRoutine(const std::string& rtnName, Routine* rtn);
-  Routine* getRoutine(Dwarf_Off off);
+  Routine* getRoutine(Dwarf_Off off) const;
   Routine* getRoutine(const Routine::name_t& name) const;
 
   // variable
   void addStaticVariable(Dwarf_Off off, std::unique_ptr<Variable> var);
   Variable* getStaticVariable(Dwarf_Off off) const;
+  void addVariable(Dwarf_Off off, std::unique_ptr<Variable> var);
+  Variable* getVariable(Dwarf_Off off) const;
+
+  // duplicates
+  void addDuplicate(Dwarf_Off original, Dwarf_Off duplicate);
+  Dwarf_Off getDuplicate(Dwarf_Off original) const;
 
   void clearCache() noexcept;
 
@@ -83,9 +91,11 @@ struct Context {
   std::unordered_map<Dwarf_Off, Class*> offClassMap_;
   std::unordered_map<Class::name_t, Class*> nameClassMap_;
   std::unordered_map<Dwarf_Off, Routine*> offRoutineMap_;
+  std::unordered_map<Dwarf_Off, Variable*> offVariableMap_;
   std::unordered_map<Routine::name_t, Routine*> nameRtnMap_;
   std::unordered_map<Dwarf_Off, std::string> offTypedefName_;
   std::unordered_map<Dwarf_Off, Variable*> offStaticVariableMap_;
+  std::unordered_map<Dwarf_Off, Dwarf_Off> duplicates_;
   std::vector<ClassRelation_t> inheritances_;
   std::vector<ClassRelation_t> compositions_;
 };

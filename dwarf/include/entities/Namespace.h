@@ -8,21 +8,31 @@
 #include <string>
 #include <vector>
 
+#include "SoftwareEntity.h"
+
+#include <iostream>
+
 namespace pcv {
-namespace entity {
+  namespace entity {
 
-struct SoftwareEntity;
+    struct Namespace : public SoftwareEntity {
+      Namespace *parent;
+      std::vector<Namespace *> children;
+      std::vector<SoftwareEntity *> entities;
 
-struct Namespace {
-    std::string name;
-    Namespace *parent;
-    std::vector<Namespace*> children;
-    std::vector<SoftwareEntity*> entities;
+      Namespace(Id_t id,
+                name_t name,
+                Image *img,
+                Namespace *nmsp,
+                file_t file,
+                line_t line,
+                Namespace *parent)
+              : SoftwareEntity(id, name, img, nmsp, nullptr, file, line), parent(parent) {}
 
-    Namespace(std::string &&name, Namespace *parent) : name(name), parent(parent) {}
-};
+      EntityType getEntityType() const override { return EntityType::Namespace; }
+    };
 
-}  // namespace pcv
+  }  // namespace pcv
 }  // namespace entity
 
 #endif //DWARFLOADER_NAMESPACE_H

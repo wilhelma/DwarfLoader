@@ -2,7 +2,7 @@
 // Created by wilhelma on 1/7/17.
 //
 
-#include <iostream>
+#include <algorithm>
 #include "Context.h"
 
 namespace pcv {
@@ -17,6 +17,17 @@ void Context::addClass(Dwarf_Off off, Class *cls)
   offClassMap_[off] = cls;
   if (getClass(*cls->nmsp, cls->name) == nullptr)
     nameClassMap_[cls->nmsp->name + cls->name] = cls;
+
+  // add nested classes
+  if (cls->cls != nullptr) {
+    if (std::find(std::begin(cls->cls->nestedClasses),
+                  std::end(cls->cls->nestedClasses),
+                  cls) == std::end(cls->cls->nestedClasses))
+    {
+      cls->cls->nestedClasses.push_back(cls);
+    }
+  }
+
   currentClass.push(cls);
 }
 
@@ -49,7 +60,7 @@ void Context::linkNameToRoutine(const std::string &rtnName, Routine *rtn) {
   nameRtnMap_[rtnName] = rtn;
 }
 
-Routine* Context::getRoutine(Dwarf_Off off) {
+Routine* Context::getRoutine(Dwarf_Off off) const {
   auto tmp = offRoutineMap_.find(off);
   if (tmp != std::end(offRoutineMap_))
     return tmp->second;
@@ -63,6 +74,20 @@ Routine* Context::getRoutine(const Routine::name_t &name) const {
     return rtn->second;
   else
     return nullptr;
+}
+
+void Context::addVariable(Dwarf_Off off, std::unique_ptr<Variable> var)
+{
+  offVariableMap_[off] = var.get();
+  variables.emplace_back(std::move(var));
+}
+
+Variable* Context::getVariable(Dwarf_Off off) const {
+  auto tmp = offVariableMap_.find(off);
+  if (tmp != std::end(offVariableMap_))
+    return tmp->second;
+
+  return nullptr;
 }
 
 void Context::addTypedef(Dwarf_Off off, const std::string &name)
@@ -120,6 +145,7 @@ void Context::reset() noexcept
 void Context::clearCache() noexcept
 {
   offRoutineMap_.clear();
+  offVariableMap_.clear();
   nameRtnMap_.clear();
   offTypedefName_.clear();
 }
@@ -137,6 +163,20 @@ Variable* Context::getStaticVariable(Dwarf_Off off) const
     return it->second;
   else
     return nullptr;
+}
+
+void Context::addDuplicate(Dwarf_Off original, Dwarf_Off duplicate)
+{
+  duplicates_[duplicate] = original;
+}
+
+Dwarf_Off Context::getDuplicate(Dwarf_Off original) const
+{
+  auto result = duplicates_.find(original);
+  if (result == std::end(duplicates_))
+    return 0;
+  else
+    return result->second;
 }
 
 }  // namespace dwarf

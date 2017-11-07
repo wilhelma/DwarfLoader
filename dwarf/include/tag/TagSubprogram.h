@@ -65,7 +65,18 @@ bool inspectConstructors(Context &ctxt, Dwarf_Die die)
 
 bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
 {
+  static std::unordered_map<Dwarf_Off, Routine*> handled;
+
   if (isValid(ctxt, die)) {
+    if (off) {
+      Dwarf_Off specOff;
+      if (dwarf_dieoffset(die, &specOff, nullptr) != DW_DLV_OK) throw DwarfError("offset");
+      if (handled.find(specOff) != std::end(handled)) {
+        ctxt.currentRoutine.emplace(handled[specOff]);
+        return false;  // continue
+      }
+    }
+
     char *rtnName{nullptr};
     if (!getDieName(ctxt.dbg, die, &rtnName)) throw DwarfError("diename");
 
@@ -90,7 +101,7 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
     if (lineNo > 0 || isConstructor) {
       auto rtn = std::unique_ptr<Routine> {
           new Routine(off,
-                      rtnName,
+                      demangle(rtnName),
                       ctxt.currentImage,
                       ctxt.currentNamespace,
                       ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.top(),
@@ -98,6 +109,7 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
                       lineNo)};
 
       ctxt.addRoutine(off, std::move(rtn));
+      handled[off] = ctxt.routines.back().get();
 
       if (!ctxt.currentClass.empty())
         ctxt.currentClass.top()->methods.push_back(ctxt.routines.back().get());
@@ -114,26 +126,46 @@ template<>
 struct TagHandler<DW_TAG_subprogram> {
   static bool handle(Context &ctxt)
   {
-    bool stop = false;
+    bool handled = true;
 
     if (hasAttr(ctxt.die, DW_AT_specification)) {
-      Dwarf_Off off;
+      Dwarf_Off off{}, specOff{};
       auto specDie = jump(ctxt.dbg, ctxt.die, DW_AT_specification);
-      if (dwarf_dieoffset(ctxt.die, &off, 0) == DW_DLV_OK)
-        stop = handleSubProgram(ctxt, specDie, off);
+      if (dwarf_dieoffset(ctxt.die, &off, 0) == DW_DLV_OK) {
+        if (dwarf_dieoffset(specDie, &specOff, 0) == DW_DLV_OK) {
+          auto dupOff = ctxt.getDuplicate(specOff);
+          specOff = (dupOff) ? dupOff : specOff;
+          auto specRoutine = ctxt.getRoutine(specOff);
+
+          auto tmpNmsp = ctxt.currentNamespace;
+          if (specRoutine) {
+            if (specRoutine->cls) ctxt.currentClass.push(specRoutine->cls);
+            ctxt.currentNamespace = specRoutine->nmsp;
+          }
+
+          handled = handleSubProgram(ctxt, specDie, off);
+
+          if (specRoutine != nullptr)
+            if (specRoutine->cls) ctxt.currentClass.pop();
+            ctxt.currentNamespace = tmpNmsp;
+        }
+      }
       dwarf_dealloc(ctxt.dbg, specDie, DW_DLA_DIE);
-    } else {
-      stop = handleSubProgram(ctxt, ctxt.die);
+    } else if (hasAttr(ctxt.die, DW_AT_decl_file)) {
+      handled = handleSubProgram(ctxt, ctxt.die);
     }
 
-    return stop;
+    return handled;
   }
   static bool handleDuplicate(Context &ctxt)
   {
     auto rtn = ctxt.getRoutine(ctxt.duplicate);
-    if (rtn) ctxt.currentRoutine.emplace(rtn);
-
-    return false;  // continue
+    if (rtn) {
+      ctxt.currentRoutine.push(rtn);
+      return false;  // continue
+    } else {
+      return true;  // stop traversing
+    }
   }
 };
 

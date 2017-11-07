@@ -8,7 +8,7 @@
 #include <vector>
 #include <unordered_set>
 #include <memory>
-#include <gtest/gtest_prod.h>
+
 #include <iostream>
 
 #include "entities/SoftwareEntity.h"
@@ -30,6 +30,7 @@ class ArchRule;
 /// @brief The artifact structure that builds the architecture.
 typedef struct Artifact_t {
   std::string name;
+  const SoftwareEntity* entity;
   std::unordered_set<const SoftwareEntity*> entities;
   std::vector<std::unique_ptr<Artifact_t>> children;
   Artifact_t* parent;
@@ -37,12 +38,10 @@ typedef struct Artifact_t {
   /// @brief Constructor.
   /// @param name The name of the artifact.
   /// @param parent The parent artifact (nullptr if it is a root artifact).
-  explicit Artifact_t(const std::string& name, Artifact_t* parent) : name(name), parent(parent) {}
+  explicit Artifact_t(const std::string& name, Artifact_t* parent) : name(name), entity(nullptr),
+                                                                     parent(parent) {}
 
-  Artifact_t(const Artifact_t&) = delete;
-  Artifact_t& operator=(const Artifact_t&) = delete;
-  Artifact_t(const Artifact_t&&) = delete;
-  Artifact_t&operator=(const Artifact_t&&) = delete;
+  void setParent(Artifact_t &child, Artifact_t &parent) { child.parent = &parent;}
 
   ~Artifact_t() = default;
 } Artifact_t;
@@ -73,11 +72,7 @@ class ArchBuilder {
   /// @return The ostream ref to write to.
   friend std::ostream& operator<<(std::ostream& os, const ArchBuilder& obj);
 
-  /* disable copy/move construction and assignment operators */
-  ArchBuilder(const ArchBuilder &) = delete;
-  ArchBuilder(ArchBuilder &&) = delete;
-  ArchBuilder &operator=(const ArchBuilder &) = delete;
-  ArchBuilder &operator=(ArchBuilder &&) = delete;
+  Artifact_t* getArchSet();
 
  private:
   const dwarf::Context &ctxt_;

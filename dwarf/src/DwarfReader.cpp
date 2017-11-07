@@ -7,6 +7,18 @@
 #include "tag/TagGeneric.h"
 #include "entities/Variable.h"
 
+namespace {
+
+Namespace* getTopNamespace(Namespace* nmsp, Namespace* emptyNmsp)
+{
+  if (nmsp == emptyNmsp || nmsp->parent == emptyNmsp)
+    return nmsp;
+
+  return getTopNamespace(nmsp->parent, emptyNmsp);
+}
+
+}  // namespace
+
 namespace pcv {
 namespace dwarf {
 
@@ -28,7 +40,7 @@ DwarfReader::DwarfReader(const std::string &filename,
   dbgGuard_ = std::unique_ptr<DbgGuard> {new DbgGuard(fileGuard_->fd, errHandler)};
   ctxt_.dbg = dbgGuard_->dbg;
 
-  ctxt_.namespaces.emplace_back(new Namespace(std::string(""), nullptr));
+  ctxt_.namespaces.emplace_back(new Namespace(0, std::string(""), nullptr, nullptr, std::string(""), 0, nullptr));
   ctxt_.emptyNamespace = ctxt_.currentNamespace = ctxt_.namespaces.back().get();
 }
 
@@ -100,7 +112,7 @@ bool DwarfReader::handle(Dwarf_Die die)
   Dwarf_Half tag{};
   if (dwarf_tag(die, &tag, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
 
-  if (hasAttr(ctxt_.die, DW_AT_decl_file)) {
+  if (hasAttr(die, DW_AT_decl_file)) {
     Dwarf_Unsigned fileNo{};
     getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_file, &fileNo);
     if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
@@ -122,7 +134,6 @@ void DwarfReader::processContext()
   ctxt_.establishComposition();
   ctxt_.establishTypedefs();
 }
-
 }  // namespace dwarf
 }  // namespace pcv
 

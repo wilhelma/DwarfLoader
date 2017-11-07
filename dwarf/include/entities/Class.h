@@ -26,6 +26,7 @@ struct Class : public SoftwareEntity {
   std::vector<Variable *> members;
   std::vector<Class *> baseClasses;
   std::vector<Class *> inheritClasses;
+  std::vector<Class *> nestedClasses;
   std::vector<Class *> composites;
 
   explicit Class(Id_t id,
