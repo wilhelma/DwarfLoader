@@ -26,16 +26,19 @@
       ],
       'cflags_cc': [ '-fexceptions', '-fpermissive', '-fPIC' ],
       'include_dirs': [
-        '../cmake-build-debug/3rdparty/json11',
+        '../3rdparty/json11',
+        '../3rdparty/libdwarf/libdwarf',
+        '../3rdparty/libz',
         '../dwarf/include',
         '../architecture/include'
       ],
       'link_settings': {
         "libraries": [
           '-L/usr/local/lib',
-          '-ldwarf',
           '-lelf',
-          '../../cmake-build-debug/3rdparty/json11/libjson11.a'
+          '../../3rdparty/libdwarf/libdwarf/libdwarf.a',
+          '../../3rdparty/libz/libz.a',
+          '../../3rdparty/json11/libjson11.a'
         ]
       }
     }

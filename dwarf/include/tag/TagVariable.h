@@ -44,7 +44,7 @@ struct TagHandler<DW_TAG_variable> {
                        getVariableSize(ctxt.dbg, die),
                        file,
                        line,
-                       (ctxt.currentClass.empty()) ? Class::NO_CLASS : ctxt.currentClass.top()->id};
+                       (ctxt.currentClass.empty()) ? Class::NO_CLASS : ctxt.currentClass.back()->id};
 
       auto addVariable = [&](Dwarf_Debug dbg, Dwarf_Die die, Variable::offset_t offset,
                              Variable::Type type) {
@@ -61,6 +61,7 @@ struct TagHandler<DW_TAG_variable> {
                          type)
           }
         );
+        ctxt.add(off, ctxt.variables.back().get());
       };
 
       auto stackHandler = [&](Dwarf_Debug dbg, Dwarf_Die die, Variable::offset_t offset) {

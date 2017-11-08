@@ -2,7 +2,7 @@
 // Created by wilhelma on 1/7/17.
 //
 
-#include <iostream>
+#include <cassert>
 #include "Context.h"
 
 namespace pcv {
@@ -14,24 +14,19 @@ namespace dwarf {
 
 void Context::addClass(Dwarf_Off off, Class *cls)
 {
-  offClassMap_[off] = cls;
-  if (getClass(*cls->nmsp, cls->name) == nullptr)
-    nameClassMap_[cls->nmsp->name + cls->name] = cls;
-  currentClass.push(cls);
-}
+  add(off, cls);
 
-Class *Context::getClass(Dwarf_Off off) const
-{
-  auto tmp = offClassMap_.find(off);
-  if (tmp != std::end(offClassMap_))
-    return tmp->second;
-
-  return nullptr;
+  if (getClass(*cls->nmsp, cls->name) == nullptr) {
+    auto classSpecifier = getClassSpecifier(cls->nmsp->name, cls->name);
+    nameClassMap_[classSpecifier] = cls;
+  }
+  currentClass.push_back(cls);
 }
 
 Class* Context::getClass(const Namespace& nmsp, const Class::name_t& name) const
 {
-  auto tmp = nameClassMap_.find(nmsp.name + name);
+  auto classSpecifier = getClassSpecifier(nmsp.name, name);
+  auto tmp = nameClassMap_.find(classSpecifier);
   if (tmp != std::end(nameClassMap_))
     return tmp->second;
 
@@ -41,7 +36,7 @@ Class* Context::getClass(const Namespace& nmsp, const Class::name_t& name) const
 void Context::addRoutine(Dwarf_Off off, std::unique_ptr<Routine> rtn)
 {
   nameRtnMap_[rtn->name] = rtn.get();
-  offRoutineMap_[off] = rtn.get();
+  add(off, rtn.get());
   routines.emplace_back(std::move(rtn));
 }
 
@@ -49,16 +44,9 @@ void Context::linkNameToRoutine(const std::string &rtnName, Routine *rtn) {
   nameRtnMap_[rtnName] = rtn;
 }
 
-Routine* Context::getRoutine(Dwarf_Off off) {
-  auto tmp = offRoutineMap_.find(off);
-  if (tmp != std::end(offRoutineMap_))
-    return tmp->second;
-
-  return nullptr;
-}
-
 Routine* Context::getRoutine(const Routine::name_t &name) const {
-  auto rtn = nameRtnMap_.find(name);
+  auto fixedName = getFixedConstructorName(name);
+  auto rtn = nameRtnMap_.find(fixedName);
   if (rtn != std::end(nameRtnMap_))
     return rtn->second;
   else
@@ -72,19 +60,19 @@ void Context::addTypedef(Dwarf_Off off, const std::string &name)
 
 void Context::addInheritance(Dwarf_Off baseOff, Dwarf_Off inhOff)
 {
-  inheritances_.emplace_back(ClassRelation_t(baseOff, inhOff));
+  inheritances_.emplace_back(ClassRelation(baseOff, inhOff));
 }
 
 void Context::addComposition(Dwarf_Off first, Dwarf_Off second)
 {
-  compositions_.emplace_back(ClassRelation_t(first, second));
+  compositions_.emplace_back(ClassRelation(first, second));
 }
 
 void Context::establishInheritance()
 {
   for (auto &inh : inheritances_) {
-    Class *inhClass = getClass(inh.second);
-    Class *baseClass = getClass(inh.first);
+    Class *inhClass = get<Class>(inh.second);
+    Class *baseClass = get<Class>(inh.first);
     if (inhClass && baseClass) {
       inhClass->baseClasses.push_back(baseClass);
       baseClass->inheritClasses.push_back(inhClass);
@@ -95,8 +83,8 @@ void Context::establishInheritance()
 void Context::establishComposition()
 {
   for (auto &com : compositions_) {
-    Class *inhClass = getClass(com.second);
-    Class *baseClass = getClass(com.first);
+    Class *inhClass = get<Class>(com.second);
+    Class *baseClass = get<Class>(com.first);
     if (inhClass && baseClass) {
       inhClass->composites.push_back(baseClass);
     }
@@ -106,9 +94,10 @@ void Context::establishComposition()
 void Context::establishTypedefs()
 {
   for (auto &td : offTypedefName_) {
-    auto ptr = getClass(td.first);
-    if (ptr)
+    auto ptr = get<Class>(td.first);
+    if (ptr) {
       ptr->name = td.second;
+    }
   }
 }
 
@@ -119,24 +108,87 @@ void Context::reset() noexcept
 
 void Context::clearCache() noexcept
 {
-  offRoutineMap_.clear();
-  nameRtnMap_.clear();
   offTypedefName_.clear();
 }
 
-void Context::addStaticVariable(Dwarf_Off off, std::unique_ptr<Variable> var)
+std::string Context::getClassSpecifier(const std::string& namespaceName,
+                                       const Class::name_t& className) const
 {
-  variables.emplace_back(std::move(var));
-  offStaticVariableMap_[off] = variables.back().get();
+  std::string specifier {namespaceName};
+
+  if (!currentClass.empty()) {
+    for (auto &cls : currentClass) {
+      specifier += cls->name + "::";
+    }
+  }
+
+  return specifier + className;
 }
 
-Variable* Context::getStaticVariable(Dwarf_Off off) const
+const Routine::name_t Context::getFixedConstructorName(const Routine::name_t &cstr) const
 {
-  auto it = offStaticVariableMap_.find(off);
-  if (it != end(offStaticVariableMap_))
-    return it->second;
-  else
-    return nullptr;
+  // a workaround for the following problem (C1 and C2 constructor emitted):
+  // http://stackoverflow.com/questions/6921295/dual-emission-of-constructor-symbols
+  Routine::name_t altConstructor {cstr};
+  std::size_t pos = cstr.find("C2E");
+  if (pos != std::string::npos) {
+    altConstructor.replace(pos, 3, "C1E");
+  } else {
+    pos = cstr.find("C1E");
+    if (pos != std::string::npos)
+      altConstructor.replace(pos, 3, "C2E");
+  }
+
+  return altConstructor;
+}
+
+Context::Context()
+{
+  //offClassMap_.set_empty_key(~0u);
+}
+
+void Context::reserveEntityVector(size_t e)
+{
+  vectorSize_ = e;
+  entities_ = std::unique_ptr<std::vector<SoftwareEntity*>> {
+    new std::vector<SoftwareEntity*>(e, nullptr)
+  };
+}
+
+void Context::
+addSourceLocation(const Dwarf_Addr &ip, std::unique_ptr<pcv::dwarf::SourceLocation> loc) noexcept
+{
+  sourceLocations_[ip] = std::move(loc);
+}
+
+SourceLocation *Context::getSourceLocation(Dwarf_Addr ip) const
+{
+  auto location = sourceLocations_.upper_bound(ip);
+  if (location != std::begin(sourceLocations_)) {
+    location--;
+    return location->second.get();
+  }
+  return nullptr;
+}
+
+void Context::finalizeSourceLocations()
+{
+  assert(!sourceLocations_.empty());
+
+  sourceLocations_[sourceLocations_.rbegin()->first + 1] = std::unique_ptr<SourceLocation> {
+    new SourceLocation(0, "")
+  };
+}
+
+void Context::add(Dwarf_Off off, SoftwareEntity *entity)
+{
+  (*entities_)[off] = entity;
+}
+
+void Context::addMember(Dwarf_Off off, Variable *member)
+{
+  currentClass.back()->members.emplace_back(member);
+  add(off, member);
 }
 
 }  // namespace dwarf

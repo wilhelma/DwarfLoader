@@ -10,22 +10,49 @@
 
 namespace {
 
-bool isRealDuplicate(Dwarf_Debug dbg, Dwarf_Die rhs, Dwarf_Die lhs)
+bool isRealDuplicate(const pcv::dwarf::Context &ctxt, Dwarf_Die dupDie)
 {
-  Dwarf_Half tagL{}, tagR{};
-  Dwarf_Unsigned lineL{}, lineR{};
+  const auto &origDie = ctxt.die;
+  const auto &dbg = ctxt.dbg;
 
-  if (dwarf_tag(lhs, &tagL, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
-  pcv::dwarf::getAttrUint(dbg, lhs, DW_AT_decl_line, &lineL);
-  if (dwarf_tag(rhs, &tagR, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
-  pcv::dwarf::getAttrUint(dbg, rhs, DW_AT_decl_line, &lineR);
+  Dwarf_Half tagDup{}, tagOrig{};
+  if (dwarf_tag(dupDie, &tagDup, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
+  if (dwarf_tag(origDie, &tagOrig, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
 
-  char *lhsChr{}, *rhsChr{};
-  if (pcv::dwarf::getDieName(dbg, rhs, &rhsChr) && pcv::dwarf::getDieName(dbg, lhs, &lhsChr)) {
-    return (tagL == tagR && lineL == lineR && std::string(lhsChr) == std::string(rhsChr));
+  // compare tag
+  if (tagDup != tagOrig)
+    return false;
+
+  {  // compare line
+    Dwarf_Unsigned lineDup{}, lineOrig{};
+    pcv::dwarf::getAttrUint(dbg, dupDie, DW_AT_decl_line, &lineDup);
+    pcv::dwarf::getAttrUint(dbg, origDie, DW_AT_decl_line, &lineOrig);
+
+    if (lineDup != lineOrig)
+      return false;
   }
 
-  return (tagL == tagR && lineL == lineR);
+  {  // compare die name
+    char *dupChr{}, *origChr{};
+    if (pcv::dwarf::getDieName(dbg, origDie, &origChr) &&
+      pcv::dwarf::getDieName(dbg, dupDie, &dupChr) &&
+      std::string(dupChr) != std::string(origChr))
+      return false;
+  }
+
+  if (!ctxt.currentClass.empty()) {  // compare template class
+    Dwarf_Off offDup{};
+    if (dwarf_dieoffset(dupDie, &offDup, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_offset");
+
+    auto entity = ctxt.get<pcv::entity::SoftwareEntity>(offDup);
+    if (entity != nullptr) {
+      auto clsDup = ctxt.get<pcv::entity::SoftwareEntity>(offDup)->cls;
+      if (clsDup != ctxt.currentClass.back())
+        return false;
+    }
+  }
+
+  return true;  // identical
 }
 
 }
@@ -80,7 +107,7 @@ Dwarf_Off DieDuplicate::isDuplicate(const Context &ctxt) const
       Dwarf_Die d{};
       if (dwarf_offdie(ctxt.dbg, dup->second, &d, nullptr) != DW_DLV_OK) throw DwarfError("offDie");
 
-      if (isRealDuplicate(ctxt.dbg, ctxt.die, d))
+      if (isRealDuplicate(ctxt, d))
         return dup->second;
     }
   }

@@ -33,7 +33,7 @@ struct TagHandler<DW_TAG_formal_parameter> {
                          file,
                          line,
                          (ctxt.currentClass.empty()) ? Class::NO_CLASS
-                                                     : ctxt.currentClass.top()->id};
+                                                     : ctxt.currentClass.back()->id};
 
         assert(!ctxt.currentRoutine.empty());
 
@@ -55,7 +55,9 @@ struct TagHandler<DW_TAG_formal_parameter> {
                            Variable::Type::STACK)
             }
           );
-          ctxt.currentRoutine.top()->locals.emplace_back(ctxt.variables.back().get());
+          auto newVar = ctxt.variables.back().get();
+          ctxt.currentRoutine.top()->locals.emplace_back(newVar);
+          ctxt.add(off, newVar);
         };
 
         handleLocListFromExpr(ctxt.dbg, ctxt.die, stackHandler,

@@ -39,7 +39,7 @@ bool handleStructClass(Context &ctxt)
                       clsString,
                       ctxt.currentImage,
                       ctxt.currentNamespace,
-                      ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.top(),
+                      ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.back(),
                       ctxt.srcFiles[fileNo - 1],
                       lineNo,
                       size)
@@ -48,14 +48,13 @@ bool handleStructClass(Context &ctxt)
       ctxt.addClass(off, ctxt.classes.back().get());
     } else {
       // there where already declarations of this class in the dwarf file
-      cls->cls = ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.top();
+      cls->cls = ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.back();
       cls->file = ctxt.srcFiles[fileNo - 1];
       cls->line = lineNo;
       cls->size = size;
       ctxt.addClass(off, cls);
     }
-  }
-  else {
+  } else {
     char *clsChar{nullptr};
     std::string clsString{};
 
@@ -92,7 +91,7 @@ bool handleStructClassDuplicate(Context &ctxt)
   Dwarf_Off off;
   if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
 
-  auto cls = ctxt.getClass(ctxt.duplicate);
+  auto cls = ctxt.get<Class>(ctxt.duplicate);
   if (cls) ctxt.addClass(off, cls);
 
   return false;
@@ -128,15 +127,11 @@ template<>
 struct TagLeaver<DW_TAG_class_type> {
   static void leave(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file)) {
-      ctxt.currentClass.pop();
-    }
+      ctxt.currentClass.pop_back();
   }
   static void leaveDuplicate(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file)) {
-      ctxt.currentClass.pop();
-    }
+      ctxt.currentClass.pop_back();
   }
 };
 
@@ -144,15 +139,11 @@ template<>
 struct TagLeaver<DW_TAG_structure_type> {
   static void leave(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file)) {
-      ctxt.currentClass.pop();
-    }
+      ctxt.currentClass.pop_back();
   }
   static void leaveDuplicate(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file)) {
-      ctxt.currentClass.pop();
-    }
+      ctxt.currentClass.pop_back();
   }
 };
 

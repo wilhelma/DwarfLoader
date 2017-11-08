@@ -13,7 +13,7 @@ namespace {
 
 using pcv::dwarf::Context;
 using pcv::dwarf::Namespace;
-using pcv::dwarf::Class;
+using pcv::entity::Class;
 
 std::string fillNmspString(const Context& ctxt, Namespace* nmsp)
 {
@@ -23,10 +23,10 @@ std::string fillNmspString(const Context& ctxt, Namespace* nmsp)
     return fillNmspString(ctxt, nmsp->parent) + "::" + nmsp->name;
 }
 
-std::string fillClassString(const Context& ctxt, std::stack<Class*>& s)
+std::string fillClassString(const Context& ctxt, std::vector<Class*>& s)
 {
-    std::string className = s.top()->name;
-    s.pop();
+    std::string className = s.back()->name;
+    s.pop_back();
 
     if (s.empty())
       return className;
@@ -59,21 +59,19 @@ struct TagHandler<DW_TAG_member> {
   {
     if (!hasAttr(ctxt.die, DW_AT_artificial) &&
         !hasAttr(ctxt.die, DW_AT_declaration)) {
+      if (ctxt.currentClass.empty()) throw DwarfError("No class for member");
 
       Dwarf_Off off{};
       if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_dieoff");
 
-      if (ctxt.currentClass.empty()) throw DwarfError("No class for member");
-
-
       if (getPtrOff(ctxt.dbg, jump(ctxt.dbg, ctxt.die, DW_AT_type), &off)) {
-        ctxt.addComposition(ctxt.currentClass.top()->id, off);
+        ctxt.addComposition(ctxt.currentClass.back()->id, off);
       } else { // member variable
         char *varName{nullptr};
         if (getDieName(ctxt.dbg, ctxt.die, &varName)) {
           Dwarf_Unsigned file{}, line{}, offset{};
           Dwarf_Half tag{};
-          entity::Class* classType {nullptr};
+          Class* classType {nullptr};
 
           getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_file, &file);
           getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &line);
@@ -84,7 +82,7 @@ struct TagHandler<DW_TAG_member> {
           if (tag == DW_TAG_structure_type || tag == DW_TAG_class_type) {
             Dwarf_Off off{};
             if (dwarf_dieoffset(typeDie, &off, nullptr) != DW_DLV_OK) throw DwarfError("dieoffset");
-            classType = ctxt.getClass(off);
+            classType = ctxt.get<Class>(off);
           }
 
           ctxt.variables.emplace_back(
@@ -93,7 +91,7 @@ struct TagHandler<DW_TAG_member> {
                                prepareMemberName(ctxt, varName),
                                ctxt.currentImage,
                                ctxt.currentNamespace,
-                               ctxt.currentClass.top(),
+                               ctxt.currentClass.back(),
                                ctxt.srcFiles[file - 1],
                                line,
                                getVariableSize(ctxt.dbg, ctxt.die),
@@ -102,7 +100,7 @@ struct TagHandler<DW_TAG_member> {
                                classType)
               }
           );
-          ctxt.currentClass.top()->members.emplace_back(ctxt.variables.back().get());
+          ctxt.addMember(off, ctxt.variables.back().get());
         }
       }
     }

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+CFLAGS="-fPIC $2" CPPFLAGS="-fPIC $3" LDFLAGS="$4" $1 $5

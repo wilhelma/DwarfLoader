@@ -23,6 +23,36 @@ bool isValid(const Context &ctxt, Dwarf_Die die)
 namespace pcv {
 namespace dwarf {
 
+pcv::entity::Routine* getSpecRoutine(const Context &ctxt, Dwarf_Die die)
+{
+  Dwarf_Off specOff{};
+  Dwarf_Die specDie{0};
+
+  // specification
+  if (hasAttr(die, DW_AT_declaration))
+    specDie = die;
+
+  // declaration
+  else if (hasAttr(die, DW_AT_specification))
+    specDie = jump(ctxt.dbg, die, DW_AT_specification);
+
+  // abstract origin
+  else if (hasAttr(die, DW_AT_abstract_origin)) {
+    auto declDie = jump(ctxt.dbg, die, DW_AT_abstract_origin);
+    if (hasAttr(declDie, DW_AT_specification)) {
+      specDie = jump(ctxt.dbg, declDie, DW_AT_specification);
+    }
+    dwarf_dealloc(ctxt.dbg, declDie, DW_DLA_DIE);
+  }
+
+  if (!specDie) return nullptr;
+
+  dwarf_dieoffset(specDie, &specOff, nullptr);
+  if (!hasAttr(die, DW_AT_declaration)) dwarf_dealloc(ctxt.dbg, specDie, DW_DLA_DIE);
+  return ctxt.get<Routine>(specOff);
+}
+
+
 bool inspectConstructors(Context &ctxt, Dwarf_Die die)
 {
   char *rtnName = nullptr;
@@ -34,26 +64,20 @@ bool inspectConstructors(Context &ctxt, Dwarf_Die die)
       if (pos1 != std::string::npos) pos1 += 2;
       else pos1 = 0;
 
-      const std::string className = uName.substr(pos1, pos2 - pos1);
+      std::string className = uName.substr(pos1, pos2 - pos1);
+      auto pos = className.find_first_of('<');
+      if (pos != std::string::npos)
+        className = className.substr(0, pos);
+
       const std::string methodName = uName.substr(pos2 + 2);
 
       if (className == methodName) {
         if (hasAttr(die, DW_AT_abstract_origin)) {
-          auto declDie = jump(ctxt.dbg, die, DW_AT_abstract_origin);
-          if (hasAttr(declDie, DW_AT_specification)) {
-            auto specDie = jump(ctxt.dbg, declDie, DW_AT_specification);
-            Dwarf_Off specOff{};
-
-            // add line of declaration to class constructors
-            dwarf_dieoffset(specDie, &specOff, nullptr);
-            auto rtn = ctxt.getRoutine(specOff);
-            if (rtn != nullptr) {
-              rtn->isConstructor = true;
-              ctxt.linkNameToRoutine(rtnName, rtn);
-            }
-            dwarf_dealloc(ctxt.dbg, specDie, DW_DLA_DIE);
+          auto rtn = getSpecRoutine(ctxt, die);
+          if (rtn != nullptr) {
+            rtn->isConstructor = true;
+            ctxt.linkNameToRoutine(rtnName, rtn);
           }
-          dwarf_dealloc(ctxt.dbg, declDie, DW_DLA_DIE);
 
           return true;
         }
@@ -65,16 +89,27 @@ bool inspectConstructors(Context &ctxt, Dwarf_Die die)
 
 bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
 {
+  static std::unordered_map<Dwarf_Off, Routine*> handled;
+
   if (isValid(ctxt, die)) {
+    if (off) {
+      Dwarf_Off specOff;
+      if (dwarf_dieoffset(die, &specOff, nullptr) != DW_DLV_OK) throw DwarfError("offset");
+      if (handled.find(specOff) != std::end(handled)) {
+        ctxt.currentRoutine.emplace(handled[specOff]);
+        return false;  // continue
+      }
+    }
+
     char *rtnName{nullptr};
     if (!getDieName(ctxt.dbg, die, &rtnName)) throw DwarfError("diename");
 
     // handle constructors
-    bool isConstructor {!ctxt.currentClass.empty() && (ctxt.currentClass.top()->name == rtnName)};
+    bool isConstructor {!ctxt.currentClass.empty() && (ctxt.currentClass.back()->name == rtnName)};
     if (std::strstr(rtnName, "C1") != nullptr ||
       std::strstr(rtnName, "C2") != nullptr ||
       std::strstr(rtnName, "C3") != nullptr) {
-      inspectConstructors(ctxt, die);
+      isConstructor = inspectConstructors(ctxt, die);
     }
 
     if (!off && (dwarf_dieoffset(die, &off, nullptr) != DW_DLV_OK)) throw DwarfError("offset");
@@ -88,19 +123,28 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
     }
 
     if (lineNo > 0 || isConstructor) {
+      auto cls = ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.back();
+      if (cls == nullptr) {
+        auto specRtn = getSpecRoutine(ctxt, die);
+        if (specRtn != nullptr)
+          cls = specRtn->cls;
+      }
+
       auto rtn = std::unique_ptr<Routine> {
-          new Routine(off,
-                      rtnName,
-                      ctxt.currentImage,
-                      ctxt.currentNamespace,
-                      ctxt.currentClass.empty() ? nullptr : ctxt.currentClass.top(),
-                      file,
-                      lineNo)};
+        new Routine(off,
+                    rtnName,
+                    ctxt.currentImage,
+                    ctxt.currentNamespace,
+                    cls,
+                    file,
+                    lineNo,
+                    isConstructor)};
 
       ctxt.addRoutine(off, std::move(rtn));
+      handled[off] = ctxt.routines.back().get();
 
       if (!ctxt.currentClass.empty())
-        ctxt.currentClass.top()->methods.push_back(ctxt.routines.back().get());
+        ctxt.currentClass.back()->methods.push_back(ctxt.routines.back().get());
 
       ctxt.currentRoutine.emplace(ctxt.routines.back().get());
 
@@ -114,23 +158,23 @@ template<>
 struct TagHandler<DW_TAG_subprogram> {
   static bool handle(Context &ctxt)
   {
-    bool stop = false;
+    bool handled = false;
 
     if (hasAttr(ctxt.die, DW_AT_specification)) {
       Dwarf_Off off;
       auto specDie = jump(ctxt.dbg, ctxt.die, DW_AT_specification);
       if (dwarf_dieoffset(ctxt.die, &off, 0) == DW_DLV_OK)
-        stop = handleSubProgram(ctxt, specDie, off);
+        handled = handleSubProgram(ctxt, specDie, off);
       dwarf_dealloc(ctxt.dbg, specDie, DW_DLA_DIE);
     } else {
-      stop = handleSubProgram(ctxt, ctxt.die);
+      handled = handleSubProgram(ctxt, ctxt.die);
     }
 
-    return stop;
+    return handled;
   }
   static bool handleDuplicate(Context &ctxt)
   {
-    auto rtn = ctxt.getRoutine(ctxt.duplicate);
+    auto rtn = ctxt.get<Routine>(ctxt.duplicate);
     if (rtn) ctxt.currentRoutine.emplace(rtn);
 
     return false;  // continue
@@ -147,7 +191,7 @@ struct TagLeaver<DW_TAG_subprogram> {
 
   static void leaveDuplicate(Context &ctxt)
   {
-    auto rtn = ctxt.getRoutine(ctxt.duplicate);
+    auto rtn = ctxt.get<Routine>(ctxt.duplicate);
     if (rtn != nullptr) {
       ctxt.currentRoutine.pop();
     }
