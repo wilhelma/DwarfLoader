@@ -10,16 +10,6 @@
 namespace pcv {
 namespace dwarf {
 
-bool isValid(const Context& ctxt)
-{
-  Dwarf_Unsigned lineNo{};
-  getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &lineNo);
-  if (lineNo == 0)
-    return false;
-
-  return true;
-}
-
 bool handleStructClass(Context &ctxt)
 {
   Dwarf_Off off{};
@@ -34,10 +24,8 @@ bool handleStructClass(Context &ctxt)
     else
       clsString = std::string("unnamed");
 
-    Dwarf_Off off{};
     Dwarf_Unsigned fileNo{}, lineNo{}, size{};
 
-    if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_file, &fileNo);
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_decl_line, &lineNo);
     getAttrUint(ctxt.dbg, ctxt.die, DW_AT_byte_size, &size);
@@ -126,17 +114,11 @@ template<>
 struct TagHandler<DW_TAG_structure_type> {
   static bool handle(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file) && !isValid(ctxt))
-      return true;
-
     return handleStructClass(ctxt);
   }
 
   static bool handleDuplicate(Context &ctxt)
   {
-    if (hasAttr(ctxt.die, DW_AT_decl_file) && !isValid(ctxt))
-      return true;
-
     return handleStructClassDuplicate(ctxt);
   }
 };

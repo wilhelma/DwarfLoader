@@ -5,6 +5,8 @@
 #ifndef DWARFLOADER_TAGSUBPROGRAM_H
 #define DWARFLOADER_TAGSUBPROGRAM_H
 
+#include <cstring>
+
 #include "tag/TagGeneric.h"
 #include "entities/Routine.h"
 #include "Type.h"
@@ -161,7 +163,7 @@ struct TagHandler<DW_TAG_subprogram> {
     bool handled = false;
 
     if (hasAttr(ctxt.die, DW_AT_specification)) {
-      Dwarf_Off off{}, specOff{};
+      Dwarf_Off off;
       auto specDie = jump(ctxt.dbg, ctxt.die, DW_AT_specification);
       if (dwarf_dieoffset(ctxt.die, &off, 0) == DW_DLV_OK)
         handled = handleSubProgram(ctxt, specDie, off);

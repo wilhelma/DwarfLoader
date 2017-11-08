@@ -29,7 +29,7 @@ struct TagHandler<DW_TAG_variable> {
     if (hasAttr(ctxt.die, DW_AT_specification)) {
       die = jump(ctxt.dbg, ctxt.die, DW_AT_specification);
       if (dwarf_dieoffset(die, &off, 0) == DW_DLV_OK) {
-        auto specVariable = ctxt.getVariable(off);
+        auto specVariable = ctxt.get<Variable>(off);
         if (specVariable == nullptr)
           return true;
       }
@@ -91,8 +91,7 @@ struct TagHandler<DW_TAG_variable> {
 
   static
   bool handleDuplicate(Context &ctxt) {
-    auto var = ctxt.getVariable(ctxt.duplicate);
-    return (var != nullptr);
+    return false;
   }
 };
 
