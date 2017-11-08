@@ -41,7 +41,7 @@ using pcv::entity::EntityType;
 using pcv::Artifact_t;
 
 int main(int argc, char **argv) {
-  Filter filter("(.+)cppcheck(.+)", "(.+)boost(.+)");
+  Filter filter("(.+)container(.+)", "(.+)boost(.+)");
   DieDuplicate duplicate;
   auto reader = std::unique_ptr<DwarfReader> { new DwarfReader(argv[1], duplicate, filter) };
 
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
       program.accept(astVisitor);
 
     } else {
-      std::cerr << "Cannot opet file!";
+      std::cerr << "Cannot open file!";
       return -1;
     }
 

@@ -56,6 +56,7 @@
       'include_dirs': [
         '../3rdparty/json11',
         '../3rdparty/libdwarf/libdwarf',
+        '../3rdparty/libelf/lib',
         '../3rdparty/libz',
         '../dwarf/include',
         '../architecture/include'
@@ -65,6 +66,7 @@
           '-L/usr/local/lib',
           '-lelf',
           '../../3rdparty/libdwarf/libdwarf/libdwarf.a',
+          '../../3rdparty/libelf/lib/libelf.a',
           '../../3rdparty/libz/libz.a',
           '../../3rdparty/json11/libjson11.a'
         ]

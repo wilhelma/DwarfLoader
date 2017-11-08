@@ -99,6 +99,7 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
       if (dwarf_dieoffset(die, &specOff, nullptr) != DW_DLV_OK) throw DwarfError("offset");
       if (handled.find(specOff) != std::end(handled)) {
         ctxt.currentRoutine.emplace(handled[specOff]);
+        ctxt.toClean.insert(ctxt.die);
         return false;  // continue
       }
     }
@@ -116,7 +117,7 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
 
     if (!off && (dwarf_dieoffset(die, &off, nullptr) != DW_DLV_OK)) throw DwarfError("offset");
 
-    Dwarf_Unsigned fileNo{}, lineNo{};
+    Dwarf_Unsigned fileNo{0}, lineNo{0};
     std::string file{};
     if (hasAttr(die, DW_AT_decl_file)) {
       getAttrUint(ctxt.dbg, die, DW_AT_decl_file, &fileNo);
@@ -134,7 +135,7 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
 
       auto rtn = std::unique_ptr<Routine> {
         new Routine(off,
-                    rtnName,
+                    demangle(rtnName),
                     ctxt.currentImage,
                     ctxt.currentNamespace,
                     cls,
@@ -149,6 +150,7 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
         ctxt.currentClass.back()->methods.push_back(ctxt.routines.back().get());
 
       ctxt.currentRoutine.emplace(ctxt.routines.back().get());
+      ctxt.toClean.insert(ctxt.die);
 
       return false; // continue
     }
@@ -177,26 +179,34 @@ struct TagHandler<DW_TAG_subprogram> {
   static bool handleDuplicate(Context &ctxt)
   {
     auto rtn = ctxt.get<Routine>(ctxt.duplicate);
-    if (rtn) ctxt.currentRoutine.emplace(rtn);
+    if (rtn) {
+      ctxt.currentRoutine.emplace(rtn);
+      ctxt.toClean.insert(ctxt.die);
+    }
 
     return false;  // continue
   }
 };
 
+void leaveRoutine(Context &ctxt)
+{
+  auto it = ctxt.toClean.find(ctxt.die);
+  if (it != std::end(ctxt.toClean)) {
+    ctxt.currentRoutine.pop();
+    ctxt.toClean.erase(it);
+  }
+}
+
 template<>
 struct TagLeaver<DW_TAG_subprogram> {
   static void leave(Context &ctxt)
   {
-    if (isValid(ctxt, ctxt.die) && hasAttr(ctxt.die, DW_AT_decl_file))
-      ctxt.currentRoutine.pop();
+    leaveRoutine(ctxt);
   }
 
   static void leaveDuplicate(Context &ctxt)
   {
-    auto rtn = ctxt.get<Routine>(ctxt.duplicate);
-    if (rtn != nullptr) {
-      ctxt.currentRoutine.pop();
-    }
+    leaveRoutine(ctxt);
   }
 };
 

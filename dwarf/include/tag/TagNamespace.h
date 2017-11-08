@@ -64,6 +64,7 @@ bool handleNamespace(Context &ctxt)
     }
 
     ctxt.currentNamespace = addedNamespaces[nmsp];
+    ctxt.toClean.insert(ctxt.die);
   }
 
   return false; // continue
@@ -93,33 +94,25 @@ struct TagHandler<DW_TAG_namespace> {
   }
 };
 
+void leaveNamespace(Context &ctxt)
+{
+  auto it = ctxt.toClean.find(ctxt.die);
+  if (it != std::end(ctxt.toClean)) {
+    ctxt.currentNamespace = (ctxt.currentNamespace->parent == nullptr)
+                            ? ctxt.emptyNamespace : ctxt.currentNamespace->parent;
+    ctxt.toClean.erase(it);
+  }
+}
+
 template<>
 struct TagLeaver<DW_TAG_namespace> {
   static void leave(Context &ctxt)
   {
-    char* nmspChar;
-    if (getDieName(ctxt.dbg, ctxt.die, &nmspChar)) {
-      if (isExcluded(std::string(nmspChar)))
-        return;
-    }
-
-    if (hasAttr(ctxt.die, DW_AT_name)) {
-      ctxt.currentNamespace = (ctxt.currentNamespace->parent == nullptr)
-                              ? ctxt.emptyNamespace : ctxt.currentNamespace->parent;
-    }
+    leaveNamespace(ctxt);
   }
   static void leaveDuplicate(Context &ctxt)
   {
-    char* nmspChar;
-    if (getDieName(ctxt.dbg, ctxt.die, &nmspChar)) {
-      if (isExcluded(std::string(nmspChar)))
-        return;
-    }
-
-    if (hasAttr(ctxt.die, DW_AT_name)) {
-      ctxt.currentNamespace = (ctxt.currentNamespace->parent == nullptr)
-                              ? ctxt.emptyNamespace : ctxt.currentNamespace->parent;
-    }
+    leaveNamespace(ctxt);
   }
 };
 

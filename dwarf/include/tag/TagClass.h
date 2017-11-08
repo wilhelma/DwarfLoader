@@ -83,6 +83,7 @@ bool handleStructClass(Context &ctxt)
     }
   }
 
+  ctxt.toClean.insert(ctxt.die);
   return false; // continue
 }
 
@@ -92,7 +93,10 @@ bool handleStructClassDuplicate(Context &ctxt)
   if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("offset");
 
   auto cls = ctxt.get<Class>(ctxt.duplicate);
-  if (cls) ctxt.addClass(off, cls);
+  if (cls) {
+    ctxt.addClass(off, cls);
+    ctxt.toClean.insert(ctxt.die);
+  }
 
   return false;
 }
@@ -109,6 +113,15 @@ struct TagHandler<DW_TAG_class_type> {
     return handleStructClassDuplicate(ctxt);
   }
 };
+
+void leaveStructClass(Context &ctxt)
+{
+  auto it = ctxt.toClean.find(ctxt.die);
+  if (it != std::end(ctxt.toClean)) {
+    ctxt.currentClass.pop_back();
+    ctxt.toClean.erase(it);
+  }
+}
 
 template<>
 struct TagHandler<DW_TAG_structure_type> {
@@ -127,11 +140,11 @@ template<>
 struct TagLeaver<DW_TAG_class_type> {
   static void leave(Context &ctxt)
   {
-      ctxt.currentClass.pop_back();
+    leaveStructClass(ctxt);
   }
   static void leaveDuplicate(Context &ctxt)
   {
-      ctxt.currentClass.pop_back();
+    leaveStructClass(ctxt);
   }
 };
 
@@ -139,11 +152,11 @@ template<>
 struct TagLeaver<DW_TAG_structure_type> {
   static void leave(Context &ctxt)
   {
-      ctxt.currentClass.pop_back();
+    leaveStructClass(ctxt);
   }
   static void leaveDuplicate(Context &ctxt)
   {
-      ctxt.currentClass.pop_back();
+    leaveStructClass(ctxt);
   }
 };
 

@@ -78,6 +78,18 @@ ExternalProject_Add(libdwarf
         LOG_CONFIGURE 1
         LOG_BUILD 1)
 include_directories(${CMAKE_SOURCE_DIR}/3rdparty/libdwarf/libdwarf)
+# ----------------------------------------- Libelf ------------------------------------------------- #
+ExternalProject_Add(libelf
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/3rdparty/libelf
+        BUILD_IN_SOURCE 1
+        URL http://www.mr511.de/software/libelf-0.8.13.tar.gz
+        CONFIGURE_COMMAND sh ${CONFIG_WRAPPER} "${CMAKE_SOURCE_DIR}/3rdparty/libelf/configure --disable-shared ${ELF_FLAG}" ${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} "" ""
+        BUILD_COMMAND ${MAKE}
+        INSTALL_COMMAND ""
+        LOG_DOWNLOAD 1
+        LOG_CONFIGURE 1
+        LOG_BUILD 1)
+include_directories(${CMAKE_SOURCE_DIR}/3rdparty/libelf/lib)
 # ----------------------------------------- ZLIB ------------------------------------------------- #
 ExternalProject_Add(zlib
         BUILD_IN_SOURCE 1
@@ -96,9 +108,10 @@ include_directories(${CMAKE_SOURCE_DIR}/3rdparty/libz)
 include_directories(${PROJECT_INCLUDE_DIR})
 include_directories(${ARCHITECTURE_INCLUDE_DIR})
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-add_dependencies(${PROJECT_NAME} libdwarf zlib json11)
+add_dependencies(${PROJECT_NAME} libdwarf libelf zlib json11)
 target_compile_options(${PROJECT_NAME} PUBLIC -fno-omit-frame-pointer)
 target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/3rdparty/libdwarf/libdwarf/libdwarf.a
+                                      ${CMAKE_SOURCE_DIR}/3rdparty/libelf/lib/libelf.a
                                       ${CMAKE_SOURCE_DIR}/3rdparty/libz/libz.a
                                       ${CMAKE_SOURCE_DIR}/3rdparty/json11/libjson11.a
                                       elf)

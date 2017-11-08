@@ -86,6 +86,8 @@ void DwarfReader::iterate(Dwarf_Die die) noexcept
       dwarf_dealloc(ctxt_.dbg, child_die, DW_DLA_DIE);
     }
   }
+
+  ctxt_.die = die;
   ctxt_.duplicate = duplicate;
   leave(die);
 
@@ -106,7 +108,6 @@ void DwarfReader::leave(Dwarf_Die die)
 
   Dwarf_Half tag{};
   if (dwarf_tag(die, &tag, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
-  ctxt_.die = die;
   leaveDwarfDie(ctxt_, tag);
 }
 

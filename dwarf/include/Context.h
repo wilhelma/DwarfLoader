@@ -60,6 +60,8 @@ struct Context {
 
   Dwarf_Off duplicate{0};
 
+  std::unordered_set<Dwarf_Die> toClean;
+
   std::vector<std::unique_ptr<Image>> images;
   std::vector<std::unique_ptr<Namespace>> namespaces;
   std::vector<std::unique_ptr<Routine>> routines;

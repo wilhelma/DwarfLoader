@@ -13,9 +13,10 @@ TemplateHelper::TemplateHelper(Artifact_t *defaultArtifact)
 
 Artifact_t* TemplateHelper::processRoutine(const Routine* routine)
 {
-  auto firstAngleBracket = routine->name.find('<');
+  auto firstAngleBracket = routine->name.find_first_of('<');
+  auto closingAngleBracket = routine->name.find_first_of(">::");
 
-  if (firstAngleBracket != std::string::npos) {
+  if (firstAngleBracket != std::string::npos && closingAngleBracket == std::string::npos) {
     auto pureRoutineName = routine->name.substr(0, firstAngleBracket);
 
     // in case the templatized routine has not been seen so far => append it to the default artifact
