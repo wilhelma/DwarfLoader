@@ -63,13 +63,42 @@ ExternalProject_Add(json11
         TEST_COMMAND "")
 
 include_directories(${CMAKE_SOURCE_DIR}/3rdparty/json11)
-link_directories(${CMAKE_SOURCE_DIR}/3rdparty/json11)
+# ----------------------------------------- Libdwarf ------------------------------------------------- #
+set(CONFIG_WRAPPER ${DwarfLoader_BINARY_DIR}/runconfigure.sh)
+configure_file(${DwarfLoader_SOURCE_DIR}/runconfigure.sh.in ${CONFIG_WRAPPER} @ONLY)
+ExternalProject_Add(libdwarf
+        BUILD_IN_SOURCE 1
+        URL http://www.prevanders.net/libdwarf-20160115.tar.gz
+        CONFIGURE_COMMAND sh ${CONFIG_WRAPPER} ${CMAKE_SOURCE_DIR}/3rdparty/libdwarf/configure ${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} ${LD_LIBDWARF_FLAGS} ""
+        BUILD_COMMAND ${MAKE}
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/libdwarf"
+        BUILD_IN_SOURCE 1
+        INSTALL_COMMAND ""
+        LOG_DOWNLOAD 1
+        LOG_CONFIGURE 1
+        LOG_BUILD 1)
+include_directories(${CMAKE_SOURCE_DIR}/3rdparty/libdwarf/libdwarf)
+# ----------------------------------------- ZLIB ------------------------------------------------- #
+ExternalProject_Add(zlib
+        BUILD_IN_SOURCE 1
+        URL http://zlib.net/zlib-1.2.11.tar.gz
+        CONFIGURE_COMMAND sh ${CONFIG_WRAPPER} "${CMAKE_SOURCE_DIR}/3rdparty/libz/configure --static" ${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} "" ""
+        BUILD_COMMAND ${MAKE}
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/3rdparty/libz"
+        BUILD_IN_SOURCE 1
+        INSTALL_COMMAND ""
+        LOG_DOWNLOAD 1
+        LOG_CONFIGURE 1
+        LOG_BUILD 1)
+include_directories(${CMAKE_SOURCE_DIR}/3rdparty/libz)
 #--------------------------------------------------------------------------------------------------#
 
 include_directories(${PROJECT_INCLUDE_DIR})
 include_directories(${ARCHITECTURE_INCLUDE_DIR})
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_dependencies(${PROJECT_NAME} libdwarf zlib json11)
 target_compile_options(${PROJECT_NAME} PUBLIC -fno-omit-frame-pointer)
-add_dependencies(${PROJECT_NAME} json11)
-target_link_libraries(${PROJECT_NAME} dwarf elf ${CMAKE_SOURCE_DIR}/3rdparty/json11/libjson11.a)
-
+target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/3rdparty/libdwarf/libdwarf/libdwarf.a
+                                      ${CMAKE_SOURCE_DIR}/3rdparty/libz/libz.a
+                                      ${CMAKE_SOURCE_DIR}/3rdparty/json11/libjson11.a
+                                      elf)

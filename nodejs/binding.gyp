@@ -55,14 +55,17 @@
       'cflags_cc!': [ '-fno-rtti' ],
       'include_dirs': [
         '../3rdparty/json11',
+        '../3rdparty/libdwarf/libdwarf',
+        '../3rdparty/libz',
         '../dwarf/include',
         '../architecture/include'
       ],
       'link_settings': {
         "libraries": [
           '-L/usr/local/lib',
-	  '/home/wilhelma/workspace/parceive/dc_cpp/cmake-build-release/libdwarf/libdwarf/libdwarf.a',
-	  '/home/wilhelma/workspace/parceive/dc_cpp/cmake-build-release/libelf/lib/libelf.a',
+          '-lelf',
+          '../../3rdparty/libdwarf/libdwarf/libdwarf.a',
+          '../../3rdparty/libz/libz.a',
           '../../3rdparty/json11/libjson11.a'
         ]
       }

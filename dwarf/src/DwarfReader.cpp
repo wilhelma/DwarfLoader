@@ -4,6 +4,9 @@
 
 #include "DwarfReader.h"
 
+#include <algorithm>
+#include <sstream>
+
 #include "tag/TagGeneric.h"
 #include "entities/Variable.h"
 
@@ -124,7 +127,13 @@ bool DwarfReader::handle(Dwarf_Die die)
 
 void DwarfReader::start()
 {
+  Dwarf_Unsigned infoSize {0}, rest {0};
+  dwarf_get_section_max_offsets_b(ctxt_.dbg, &infoSize, &rest, &rest, &rest, &rest, &rest,
+                                  &rest, &rest, &rest, &rest, &rest, &rest);
+
+  ctxt_.reserveEntityVector(infoSize);
   iterateCUs();
+  ctxt_.finalizeSourceLocations();
   processContext();
 }
 

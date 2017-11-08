@@ -5,8 +5,9 @@
 #ifndef DWARFLOADER_TAGCOMPILEUNIT_H
 #define DWARFLOADER_TAGCOMPILEUNIT_H
 
-#include "./TagGeneric.h"
-#include "../include/DwarfHelper.h"
+#include <libdwarf.h>
+#include "tag/TagGeneric.h"
+#include "DwarfHelper.h"
 
 namespace pcv {
 namespace dwarf {
@@ -26,6 +27,45 @@ static std::string fixPath(const char *path)
 
   return pathStr;
 };
+
+void parseSourceLocationInfo(pcv::dwarf::Context &ctxt)
+{
+  Dwarf_Unsigned version{0};
+  Dwarf_Small count{0};
+  Dwarf_Line_Context context{0};
+
+  if (dwarf_srclines_b(ctxt.die, &version, &count, &context, nullptr) != DW_DLV_OK)
+    throw DwarfError("dwarf_srclines_b");
+
+  if (count == 1) {
+    Dwarf_Line *lineBuf;
+    Dwarf_Signed lineCount{0};
+
+    if (dwarf_srclines_from_linecontext(context, &lineBuf, &lineCount, nullptr) != DW_DLV_OK)
+      throw DwarfError("dwarf_srclines_from_linecontext");
+
+    for (auto i = 0; i < lineCount; ++i) {
+      Dwarf_Addr lineAddr{0};
+      Dwarf_Unsigned lineNo{0}, fileNo{0};
+
+      if (dwarf_lineaddr(lineBuf[i], &lineAddr, nullptr) != DW_DLV_OK)
+        throw DwarfError("dwarf_lineaddr");
+
+      if (dwarf_lineno(lineBuf[i], &lineNo, nullptr) != DW_DLV_OK)
+        throw DwarfError("dwarf_lineno");
+
+      if (dwarf_line_srcfileno(lineBuf[i], &fileNo, nullptr) != DW_DLV_OK)
+        throw DwarfError("dwarf_line_srcfileno");
+
+      ctxt.addSourceLocation(lineAddr, std::unique_ptr<SourceLocation> {
+        new SourceLocation(lineNo, ctxt.srcFiles[fileNo - 1])
+      });
+    }
+  }
+
+  dwarf_srclines_dealloc_b(context);
+}
+
 
 template<>
 struct TagHandler<DW_TAG_compile_unit> {
@@ -53,6 +93,8 @@ struct TagHandler<DW_TAG_compile_unit> {
         dwarf_dealloc(ctxt.dbg, srcfiles, DW_DLA_LIST);
       }
     }
+
+    parseSourceLocationInfo(ctxt);
 
     return false;  // continue
   }

@@ -15,7 +15,7 @@ namespace dwarf {
 void handleInheritance(Context &ctxt, Dwarf_Off &baseOff)
 {
   assert(!ctxt.currentClass.empty() && "The context contains no current class!");
-  ctxt.addInheritance(baseOff, ctxt.currentClass.top()->id);
+  ctxt.addInheritance(baseOff, ctxt.currentClass.back()->id);
 }
 
 template <> struct TagHandler<DW_TAG_inheritance> {

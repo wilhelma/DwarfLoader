@@ -286,7 +286,7 @@ Class *getClassOfVariable(Dwarf_Debug dbg, Dwarf_Die die, const Context& ctxt)
     auto typeDie = jump(dbg, die, DW_AT_type);
     Dwarf_Off off{};
     if (dwarf_dieoffset(typeDie, &off, nullptr) == DW_DLV_OK) {
-      return ctxt.getClass(off);
+      return ctxt.get<Class>(off);
     }
     dwarf_dealloc(dbg, typeDie, DW_DLA_DIE);
   }

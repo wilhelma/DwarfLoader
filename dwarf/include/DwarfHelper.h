@@ -5,9 +5,8 @@
 #ifndef DWARFLOADER_DWARFHELPER_H
 #define DWARFLOADER_DWARFHELPER_H
 
-#include <functional>
-
 #include <libdwarf.h>
+#include <functional>
 #include <entities/SoftwareEntity.h>
 #include <entities/Variable.h>
 

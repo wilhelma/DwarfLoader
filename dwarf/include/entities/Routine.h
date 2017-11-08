@@ -26,8 +26,9 @@ struct Routine : public SoftwareEntity {
                    Namespace *nmsp,
                    Class *cls,
                    std::string file,
-                   int line)
-    : SoftwareEntity(id, name, img, nmsp, cls, file, line), isConstructor(false) {}
+                   int line,
+                   bool isConstructor = false)
+    : SoftwareEntity(id, name, img, nmsp, cls, file, line), isConstructor(isConstructor) {}
 
   EntityType getEntityType() const override { return EntityType::Routine; }
 };

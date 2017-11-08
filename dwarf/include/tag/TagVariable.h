@@ -29,7 +29,7 @@ struct TagHandler<DW_TAG_variable> {
     if (hasAttr(ctxt.die, DW_AT_specification)) {
       die = jump(ctxt.dbg, ctxt.die, DW_AT_specification);
       if (dwarf_dieoffset(die, &off, 0) == DW_DLV_OK) {
-        auto specVariable = ctxt.getVariable(off);
+        auto specVariable = ctxt.get<Variable>(off);
         if (specVariable == nullptr)
           return true;
       }
@@ -49,22 +49,24 @@ struct TagHandler<DW_TAG_variable> {
                        getVariableSize(ctxt.dbg, die),
                        file,
                        line,
-                       (ctxt.currentClass.empty()) ? Class::NO_CLASS : ctxt.currentClass.top()->id};
+                       (ctxt.currentClass.empty()) ? Class::NO_CLASS : ctxt.currentClass.back()->id};
 
       auto addVariable = [&](Dwarf_Debug dbg, Dwarf_Die die, Variable::offset_t offset,
                              Variable::Type type) {
-        ctxt.addVariable(off, std::unique_ptr<Variable> {
-           new Variable(off,
-                        var.name,
-                        ctxt.currentImage,
-                        ctxt.currentNamespace,
-                        getClassOfVariable(ctxt.dbg, ctxt.die, ctxt),
-                        ctxt.srcFiles[var.file - 1],
-                        var.line,
-                        var.size,
-                        offset,
-                        type)
-        });
+        ctxt.variables.emplace_back(std::unique_ptr<Variable> {
+            new Variable(off,
+                         var.name,
+                         ctxt.currentImage,
+                         ctxt.currentNamespace,
+                         getClassOfVariable(ctxt.dbg, ctxt.die, ctxt),
+                         ctxt.srcFiles[var.file - 1],
+                         var.line,
+                         var.size,
+                         offset,
+                         type)
+          }
+        );
+        ctxt.add(off, ctxt.variables.back().get());
       };
 
       auto stackHandler = [&](Dwarf_Debug dbg, Dwarf_Die die, Variable::offset_t offset) {
@@ -89,8 +91,7 @@ struct TagHandler<DW_TAG_variable> {
 
   static
   bool handleDuplicate(Context &ctxt) {
-    auto var = ctxt.getVariable(ctxt.duplicate);
-    return (var != nullptr);
+    return false;
   }
 };
 
