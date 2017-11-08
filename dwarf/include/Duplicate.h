@@ -42,11 +42,10 @@ class DieDuplicate {
 
   Dwarf_Off isDuplicate(const Context& ctxt) const;
   void addDie(const Context& ctxt);
-  void addDuplicate(const Context& ctxt);
+  void addDuplicate(Context& ctxt);
 
  private:
   std::unordered_map<size_t, Dwarf_Off> duplicates_;
-  std::unordered_map<Dwarf_Off, Dwarf_Off> mappings_;
 
   std::size_t getHash(const Context& /* ctxt */) const;
 };

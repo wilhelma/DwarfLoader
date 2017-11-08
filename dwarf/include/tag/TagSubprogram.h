@@ -161,7 +161,7 @@ struct TagHandler<DW_TAG_subprogram> {
     bool handled = false;
 
     if (hasAttr(ctxt.die, DW_AT_specification)) {
-      Dwarf_Off off;
+      Dwarf_Off off{}, specOff{};
       auto specDie = jump(ctxt.dbg, ctxt.die, DW_AT_specification);
       if (dwarf_dieoffset(ctxt.die, &off, 0) == DW_DLV_OK)
         handled = handleSubProgram(ctxt, specDie, off);

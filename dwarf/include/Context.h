@@ -20,6 +20,8 @@
 #include "entities/Class.h"
 #include "entities/Variable.h"
 
+#include <iostream>
+
 namespace pcv {
 
 class Parceive;

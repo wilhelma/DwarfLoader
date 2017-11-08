@@ -23,14 +23,19 @@ struct TagHandler<DW_TAG_variable> {
     if (hasAttr(ctxt.die, DW_AT_artificial))
       return true; // stop parsing
 
+    Dwarf_Off off{};
     Dwarf_Die die = ctxt.die;
 
     if (hasAttr(ctxt.die, DW_AT_specification)) {
       die = jump(ctxt.dbg, ctxt.die, DW_AT_specification);
+      if (dwarf_dieoffset(die, &off, 0) == DW_DLV_OK) {
+        auto specVariable = ctxt.getVariable(off);
+        if (specVariable == nullptr)
+          return true;
+      }
+    } else {
+      dwarf_dieoffset(die, &off, 0);
     }
-
-    Dwarf_Off off{};
-    dwarf_dieoffset(die, &off, 0);
 
     if (ctxt.die != die ||
         (!hasAttr(ctxt.die, DW_AT_declaration) &&
@@ -70,7 +75,12 @@ struct TagHandler<DW_TAG_variable> {
       };
 
       auto staticGlobalHandler = [&](Dwarf_Debug dbg, Dwarf_Die die, Variable::offset_t offset) {
-        addVariable(dbg, die, offset, Variable::Type::GLOBAL);
+        if (ctxt.currentRoutine.empty()) {
+          addVariable(dbg, die, offset, Variable::Type::GLOBAL);
+        } else {
+          addVariable(dbg, die, offset, Variable::Type::STATICVAR);
+          ctxt.currentRoutine.top()->locals.emplace_back(ctxt.variables.back().get());
+        }
       };
 
       handleLocListFromExpr(ctxt.dbg, ctxt.die, stackHandler, staticGlobalHandler);
@@ -81,11 +91,12 @@ struct TagHandler<DW_TAG_variable> {
 
   static
   bool handleDuplicate(Context &ctxt) {
-    return false;
+    auto var = ctxt.getVariable(ctxt.duplicate);
+    return (var != nullptr);
   }
 };
 
-}  // dwarf
-}  // pcv
+}  // namespace dwarf
+}  // namespace pcv
 
 #endif //DWARFLOADER_TAGVARIABLE_H

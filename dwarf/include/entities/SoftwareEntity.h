@@ -8,7 +8,6 @@
 #include <string>
 #include <utility>
 #include <libdwarf.h>
-#include "./Namespace.h"
 #include "./Image.h"
 
 namespace pcv {
@@ -23,7 +22,8 @@ enum class EntityType : int
   Class     = 1 << 0,
   Routine   = 1 << 1,
   Variable  = 1 << 2,
-  All       = Class | Routine | Variable
+  Namespace = 1 << 3,
+  All       = Class | Routine | Variable | Namespace
 };
 
 inline constexpr EntityType
@@ -40,6 +40,7 @@ operator|(EntityType  __x, EntityType  __y)
 
 struct Class;
 struct Artifact_t;
+  struct  Namespace;
 
 /// @brief The base structure of a software entitiy.
 struct SoftwareEntity {
@@ -70,12 +71,9 @@ struct SoftwareEntity {
   /// @param file The name of the containing file.
   /// @param line The line of the declaration.
   explicit SoftwareEntity(Id_t id, name_t name, Image *img, Namespace *nmsp, Class *cls,
-                          file_t file, line_t line)
-    : id(id), name(std::move(name)), img(img), nmsp(nmsp), cls(cls), file(std::move(file)), line(line)
-  {
-    nmsp->entities.push_back(this);
-    img->entities.push_back(this);
-  }
+                          file_t file, line_t line);
+
+  SoftwareEntity() {}
 
   /*!
    * @brief Returns the type of the concrete software entity.

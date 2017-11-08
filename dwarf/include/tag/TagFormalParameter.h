@@ -9,7 +9,7 @@
 #include <libdwarf.h>
 #include <cassert>
 
-#include "TagGeneric.h"
+#include "./TagGeneric.h"
 
 namespace pcv {
 namespace dwarf {

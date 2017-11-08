@@ -85,8 +85,7 @@ struct TagHandler<DW_TAG_member> {
             classType = ctxt.get<Class>(off);
           }
 
-          ctxt.variables.emplace_back(
-              std::unique_ptr<Variable> {
+          ctxt.addVariable(off, std::unique_ptr<Variable> {
                   new Variable(off,
                                prepareMemberName(ctxt, varName),
                                ctxt.currentImage,
@@ -109,7 +108,8 @@ struct TagHandler<DW_TAG_member> {
   }
   static bool handleDuplicate(Context &ctxt)
   {
-    return false;
+    auto var = ctxt.getVariable(ctxt.duplicate);
+    return (var != nullptr);
   }
 };
 

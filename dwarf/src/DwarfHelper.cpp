@@ -162,8 +162,10 @@ void handleLocListFromExpr(Dwarf_Debug dbg,
           if (dwarf_loclist_from_expr_a(dbg, x, tmp, size, &locDesc, &len, nullptr) == DW_DLV_OK) {
             for (int i = 0; i < locDesc->ld_cents; i++) {
               Dwarf_Loc *expr{&locDesc->ld_s[i]};
-              if (expr->lr_atom == DW_OP_fbreg)
+              if (expr->lr_atom == DW_OP_fbreg) {
                 stackHandler(dbg, die, static_cast<int>(expr->lr_number) + DISPLACEMENT);
+                break;
+              }
               else
                 globalAndStaticHandler(dbg, die, static_cast<int>(expr->lr_number));
             }
@@ -197,6 +199,11 @@ Dwarf_Unsigned getVariableSize(Dwarf_Debug dbg, Dwarf_Die die)
   }
   dwarf_dealloc(dbg, typeDie, DW_DLA_DIE);
   return bsize;
+}
+
+void identifySubrangeDie(Dwarf_Die& die)
+{
+
 }
 
 Dwarf_Unsigned getArraySize(Dwarf_Debug dbg, Dwarf_Die arrayDie)

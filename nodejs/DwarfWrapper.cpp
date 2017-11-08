@@ -1,15 +1,22 @@
+#include <v8.h>
 #include "DwarfWrapper.h"
+#include "../ast/visitor/VisitorContext.h"
+#include "../ast/visitor/ASTVisitor.h"
+#include "../ast/ast-from-json/CreateAstFromJson.h"
 
 v8::Persistent<v8::Function> DwarfWrapper::constructor;
 
-DwarfWrapper::DwarfWrapper(const std::string &fileName){
-   filter_ = new Filter("(.+)main(.+)", "(.+)boost(.+)");
-
+DwarfWrapper::DwarfWrapper(const std::string &fileName,
+                           const std::string& filterStr,
+                           const std::string& ast)
+    : ast_(ast) {
+   filter_ = new Filter("(.+)" + filterStr + "(.+)", "(.+)boost(.+)");
    DwarfWrapper::reader_ = new DwarfReader(fileName, duplicate_, *filter_);
    arch_ = new ArchBuilder(reader_->getContext());
 }
 
 DwarfWrapper::~DwarfWrapper(){
+    delete filter_;
     delete reader_;
     delete arch_;
 }
@@ -30,9 +37,10 @@ void DwarfWrapper::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Isolate* isolate = args.GetIsolate();
     if (args.IsConstructCall()) {
         v8::String::Utf8Value str(args[0]);
-        //std::string s(*str);
-        DwarfWrapper* obj = new DwarfWrapper(*str);
-       // printf("from new the filname is : %s", *str);
+        v8::String::Utf8Value filterStr(args[1]);
+        v8::String::Utf8Value ast(args[2]);
+
+        DwarfWrapper* obj = new DwarfWrapper(*str, *filterStr, *ast);
         obj->Wrap(args.This());
         args.GetReturnValue().Set(args.This());
     } else {
@@ -47,23 +55,28 @@ void DwarfWrapper::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
 
 void DwarfWrapper::start(const v8::FunctionCallbackInfo<v8::Value>& args) {
     v8::Isolate* isolate = args.GetIsolate();
-    //v8::EscapableHandleScope scope(isolate);
     DwarfWrapper* obj = ObjectWrap::Unwrap<DwarfWrapper>(args.Holder());
-    try{
-        obj->reader_->start();
-    } catch (DwarfError& e) {
-        std::cerr << e.what();
-        //return scope.Escape(Undefined(isolate));
+    v8::String::Utf8Value ast(args[0]);
+
+    if (obj->reader_->getContext().images.size() == 0) {
+        try {
+            obj->reader_->start();
+        } catch (DwarfError& e) {
+            std::cerr << e.what();
+        }
     }
-    std::unique_ptr<ArchRule> nRule{ new NamespaceRule() };
-    std::unique_ptr<ArchRule> cRule{ new ClassRule() };
-    obj->arch_->apply(nRule.get());
-    obj->arch_->apply(cRule.get());
+
     std::stringstream buffer;
-   // std::cout << *(obj->arch_) << '\n';
-   buffer << *(obj->arch_);
-   std::string output = buffer.str();
-    //obj->Wrap(args.This());
-    args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate,output.c_str()));
+    std::string error;
+
+    const auto json = Json::parse(*ast, error);
+
+    VisitorContext visitorContext(obj->reader_->getContext(), buffer);
+    ASTVisitor astVisitor(&visitorContext);
+
+    Program program = CreateAstFromJson::generateAst(json);
+    program.accept(astVisitor);
+
+    args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, buffer.str().c_str()));
 }
 

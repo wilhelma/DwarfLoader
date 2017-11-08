@@ -3,6 +3,7 @@
 //
 
 #include <cassert>
+#include <algorithm>
 #include "Context.h"
 
 namespace pcv {
@@ -51,6 +52,20 @@ Routine* Context::getRoutine(const Routine::name_t &name) const {
     return rtn->second;
   else
     return nullptr;
+}
+
+void Context::addVariable(Dwarf_Off off, std::unique_ptr<Variable> var)
+{
+  offVariableMap_[off] = var.get();
+  variables.emplace_back(std::move(var));
+}
+
+Variable* Context::getVariable(Dwarf_Off off) const {
+  auto tmp = offVariableMap_.find(off);
+  if (tmp != std::end(offVariableMap_))
+    return tmp->second;
+
+  return nullptr;
 }
 
 void Context::addTypedef(Dwarf_Off off, const std::string &name)
@@ -189,6 +204,20 @@ void Context::addMember(Dwarf_Off off, Variable *member)
 {
   currentClass.back()->members.emplace_back(member);
   add(off, member);
+}
+
+void Context::addDuplicate(Dwarf_Off original, Dwarf_Off duplicate)
+{
+  duplicates_[duplicate] = original;
+}
+
+Dwarf_Off Context::getDuplicate(Dwarf_Off original) const
+{
+  auto result = duplicates_.find(original);
+  if (result == std::end(duplicates_))
+    return 0;
+  else
+    return result->second;
 }
 
 }  // namespace dwarf
