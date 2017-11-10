@@ -59,7 +59,7 @@ bool inspectConstructors(Context &ctxt, Dwarf_Die die)
 {
   char *rtnName = nullptr;
   if (getDieName(ctxt.dbg, die, &rtnName)) {
-    std::string uName = demangle(rtnName);
+    std::string uName = demangleNameOnly(rtnName);
     size_t pos2{uName.rfind("::")};
     if (pos2 != std::string::npos) {
       size_t pos1{uName.rfind("::", pos2 - 1)};
@@ -112,7 +112,7 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
     if (std::strstr(rtnName, "C1") != nullptr ||
       std::strstr(rtnName, "C2") != nullptr ||
       std::strstr(rtnName, "C3") != nullptr) {
-      isConstructor = inspectConstructors(ctxt, die);
+      inspectConstructors(ctxt, die);
     }
 
     if (!off && (dwarf_dieoffset(die, &off, nullptr) != DW_DLV_OK)) throw DwarfError("offset");

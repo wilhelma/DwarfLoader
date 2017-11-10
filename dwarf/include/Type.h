@@ -14,6 +14,7 @@ namespace pcv {
 namespace dwarf {
 
 std::string demangle(const char* name);
+std::string demangleNameOnly(const char *name);
 
 }  // namespace dwarf
 }  // namespace pcv

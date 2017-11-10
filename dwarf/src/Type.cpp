@@ -11,8 +11,8 @@
 namespace pcv {
 namespace dwarf {
 
-std::string demangle(const char* name) {
-
+std::string demangle(const char* name)
+{
   int status {};
 
   std::unique_ptr<char, void(*)(void*)> res {
@@ -21,6 +21,19 @@ std::string demangle(const char* name) {
   };
 
   return (status==0) ? res.get() : name ;
+}
+
+std::string demangleNameOnly(const char *name)
+{
+  std::string demangledName = demangle(name);
+
+  { // remove parameters
+    auto firstParenthese = demangledName.find_first_of('(');
+    if (firstParenthese != std::string::npos)
+      demangledName = demangledName.substr(0, firstParenthese);
+  }
+
+  return demangledName;
 }
 
 }  // namespace dwarf
