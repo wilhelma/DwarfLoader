@@ -76,6 +76,17 @@ namespace pcv {
 
       addedArtifacts[nmsp] = parent;
       if (added != nullptr) {
+        // consider namespaces
+        {
+          std::unordered_set<const Namespace *> namespaces;
+          for (const auto entity : nmsp->entities) {
+            if (entity->getEntityType() == pcv::entity::EntityType::Namespace) {
+              auto tmpAdded = apply(parent, static_cast<const Namespace&>(*entity));
+              added->insert(std::begin(tmpAdded), std::end(tmpAdded));
+            }
+          }
+        }
+
         // consider classes
         {
           std::unordered_set<const Class *> classes;
@@ -136,6 +147,16 @@ namespace pcv {
     });
     auto parent = artifact->children.back().get();
 
+    // consider namespaces
+    {
+      std::unordered_set<const Namespace *> namespaces;
+      for (const auto entity : nmsp.entities) {
+        if (entity->getEntityType() == pcv::entity::EntityType::Namespace) {
+          auto tmpAdded = apply(parent, static_cast<const Namespace&>(*entity));
+          added.insert(std::begin(tmpAdded), std::end(tmpAdded));
+        }
+      }
+    }
 
     // consider classes
     {

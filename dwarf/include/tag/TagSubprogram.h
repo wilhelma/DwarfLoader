@@ -15,6 +15,8 @@
 
 namespace {
 
+static std::unordered_map<Dwarf_Off, pcv::dwarf::Routine*> handled;
+
 bool isValid(const Context &ctxt, Dwarf_Die die)
 {
   return !(ctxt.currentClass.empty() && pcv::dwarf::hasAttr(die, DW_AT_artificial));
@@ -91,8 +93,6 @@ bool inspectConstructors(Context &ctxt, Dwarf_Die die)
 
 bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
 {
-  static std::unordered_map<Dwarf_Off, Routine*> handled;
-
   if (isValid(ctxt, die)) {
     if (off) {
       Dwarf_Off specOff;
@@ -180,6 +180,9 @@ struct TagHandler<DW_TAG_subprogram> {
   {
     auto rtn = ctxt.get<Routine>(ctxt.duplicate);
     if (rtn) {
+      Dwarf_Off off{};
+      if (dwarf_dieoffset(ctxt.die, &off, nullptr) != DW_DLV_OK) throw DwarfError("dieoffset");
+      handled[off] = rtn;
       ctxt.currentRoutine.emplace(rtn);
       ctxt.toClean.insert(ctxt.die);
     }

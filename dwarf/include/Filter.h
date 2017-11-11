@@ -17,7 +17,7 @@ class Filter {
 
   bool isIncluded(const std::string &fileName) const;
   bool isExcluded(const std::string &fileName) const;
-  bool isValid(const std::string &fileName) const;
+  bool isValid(const std::string &fileName, uint lineNo) const;
 
   /* disable copy/move construction and assignment operators */
   Filter(const Filter &) = delete;

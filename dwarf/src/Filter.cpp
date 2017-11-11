@@ -22,9 +22,9 @@ bool Filter::isExcluded(const std::string &fileName) const
   return excluded;
 }
 
-bool Filter::isValid(const std::string &fileName) const
+bool Filter::isValid(const std::string &fileName, uint lineNo) const
 {
-  return !isExcluded(fileName) && isIncluded(fileName);
+  return !isExcluded(fileName) && isIncluded(fileName) && (lineNo > 0);
 }
 
 }  // namespace dwarf

@@ -3,6 +3,7 @@
 //
 
 #include <cassert>
+#include <algorithm>
 #include "Context.h"
 
 namespace pcv {
@@ -19,7 +20,17 @@ void Context::addClass(Dwarf_Off off, Class *cls)
   if (getClass(*cls->nmsp, cls->name) == nullptr) {
     auto classSpecifier = getClassSpecifier(cls->nmsp->name, cls->name);
     nameClassMap_[classSpecifier] = cls;
+
+    // add nested classes
+    if (cls->cls != nullptr) {
+      if (std::find(std::begin(cls->cls->nestedClasses),
+                    std::end(cls->cls->nestedClasses),
+                    cls) == std::end(cls->cls->nestedClasses)) {
+        cls->cls->nestedClasses.push_back(cls);
+      }
+    }
   }
+
   currentClass.push_back(cls);
 }
 

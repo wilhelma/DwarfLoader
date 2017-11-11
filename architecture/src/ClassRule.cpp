@@ -139,16 +139,17 @@ namespace pcv {
 
     for (auto cls : classesVector) {
       if (added.find(cls) == std::end(added)) {
-        const Class *baseClass = getBaseClass(cls);
-        if (useAllClassesFromCtxt)
-          traverseHierarchy(baseClass, artifact, classesVector, useAllClassesFromCtxt);
-        else {
-          if (classes.find(baseClass) == std::end(classes))
-            traverseHierarchy(cls, artifact, classesVector, useAllClassesFromCtxt);
-          else
-            traverseHierarchy(baseClass, artifact, classesVector, useAllClassesFromCtxt);
-        }
-
+        traverseHierarchy(cls, artifact, classesVector, useAllClassesFromCtxt);
+//        //todo: consider base classes
+//        const Class *baseClass = getBaseClass(cls);
+//        if (useAllClassesFromCtxt)
+//          traverseHierarchy(baseClass, artifact, classesVector, useAllClassesFromCtxt);
+//        else {
+//          if (classes.find(baseClass) == std::end(classes))
+//            traverseHierarchy(cls, artifact, classesVector, useAllClassesFromCtxt);
+//          else
+//            traverseHierarchy(baseClass, artifact, classesVector, useAllClassesFromCtxt);
+//        }
       }
     }
 

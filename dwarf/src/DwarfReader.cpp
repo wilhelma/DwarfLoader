@@ -100,9 +100,10 @@ void DwarfReader::iterate(Dwarf_Die die) noexcept
 void DwarfReader::leave(Dwarf_Die die)
 {
   if (hasAttr(die, DW_AT_decl_file)) {
-    Dwarf_Unsigned fileNo{};
+    Dwarf_Unsigned fileNo{}, lineNo{};
     getAttrUint(ctxt_.dbg, die, DW_AT_decl_file, &fileNo);
-    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
+    getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_line, &lineNo);
+    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1], lineNo))
       return;
   }
 
@@ -117,9 +118,10 @@ bool DwarfReader::handle(Dwarf_Die die)
   if (dwarf_tag(die, &tag, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag() failed");
 
   if (hasAttr(die, DW_AT_decl_file)) {
-    Dwarf_Unsigned fileNo{};
+    Dwarf_Unsigned fileNo{}, lineNo{};
     getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_file, &fileNo);
-    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1]))
+    getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_line, &lineNo);
+    if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1], lineNo))
       return true;
   }
 
