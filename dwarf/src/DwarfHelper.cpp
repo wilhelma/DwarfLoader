@@ -217,11 +217,14 @@ Dwarf_Unsigned getArraySize(Dwarf_Debug dbg, Dwarf_Die arrayDie)
     if (dwarf_bytesize(typeDie, &bsize, nullptr) != DW_DLV_OK) throw DwarfError("size");
   } else {
     auto arrayTypeDie = jump(dbg, typeDie, DW_AT_type);
+
     Dwarf_Half tag;
-    if (dwarf_tag(arrayTypeDie, &tag, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag");
-    if (tag == DW_TAG_typedef) { // consider typedefs
-      arrayTypeDie = jump(dbg, arrayTypeDie, DW_AT_type);
-    }
+    do {
+      if (dwarf_tag(arrayTypeDie, &tag, nullptr) != DW_DLV_OK) throw DwarfError("dwarf_tag");
+      if (tag == DW_TAG_typedef) { // consider typedefs
+        arrayTypeDie = jump(dbg, arrayTypeDie, DW_AT_type);
+      }
+    } while(tag == DW_TAG_typedef);
 
     if (dwarf_bytesize(arrayTypeDie, &bsize, nullptr) != DW_DLV_OK) throw DwarfError("size");
     dwarf_dealloc(dbg, arrayTypeDie, DW_DLA_DIE);
