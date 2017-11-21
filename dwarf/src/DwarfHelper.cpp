@@ -239,9 +239,11 @@ Dwarf_Unsigned getArraySize(Dwarf_Debug dbg, Dwarf_Die arrayDie)
       if (dwarf_attr(subRangeDie, DW_AT_upper_bound, &attr, nullptr) != DW_DLV_OK)
         break;
 
+      Dwarf_Off off{};
+      dwarf_dieoffset(subRangeDie, &off, 0);
+
       if (dwarf_whatform(attr, &form, nullptr) != DW_DLV_OK) throw DwarfError("whatform");
-      if (form != DW_FORM_exprloc) {
-        if (dwarf_formudata(attr, &nElements, nullptr) != DW_DLV_OK) throw DwarfError("formudata");
+      if (form != DW_FORM_exprloc && dwarf_formudata(attr, &nElements, nullptr) == DW_DLV_OK) {
         bsize *= (nElements + 1);
       } else {
         // todo: support dynamic sized arrays on the stack (issue #133)

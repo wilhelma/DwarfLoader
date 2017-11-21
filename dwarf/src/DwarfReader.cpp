@@ -102,7 +102,10 @@ void DwarfReader::leave(Dwarf_Die die)
   if (hasAttr(die, DW_AT_decl_file)) {
     Dwarf_Unsigned fileNo{}, lineNo{};
     getAttrUint(ctxt_.dbg, die, DW_AT_decl_file, &fileNo);
-    getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_line, &lineNo);
+    if (hasAttr(die, DW_AT_decl_line))
+      getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_line, &lineNo);
+    else
+      lineNo = 1;
     if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1], lineNo))
       return;
   }
@@ -120,7 +123,10 @@ bool DwarfReader::handle(Dwarf_Die die)
   if (hasAttr(die, DW_AT_decl_file)) {
     Dwarf_Unsigned fileNo{}, lineNo{};
     getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_file, &fileNo);
-    getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_line, &lineNo);
+    if (hasAttr(die, DW_AT_decl_line))
+      getAttrUint(ctxt_.dbg, ctxt_.die, DW_AT_decl_line, &lineNo);
+    else
+      lineNo = 1;
     if (!filter_.isValid(ctxt_.srcFiles[fileNo - 1], lineNo))
       return true;
   }
