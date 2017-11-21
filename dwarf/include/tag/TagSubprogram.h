@@ -105,7 +105,8 @@ bool handleSubProgram(Context &ctxt, Dwarf_Die die, Dwarf_Off off = 0)
     }
 
     char *rtnName{nullptr};
-    if (!getDieName(ctxt.dbg, die, &rtnName)) throw DwarfError("diename");
+    if (!getDieName(ctxt.dbg, die, &rtnName))
+      return true;  // stop (probably inlined constructor)
 
     // handle constructors
     bool isConstructor {!ctxt.currentClass.empty() && (ctxt.currentClass.back()->name == rtnName)};
@@ -185,9 +186,10 @@ struct TagHandler<DW_TAG_subprogram> {
       handled[off] = rtn;
       ctxt.currentRoutine.emplace(rtn);
       ctxt.toClean.insert(ctxt.die);
+      return false;  // continue
     }
 
-    return false;  // continue
+    return true;  // quit
   }
 };
 
